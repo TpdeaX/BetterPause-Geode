@@ -61,7 +61,7 @@ bool ProgressPlataformerBetter::init() {
         10.f,
         false
     );
-    m_timeLabelLevel->setPosition({ 385.f, 5.f });
+    m_timeLabelLevel->setPosition({ 35.f + (m_timeLabelLevel->getContentSize().width / 2), 5.f});
     this->addChild(m_timeLabelLevel);
 
     //auto pointsCurrent = GameToolbox::poi
@@ -83,7 +83,7 @@ bool ProgressPlataformerBetter::init() {
         10.f,
         false
     );
-    m_pointsLabelLevel->setPosition({ 385.f, -35.f });
+    m_pointsLabelLevel->setPosition({ 35.f + (m_timeLabelLevel->getContentSize().width / 2), -35.f });
     this->addChild(m_pointsLabelLevel);
 
     return true;

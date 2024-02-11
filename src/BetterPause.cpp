@@ -25,19 +25,24 @@ BetterPause* BetterPause::create(PauseLayer* pauLa)
 
 void BetterPause::update(float dt) {
 
-
-	if (totalHeightButtonsList < m_buttonsList->m_contentLayer->getPositionY() &&
-		0.f > m_buttonsList->m_contentLayer->getPositionY()) {
-		this->upBtnSpriteList->setVisible(true);
-		this->downBtnSpriteList->setVisible(true);
+	if (totalHeightButtonsList != 0.f) {
+		if (totalHeightButtonsList < m_buttonsList->m_contentLayer->getPositionY() &&
+			0.f > m_buttonsList->m_contentLayer->getPositionY()) {
+			this->upBtnSpriteList->setVisible(true);
+			this->downBtnSpriteList->setVisible(true);
+		}
+		else if (m_buttonsList->m_contentLayer->getPositionY() >= 0.f) {
+			this->upBtnSpriteList->setVisible(true);
+			this->downBtnSpriteList->setVisible(false);
+		}
+		else if (m_buttonsList->m_contentLayer->getPositionY() <= totalHeightButtonsList) {
+			this->upBtnSpriteList->setVisible(false);
+			this->downBtnSpriteList->setVisible(true);
+		}
 	}
-	else if (m_buttonsList->m_contentLayer->getPositionY() >= 0.f) {
-		this->upBtnSpriteList->setVisible(true);
-		this->downBtnSpriteList->setVisible(false);
-	}
-	else if (m_buttonsList->m_contentLayer->getPositionY() <= totalHeightButtonsList) {
+	else {
 		this->upBtnSpriteList->setVisible(false);
-		this->downBtnSpriteList->setVisible(true);
+		this->downBtnSpriteList->setVisible(false);
 	}
 
 	if (this->m_pCustomSongWidget->m_artistLabel && this->m_pCustomSongWidget->m_moreBtn) {
@@ -283,15 +288,18 @@ void BetterPause::createButtonsMenu() {
 	upBtnSpriteList->setScaleX(2.f);
 	upBtnSpriteList->setScaleY(1.4f);
 	upBtnSpriteList->setPosition({ 40.f, Utils::WinSize().height - 15.f });
-	upBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
 	menuScrollButtons->addChild(upBtnSpriteList);
 
 	downBtnSpriteList = cocos2d::CCSprite::createWithSpriteFrameName("edit_downBtn_001.png");
 	downBtnSpriteList->setScaleX(2.f);
 	downBtnSpriteList->setScaleY(1.4f);
 	downBtnSpriteList->setPosition({ 40.f, Utils::WinSize().height - 213.f });
-	downBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
 	menuScrollButtons->addChild(downBtnSpriteList);
+
+	if (!Mod::get()->getSettingValue<bool>("disable-arrow-blink")) {
+		upBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
+		downBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
+	}
 
 	float totalHeight = 0.0f;
 
@@ -411,7 +419,8 @@ void BetterPause::createButtonsMenu2() {
 	m_pMenuButtons2->setPosition({ 40.f, 42.f });
 	this->addChild(m_pMenuButtons2);
 
-	auto visibleButtonImage = cocos2d::CCSprite::create("BE_eye-on-btn.png");
+	auto visibleButtonImage = cocos2d::CCSprite::create("BE_eye-on-btn.png"_spr);
+
 	if (!visibleButtonImage)
 	{
 		visibleButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_reportBtn_001.png");
@@ -525,9 +534,9 @@ void BetterPause::createLabels() {
 		timeColorD = Utils::getplayLayerA()->m_isPracticeMode ? "Time Total: <cj>%02d:%02d</c>" : "Time Total: <cg>%02d:%02d</c>";
 	}
 
-	m_pAttemptCurrentLevelLabel = TextArea::create(gd::string(cocos2d::CCString::createWithFormat(attemptColorD, Utils::from<int>(Utils::getplayLayerA(), 0x29ac))->getCString()), "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 100.f, false);
-	m_pAttemptCurrentLevelLabel->setPosition({ 186.f, Utils::WinSize().height - 60.f });
-	m_pAttemptCurrentLevelLabel->m_label->setAnchorPoint({ 0.f, 1.f });
+	m_pAttemptCurrentLevelLabel = TextArea::create(gd::string(cocos2d::CCString::createWithFormat(attemptColorD, Utils::from<int>(Utils::getplayLayerA(), 0x29ac))->getCString()), "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 0.f, false);
+	m_pAttemptCurrentLevelLabel->setPosition({ 86.f + (m_pAttemptCurrentLevelLabel->getContentSize().width / 2),
+		Utils::WinSize().height - 60.f });
 	this->addChild(m_pAttemptCurrentLevelLabel);
 
 	int totalSeconds = std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x320));
@@ -540,8 +549,8 @@ void BetterPause::createLabels() {
 	int seconds = totalSeconds % 60;
 
 
-	m_pTimeCurrentLevelLabel = TextArea::create(gd::string(cocos2d::CCString::createWithFormat(timeColorD.c_str(), minutes, seconds)->getCString()), "bigFont.fnt", 0.3f, 100.f, {0.f, 1.f}, 100.f, false);
-	m_pTimeCurrentLevelLabel->setPosition({ 295.f,
+	m_pTimeCurrentLevelLabel = TextArea::create(gd::string(cocos2d::CCString::createWithFormat(timeColorD.c_str(), minutes, seconds)->getCString()), "bigFont.fnt", 0.3f, 100.f, {0.f, 1.f}, 0.f, false);
+	m_pTimeCurrentLevelLabel->setPosition({ 195.f + (m_pTimeCurrentLevelLabel->getContentSize().width / 2),
 										   Utils::WinSize().height - 60.f});
 	this->addChild(m_pTimeCurrentLevelLabel);
 }
@@ -756,7 +765,7 @@ void BetterPause::onHide(cocos2d::CCObject* pSender) {
 
 	if (m_pIsTextureEye)
 	{
-		reinterpret_cast<cocos2d::CCSprite*>(m_pVisibleButton->getChildren()->objectAtIndex(0))->initWithFile(this->m_pIsHide ? "BE_eye-off-btn.png" : "BE_eye-on-btn.png");
+		reinterpret_cast<cocos2d::CCSprite*>(m_pVisibleButton->getChildren()->objectAtIndex(0))->initWithFile(this->m_pIsHide ? "BE_eye-off-btn.png"_spr : "BE_eye-on-btn.png"_spr);
 	}
 	m_pVisibleButton->setVisible(true);
 	m_pVisibleButton->setOpacity(this->m_pIsHide ? 50 : 255);
