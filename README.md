@@ -1,2 +1,18 @@
-# BetterPause-Geode
- betterPause ported to geode, from there you will receive updates.
+# BetterPause
+ A mod inspired by the collar server, an improvement for the geometry dash pause menu.
+ 
+ 
+ RESOURCES NEEDED, DOWNLOAD IT!!!!!
+
+Special thanks:
+
+-[Collar_2023_server] (https://discord.gg/9GX4Dkb)
+
+
+-[Mat] (https://github.com/matcool)
+
+
+-[Hjfod] (https://github.com/HJfod)
+
+
+-[Adaf] (https://github.com/adafcaefc)
