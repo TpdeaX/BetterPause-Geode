@@ -23,9 +23,12 @@ namespace Utils
 	float getPercentagePerXpos()
 	{
 		auto playLayer = Utils::getplayLayerA();
-		if (!playLayer) {
-			return 0.f;
-		}
+		return 0.f;
+
+
+#ifndef GEODE_IS_ANDROID
+		return playLayer->getCurrentPercent();
+#endif
 
 		auto player = Utils::from<PlayerObject*>(playLayer, 0x878);
 		auto playerXPosition = player->getPositionX();

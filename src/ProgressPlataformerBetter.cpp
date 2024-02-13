@@ -44,12 +44,20 @@ bool ProgressPlataformerBetter::init() {
         (static_cast<int>(Utils::getplayLayerA()->m_level->m_timestamp) / 240.f) :
         BetterInfo::timeForLevelString(Utils::getplayLayerA()->m_level->m_levelString);
 
+    double currentTime = 0.0;
+
+#ifdef GEODE_IS_WINDOWS
+    currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x2c20);
+#endif
+#ifdef GEODE_IS_ANDROID
+    currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x3480);
+#endif
     
     m_timeLabelLevel = TextArea::create(
         gd::string(
             cocos2d::CCString::createWithFormat(
                 timeTextFormat,
-                Utils::from<double>(Utils::getplayLayerA(), 0x2c20),
+                currentTime,
                 bestTimeSeconds,
                 estimatedTime
             )->getCString()
@@ -66,12 +74,21 @@ bool ProgressPlataformerBetter::init() {
 
     //auto pointsCurrent = GameToolbox::poi
 
+    int currentPoints = 0;
+
+#ifdef GEODE_IS_WINDOWS
+    currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x5d8);
+#endif
+#ifdef GEODE_IS_ANDROID
+    currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x348c);
+#endif
+
 
     m_pointsLabelLevel = TextArea::create(
         gd::string(
             cocos2d::CCString::createWithFormat(
                 pointTextFormat,
-                Utils::from<int>(Utils::getplayLayerA(), 0x5d8),
+                currentPoints,
                 Utils::getplayLayerA()->m_level->m_bestPoints,
                 ProgressPlataformerBetter::m_totalPoints
             )->getCString()

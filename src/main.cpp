@@ -16,6 +16,7 @@
 
 using namespace geode::prelude;
 
+#ifdef GEODE_IS_WINDOWS
 namespace matdash {
 	struct Console {
 		std::ofstream out, in;
@@ -39,13 +40,10 @@ namespace matdash {
 		static Console console;
 	}
 }
-
+#endif
 
 class $modify(PauseLayer) {
 	static PauseLayer* create(bool isEditor) {
-
-		
-
 		auto ret = PauseLayer::create(isEditor);
 
 		for (size_t i = 1; i < ret->getChildrenCount(); i++)
@@ -61,8 +59,6 @@ class $modify(PauseLayer) {
 		betterPauseMenu->setID("better-pause-node");
 		ret->addChild(betterPauseMenu, 100);
 
-		
-
 		return ret;
 	}
 
@@ -74,6 +70,10 @@ class $modify(PauseLayer) {
 			popuBetterPause->removeFromParentAndCleanup(true);
 			popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 		}
+
+#ifdef GEODE_IS_ANDROID
+		Utils::getplayLayerA()->m_uiLayer->enableMenu();
+#endif
 
 		PauseLayer::onResume(sender);
 	}
@@ -103,9 +103,20 @@ class $modify(PlayLayer) {
 
 		auto effectGameObjectPtr = dynamic_cast<EffectGameObject*>(p0);
 
+		intptr_t offsetTypeObject = 0;
+		intptr_t offsetPointsXObj = 0;
+
+#ifdef GEODE_IS_WINDOWS
+		offsetTypeObject = 0x31c;
+		offsetPointsXObj = 0x5f8;
+#endif
+#ifdef GEODE_IS_ANDROID
+		offsetTypeObject = 0x388;
+		offsetPointsXObj = 0x690;
+#endif
 		if (effectGameObjectPtr) {
 			if (Utils::from<int>(effectGameObjectPtr, 0x31c) == 0x1e) {
-				ProgressPlataformerBetter::m_totalPoints += Utils::from<int>(effectGameObjectPtr, 0x5f8);
+				ProgressPlataformerBetter::m_totalPoints += Utils::from<int>(effectGameObjectPtr, offsetPointsXObj);
 				//std::cout << maximolkjnbv << std::endl;
 			}
 		}
@@ -169,7 +180,11 @@ class $modify(GameOptionsLayer) {
 
 	static GameOptionsLayer* create(GJBaseGameLayer * layer) {
 
-		if (Utils::getplayLayerA() == layer) {
+		BetterPause::quickSettings_NameG.clear();
+		BetterPause::quickSettings_numberG.clear();
+		BetterPause::quickSettings_enabledG.clear();
+
+		if (Utils::getplayLayerA()) {
 			GameOptionsLayer_getSettings = true;
 		}
 
@@ -184,21 +199,21 @@ class $modify(GameOptionsLayer) {
 
 class $modify(GJOptionsLayer) {
 
-	void addToggle(char const* p1, int p2 , bool p3 , char const* p4) {
+	void addToggle(char const* p1, int p2, bool p3, char const* p4) {
 		GJOptionsLayer::addToggle(p1, p2, p3, p4);
 
-		BetterPause::quickSettings_NameG.resize(10);
-		BetterPause::quickSettings_numberG.resize(10);
-		BetterPause::quickSettings_enabledG.resize(10);
+		if (GameOptionsLayer_getSettings) {
+			if (p2 > 0 && p2 <= 10) { // Verificar límites del índice
+				BetterPause::quickSettings_NameG.resize(10);
+				BetterPause::quickSettings_numberG.resize(10);
+				BetterPause::quickSettings_enabledG.resize(10);
 
-		BetterPause::quickSettings_NameG[p2 - 1] = p1;
-		BetterPause::quickSettings_numberG[p2 - 1] = p2;
-		BetterPause::quickSettings_enabledG[p2 - 1] = p3;
-
-		
-
+				BetterPause::quickSettings_NameG[p2 - 1] = p1;
+				BetterPause::quickSettings_numberG[p2 - 1] = p2;
+				BetterPause::quickSettings_enabledG[p2 - 1] = p3;
+			}
+		}
 	}
-
 };
 
 class $modify(GameToolbox) {
@@ -236,7 +251,9 @@ class $modify(CustomSongWidget) {
 };
 
 $on_mod(Loaded) {
+#ifdef GEODE_IS_WINDOWS
 	//matdash::create_console();
+#endif
 	BetterPauseManager::sharedState()->loadState();
 }
 

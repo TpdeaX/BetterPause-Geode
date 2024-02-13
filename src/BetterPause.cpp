@@ -46,7 +46,7 @@ void BetterPause::update(float dt) {
 	}
 
 	if (this->m_pCustomSongWidget->m_artistLabel && this->m_pCustomSongWidget->m_moreBtn) {
-		auto labelPos = this->m_pCustomSongWidget->m_artistLabel->getPosition();
+		CCPoint labelPos = this->m_pCustomSongWidget->m_artistLabel->getPosition();
 		auto labelWidth = this->m_pCustomSongWidget->m_artistLabel->getContentSize().width * this->m_pCustomSongWidget->m_artistLabel->getScale();
 
 		auto menuItemX = labelPos.x + labelWidth - 250.f;
@@ -107,10 +107,15 @@ bool BetterPause::init(PauseLayer* pauLa)
 
 	this->pauseLayer = pauLa;
 
-	this->createQuestMenu();
+	this->clearQuickSettings();
+
+	this->createQuestMenu();	
+
 	this->createButtonsMenu();
+
 	this->createButtonsMenu2();
 	this->createLabels();
+
 
 	if(!Utils::getplayLayerA()->m_level->isPlatformer())
 		this->createBars();
@@ -151,12 +156,22 @@ void BetterPause::createCustomSongWidget() {
 
 	//std::cout << Utils::from<float>(songObj, 0x18c) << std::endl;
 
-	if (Utils::from<float>(songObj, 0x18c) != 0.f) {
+	intptr_t offsetUnkFloatCSW = 0;
+
+#ifdef GEODE_IS_WINDOWS
+	offsetUnkFloatCSW = 0x18c;
+#endif
+#ifdef GEODE_IS_ANDROID
+	offsetUnkFloatCSW = 0x170;
+#endif
+
+
+	if (Utils::from<float>(songObj, offsetUnkFloatCSW) != 0.f) {
 		this->m_pCustomSongWidget->onGetSongInfo(nullptr);
 	}
 
-	auto m_songIDs = GameManager::sharedState()->getPlayLayer()->m_level->m_songIDs;
-	auto m_sfxIDs = GameManager::sharedState()->getPlayLayer()->m_level->m_sfxIDs;
+	gd::string m_songIDs = GameManager::sharedState()->getPlayLayer()->m_level->m_songIDs;
+	gd::string m_sfxIDs = GameManager::sharedState()->getPlayLayer()->m_level->m_sfxIDs;
 
 	this->m_pCustomSongWidget->updateWithMultiAssets(m_songIDs, m_sfxIDs, 0);
 
@@ -201,45 +216,6 @@ void BetterPause::createQuickButtons() {
 		else {
 			this->createToggleButtonWithGameVariable(BetterPause::quickSettings_Key[posA].c_str(), m_pMenuButtonsConfig, BetterPause::quickSettings_Name[posA].c_str(), { xPos, yPos }, 0.25f, true);
 		}
-
-		/*
-		if (posA == -2) {
-			this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarA, Utils::shareManager()->m_showProgressBar, m_pMenuButtonsConfig, "Progress Bar", { xPos, yPos }, 0.25f, true, -1);
-		}
-		else if (BetterPause::quickSettings_Name[posA].c_str() != nullptr) {
-			if (BetterPause::quickSettings_Key[posA] == "0040") {
-				this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarPercentageA, "0040", m_pMenuButtonsConfig, "Progress %", { xPos, yPos }, 0.25f, true, -1);
-			}
-			else {
-				this->createToggleButtonWithGameVariable(BetterPause::quickSettings_Key[posA].c_str(), m_pMenuButtonsConfig, BetterPause::quickSettings_Name[posA].c_str(), { xPos, yPos }, 0.25f, true);
-			}
-		}
-		else {
-			for (size_t j = 0; j < 6; j++) {
-				bool romp = false;
-				for (size_t k = 0; k < 6; k++) {
-					if (BetterPauseManager::sharedState()->posQuickASafe[j] == BetterPauseManager::sharedState()->posQuickA[k]) {
-						break;
-					}
-					if (j + 1 == 6 && BetterPauseManager::sharedState()->posQuickASafe[j] != BetterPauseManager::sharedState()->posQuickA[k]) {
-						BetterPauseManager::sharedState()->posQuickA[i] = BetterPauseManager::sharedState()->posQuickASafe[j];
-						romp = true;
-						break;
-					}
-				}
-				if (romp) {
-					break;
-				}
-			}
-			if (BetterPause::quickSettings_Key[posA] == "0040") {
-				this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onProgressBarPercentageA, "0040", m_pMenuButtonsConfig, "Progress %", { xPos, yPos }, 0.25f, true, -1);
-			}
-			else {
-				this->createToggleButtonWithGameVariable(BetterPause::quickSettings_Key[posA].c_str(), m_pMenuButtonsConfig, BetterPause::quickSettings_Name[posA].c_str(), { xPos, yPos }, 0.25f, true);
-			}
-				
-		}
-		*/
 	}
 
 	this->clearQuickSettings();
@@ -284,22 +260,6 @@ void BetterPause::createButtonsMenu() {
 	m_buttonsList->setContentSize({ 45.f, 180.f });
 	menuScrollButtons->addChild(m_buttonsList);
 
-	upBtnSpriteList = cocos2d::CCSprite::createWithSpriteFrameName("edit_upBtn_001.png");
-	upBtnSpriteList->setScaleX(2.f);
-	upBtnSpriteList->setScaleY(1.4f);
-	upBtnSpriteList->setPosition({ 40.f, Utils::WinSize().height - 15.f });
-	menuScrollButtons->addChild(upBtnSpriteList);
-
-	downBtnSpriteList = cocos2d::CCSprite::createWithSpriteFrameName("edit_downBtn_001.png");
-	downBtnSpriteList->setScaleX(2.f);
-	downBtnSpriteList->setScaleY(1.4f);
-	downBtnSpriteList->setPosition({ 40.f, Utils::WinSize().height - 213.f });
-	menuScrollButtons->addChild(downBtnSpriteList);
-
-	if (!Mod::get()->getSettingValue<bool>("disable-arrow-blink")) {
-		upBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
-		downBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
-	}
 
 	float totalHeight = 0.0f;
 
@@ -407,7 +367,7 @@ void BetterPause::createButtonsMenu() {
 
 	m_buttonsList->m_contentLayer->setContentSize({ LAYER_SIZE.width, totalHeight });
 	m_buttonsList->moveToTop();
-	m_buttonsList->setContentSize({ 45.f, 180.f });
+	m_buttonsList->setContentSize({ 50.f, 180.f });
 
 	totalHeightButtonsList = m_buttonsList->m_contentLayer->getPositionY();
 }
@@ -438,8 +398,35 @@ void BetterPause::createButtonsMenu2() {
 	auto firstButtonRect = m_pVisibleButton->boundingBox();
 	settingsButton->setPositionY(firstButtonRect.getMaxY() + 22.f);
 
+
+	upBtnSpriteList = cocos2d::CCSprite::createWithSpriteFrameName("edit_upBtn_001.png");
+	upBtnSpriteList->setScaleX(2.f);
+	upBtnSpriteList->setScaleY(1.4f);
+	m_upBtnSpriteListBtn = CCMenuItemSpriteExtra::create(upBtnSpriteList, this, (cocos2d::SEL_MenuHandler)&BetterPause::onScrollUpButton);
+	m_upBtnSpriteListBtn->setPosition({ 0.f, Utils::WinSize().height - 57.f });
+	m_pMenuButtons2->addChild(m_upBtnSpriteListBtn);
+
+	downBtnSpriteList = cocos2d::CCSprite::createWithSpriteFrameName("edit_downBtn_001.png");
+	downBtnSpriteList->setScaleX(2.f);
+	downBtnSpriteList->setScaleY(1.4f);
+	m_downBtnSpriteListBtn = CCMenuItemSpriteExtra::create(downBtnSpriteList, this, (cocos2d::SEL_MenuHandler)&BetterPause::onScrollDownButton);
+	m_downBtnSpriteListBtn->setPosition({ 0.f, Utils::WinSize().height - 255.f });
+	m_pMenuButtons2->addChild(m_downBtnSpriteListBtn);
+
+	if (!Mod::get()->getSettingValue<bool>("disable-arrow-blink")) {
+		upBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
+		downBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
+	}
+
+
 	m_pSliderMusic = Slider::create(this, (cocos2d::SEL_MenuHandler)&BetterPause::musicSliderChanged, 1.f);
+#ifdef GEODE_IS_ANDROID
+	m_pSliderMusic->setValue(Utils::shareFMOD()->getBackgroundMusicVolume());
+#endif
+#ifdef GEODE_IS_WINDOWS
 	m_pSliderMusic->setValue(Utils::from<float>(Utils::shareFMOD(), 0x168));
+#endif
+	
 	m_pSliderMusic->setScale(0.8f);
 	m_pSliderMusic->setAnchorPoint({ 0.f, 0.5f });
 	m_pSliderMusic->setPosition({ Utils::WinSize().width - 155.f, Utils::WinSize().height - 90.f });
@@ -447,7 +434,12 @@ void BetterPause::createButtonsMenu2() {
 
 
 	m_pSliderSFX = Slider::create(this, (cocos2d::SEL_MenuHandler)&BetterPause::sfxSliderChanged, 1.f);
+#ifdef GEODE_IS_WINDOWS
 	m_pSliderSFX->setValue(Utils::from<float>(Utils::shareFMOD(), 0x16C));
+#endif
+#ifdef GEODE_IS_ANDROID
+	m_pSliderSFX->setValue(Utils::shareFMOD()->getEffectsVolume());
+#endif
 	m_pSliderSFX->setScale(0.8f);
 	m_pSliderSFX->setAnchorPoint({ 0.f, 0.5f });
 	m_pSliderSFX->setPosition({ Utils::WinSize().width - 155.f, Utils::WinSize().height - 120.f });
@@ -534,12 +526,29 @@ void BetterPause::createLabels() {
 		timeColorD = Utils::getplayLayerA()->m_isPracticeMode ? "Time Total: <cj>%02d:%02d</c>" : "Time Total: <cg>%02d:%02d</c>";
 	}
 
+#ifdef GEODE_IS_WINDOWS
 	m_pAttemptCurrentLevelLabel = TextArea::create(gd::string(cocos2d::CCString::createWithFormat(attemptColorD, Utils::from<int>(Utils::getplayLayerA(), 0x29ac))->getCString()), "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 0.f, false);
+#endif
+#ifdef GEODE_IS_ANDROID
+	m_pAttemptCurrentLevelLabel = TextArea::create(gd::string(cocos2d::CCString::createWithFormat(attemptColorD, Utils::from<int>(Utils::getplayLayerA(), 0x29cc))->getCString()), "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 0.f, false);
+#endif
+
 	m_pAttemptCurrentLevelLabel->setPosition({ 86.f + (m_pAttemptCurrentLevelLabel->getContentSize().width / 2),
 		Utils::WinSize().height - 60.f });
 	this->addChild(m_pAttemptCurrentLevelLabel);
 
-	int totalSeconds = std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x320));
+	int totalSeconds = 0;
+
+#ifdef GEODE_IS_WINDOWS
+	totalSeconds = std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x320));
+#endif
+#ifdef GEODE_IS_ANDROID
+	std::stringstream fhfg;
+	//totalSeconds = std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x318));
+	fhfg << "totalSeconds";
+	FLAlertLayer::create("erfgv", gd::string(fhfg.str().c_str()), "hello");
+	totalSeconds = 0;
+#endif
 
 	if (Utils::getplayLayerA()->m_level->isPlatformer()) {
 		totalSeconds = BetterPause::m_timeTotalLevelBackup;
@@ -585,57 +594,21 @@ void BetterPause::onInfoLevelLayer(cocos2d::CCObject* pSender) {
 }
 
 void BetterPause::musicSliderChanged(cocos2d::CCObject* pSender) {
-
-	//auto musicSliderPM = reinterpret_cast<Slider*>(this->pauseLayer->getChildByTag(9));
 	auto valueV = this->m_pSliderMusic->getThumb()->getValue();
-	//musicSliderPM->setValue(valueV);
 	this->pauseLayer->musicSliderChanged(pSender);
 	this->m_pLabelMusicVPercentage->setString(
 		cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(valueV * 100))->getCString());
 
 	return;
-
-	//this->pauseLayer->musicSliderChanged(pSender);
-	//return;
-	//auto valueV = this->m_pSliderMusic->getThumb()->getValue();
-	//Utils::shareFMOD()->m_globalChannel->setVolume(valueV);
-
-
-	//float zzz = 0.f;
-	//Utils::shareFMOD()->m_globalChannel->getVolume(&zzz);
-
-	//this->m_pLabelMusicVPercentage->setString(
-	//	cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(zzz * 100))->getCString());
-
-	
 }
 
 void BetterPause::sfxSliderChanged(cocos2d::CCObject* pSender) {
-
-	//auto sfxSliderPM = reinterpret_cast<Slider*>(this->pauseLayer->getChildByTag(10));
 	auto valueV = this->m_pSliderSFX->getThumb()->getValue();
-	//sfxSliderPM->setValue(valueV);
 	this->pauseLayer->sfxSliderChanged(pSender);
 	this->m_pLabelSFXVPercentage->setString(
 		cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(valueV * 100))->getCString());
 
 	return;
-
-
-	//this->pauseLayer->sfxSliderChanged(pSender);
-	//return;
-	//MessageBoxA(0, std::to_string((float)Utils::from<float>(Utils::shareFMOD(), 0x16C)).c_str(), "e", 0);
-	//return;
-	//MessageBoxA(0, std::to_string((float)Utils::from<float>(Utils::shareFMOD(), 0x16C)).c_str(), "e", 0);
-
-	//Utils::from<float>(Utils::shareFMOD(), 0x16C) = valueV;
-	//Utils::shareFMOD()->m_currentSoundChannel->setVolume(valueV);
-
-	//float zzz = 0.f;
-	//Utils::shareFMOD()->m_currentSoundChannel->getVolume(&zzz);
-
-
-	
 }
 
 void BetterPause::onSetValueMusic(cocos2d::CCObject* pSender) {
@@ -872,4 +845,33 @@ void BetterPause::findButtonsRecursively(CCNode* node, std::vector<std::string>&
 
 void BetterPause::tryGetExternalButtonsMods() {
 	
+}
+
+void BetterPause::onScrollUpButton(cocos2d::CCObject* sender) {
+	float scrollAmount = m_buttonsList->m_contentLayer->getPositionY() - static_cast<float>(Mod::get()->getSettingValue<double>("amount-scroll-button"));
+	float newContentPosY = 0.f;
+
+	if (scrollAmount < totalHeightButtonsList) {
+		newContentPosY = totalHeightButtonsList;
+	}
+	else {
+		newContentPosY = scrollAmount;
+	}
+
+	m_buttonsList->m_contentLayer->setPositionY(newContentPosY);
+}
+
+void BetterPause::onScrollDownButton(cocos2d::CCObject* sender) {
+
+	float scrollAmount = m_buttonsList->m_contentLayer->getPositionY() + static_cast<float>(Mod::get()->getSettingValue<double>("amount-scroll-button"));
+	float newContentPosY = 0.f;
+
+	if (scrollAmount > 0.f) {
+		newContentPosY = 0.f;
+	}
+	else {
+		newContentPosY = scrollAmount;
+	}
+
+	m_buttonsList->m_contentLayer->setPositionY(newContentPosY);
 }

@@ -1,7 +1,7 @@
 {
   "geode": "2.0.0",
   "gd": "2.204",
-  "version": "v1.5.5",
+  "version": "v1.5.6",
   "id": "tpdea.betterpause-Better",
   "name": "BetterPause",
   "developer": "Tpdea",
@@ -30,6 +30,17 @@
       "description": "Disable Button List Arrow Blink.",
       "type": "bool",
       "default": false
+    },
+    "amount-scroll-button": {
+      "name": "Scroll Amount Button",
+      "description": "How much space the button list moves up and down with the up and down buttons.",
+      "type": "float",
+      "default": 20.0,
+      "min": 1.0,
+      "control": {
+        "arrows": true,
+        "slider": false
+      }
     }
   },
   "resources": {
@@ -39,12 +50,5 @@
   },
   "tags": [
     "Customization"
-  ],
-  "dependencies": [
-    {
-      "id": "geode.node-ids",
-      "version": ">=v1.3.0",
-      "importance": "required"
-    }
   ]
 }

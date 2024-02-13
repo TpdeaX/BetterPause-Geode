@@ -58,6 +58,8 @@ public:
 	ScrollLayer* m_buttonsList = nullptr;
 	cocos2d::CCSprite* upBtnSpriteList = nullptr;
 	cocos2d::CCSprite* downBtnSpriteList = nullptr;
+	CCMenuItemSpriteExtra* m_upBtnSpriteListBtn = nullptr;
+	CCMenuItemSpriteExtra* m_downBtnSpriteListBtn = nullptr;
 	float totalHeightButtonsList = 0.f;
 
 	static BetterPause* create(PauseLayer*);
@@ -102,4 +104,6 @@ public:
 	void onPracticeMusicSyncRedirection(cocos2d::CCObject* pSender);
 	void tryGetExternalButtonsMods();
 	void findButtonsRecursively(CCNode* node, std::vector<std::string>& buttonIds, std::vector<CCMenuItemSpriteExtra*>& buttonsExternals);
+	void onScrollUpButton(cocos2d::CCObject* sender);
+	void onScrollDownButton(cocos2d::CCObject* sender);
 };
