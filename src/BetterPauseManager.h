@@ -2,6 +2,7 @@
 
 #include <Geode/utils/web.hpp>
 #include <Geode/loader/Event.hpp>
+#include "Utils.hpp"
 #include <optional>
 #include <map>
 #include <unordered_map>
@@ -14,8 +15,8 @@ protected:
     inline static BetterPauseManager* m_instance = nullptr;
     
 public:
-    int posQuickASafe[6] = { -10, -4, -5, -2, 4, 5 };
-    int posQuickA[6] = { -10, -4, -5, -2, 4, 5 };
+    std::vector<int> posQuickASafe = { -2, -4, -5, -11, 4, 5 };
+    std::vector<int> posQuickA = { -2, -4, -5, -11, 4, 5 };
 
     static BetterPauseManager* sharedState() {
         if (m_instance == nullptr) {

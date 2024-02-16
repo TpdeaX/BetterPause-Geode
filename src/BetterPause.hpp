@@ -23,6 +23,7 @@ public:
 	static std::vector<int> quickSettings_numberG;
 	static std::vector<bool> quickSettings_enabledG;
 	static float m_timeTotalLevelBackup;
+	static std::vector<GameObject*> coinsObjects;
 
 	cocos2d::CCMenu* m_pMenuButtons = nullptr;
 	cocos2d::CCMenu* m_pMenuButtons2 = nullptr;
@@ -61,6 +62,8 @@ public:
 	CCMenuItemSpriteExtra* m_upBtnSpriteListBtn = nullptr;
 	CCMenuItemSpriteExtra* m_downBtnSpriteListBtn = nullptr;
 	float totalHeightButtonsList = 0.f;
+	cocos2d::CCLabelBMFont* m_pNameCreatorLevelLabel = nullptr;
+
 
 	static BetterPause* create(PauseLayer*);
 	bool init(PauseLayer*);
@@ -106,4 +109,5 @@ public:
 	void findButtonsRecursively(CCNode* node, std::vector<std::string>& buttonIds, std::vector<CCMenuItemSpriteExtra*>& buttonsExternals);
 	void onScrollUpButton(cocos2d::CCObject* sender);
 	void onScrollDownButton(cocos2d::CCObject* sender);
+	void fixLayeror4_3AspectRation();
 };

@@ -6,6 +6,7 @@ std::vector<std::string> BetterPause::quickSettings_Key = {};
 std::vector<std::string> BetterPause::quickSettings_NameG = {};
 std::vector<int> BetterPause::quickSettings_numberG = {};
 std::vector<bool> BetterPause::quickSettings_enabledG = {};
+std::vector<GameObject*>  BetterPause::coinsObjects = {};
 float BetterPause::m_timeTotalLevelBackup = 0.f;
 
 BetterPause* BetterPause::create(PauseLayer* pauLa)
@@ -25,25 +26,29 @@ BetterPause* BetterPause::create(PauseLayer* pauLa)
 
 void BetterPause::update(float dt) {
 
-	if (totalHeightButtonsList != 0.f) {
-		if (totalHeightButtonsList < m_buttonsList->m_contentLayer->getPositionY() &&
-			0.f > m_buttonsList->m_contentLayer->getPositionY()) {
-			this->upBtnSpriteList->setVisible(true);
-			this->downBtnSpriteList->setVisible(true);
+	if (!Mod::get()->getSettingValue<bool>("disable-arrow-buttons")) {
+		if (totalHeightButtonsList != 0.f) {
+			if (totalHeightButtonsList < m_buttonsList->m_contentLayer->getPositionY() &&
+				0.f > m_buttonsList->m_contentLayer->getPositionY()) {
+				this->upBtnSpriteList->setVisible(true);
+				this->downBtnSpriteList->setVisible(true);
+			}
+			else if (m_buttonsList->m_contentLayer->getPositionY() >= 0.f) {
+				this->upBtnSpriteList->setVisible(true);
+				this->downBtnSpriteList->setVisible(false);
+			}
+			else if (m_buttonsList->m_contentLayer->getPositionY() <= totalHeightButtonsList) {
+				this->upBtnSpriteList->setVisible(false);
+				this->downBtnSpriteList->setVisible(true);
+			}
 		}
-		else if (m_buttonsList->m_contentLayer->getPositionY() >= 0.f) {
-			this->upBtnSpriteList->setVisible(true);
+		else {
+			this->upBtnSpriteList->setVisible(false);
 			this->downBtnSpriteList->setVisible(false);
 		}
-		else if (m_buttonsList->m_contentLayer->getPositionY() <= totalHeightButtonsList) {
-			this->upBtnSpriteList->setVisible(false);
-			this->downBtnSpriteList->setVisible(true);
-		}
 	}
-	else {
-		this->upBtnSpriteList->setVisible(false);
-		this->downBtnSpriteList->setVisible(false);
-	}
+
+
 
 	if (this->m_pCustomSongWidget->m_artistLabel && this->m_pCustomSongWidget->m_moreBtn) {
 		CCPoint labelPos = this->m_pCustomSongWidget->m_artistLabel->getPosition();
@@ -107,9 +112,12 @@ bool BetterPause::init(PauseLayer* pauLa)
 
 	this->pauseLayer = pauLa;
 
+
 	this->clearQuickSettings();
 
-	this->createQuestMenu();	
+	this->createQuestMenu();
+
+
 
 	this->createButtonsMenu();
 
@@ -117,7 +125,7 @@ bool BetterPause::init(PauseLayer* pauLa)
 	this->createLabels();
 
 
-	if(!Utils::getplayLayerA()->m_level->isPlatformer())
+	if (!Utils::getplayLayerA()->m_level->isPlatformer())
 		this->createBars();
 	else
 		this->createTimesPlatformer();
@@ -126,6 +134,8 @@ bool BetterPause::init(PauseLayer* pauLa)
 	this->createCustomSongWidget();
 	this->createTitlesSeccion();
 	this->tryGetExternalButtonsMods();
+
+	this->fixLayeror4_3AspectRation();
 
 	return true;
 }
@@ -175,7 +185,7 @@ void BetterPause::createCustomSongWidget() {
 
 	this->m_pCustomSongWidget->updateWithMultiAssets(m_songIDs, m_sfxIDs, 0);
 
-	
+
 }
 
 void BetterPause::createQuickButtons() {
@@ -183,7 +193,7 @@ void BetterPause::createQuickButtons() {
 	m_pMenuButtonsConfig = cocos2d::CCMenu::create();
 	this->addChild(m_pMenuButtonsConfig);
 
-	
+
 	this->handleOptionsLayers();
 
 	auto xPosButtonsToggles = Mod::get()->getSavedValue<bool>("pos-switch-buttons") == 1 ? 196.f : 250.f;
@@ -202,12 +212,13 @@ void BetterPause::createQuickButtons() {
 
 		xPos = xPosRES[i];
 		yPos = yPosRES[i];
-		
+
 
 		if (posA < -1) {
 
-			if (posA == -10) {
+			if (posA == -11) {
 				this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onPracticeMusicSyncRedirection, GameStatsManager::sharedState()->isItemEnabled(UnlockType::GJItem, 0x11), m_pMenuButtonsConfig, "Practice Music Sync", { xPos, yPos }, 0.25f, true, posA);
+				
 			}
 			else {
 				this->createToggleButton((cocos2d::SEL_MenuHandler)&BetterPause::onToogleRedirection, quickSettings_enabledG[-posA - 2], m_pMenuButtonsConfig, quickSettings_NameG[-posA - 2], { xPos, yPos }, 0.25f, true, posA);
@@ -230,7 +241,13 @@ void BetterPause::createQuestMenu() {
 	m_pQuestMenu->setOpacity(0);
 	m_pQuestMenu->setPosition({ (Utils::WinSize().width / 2) - 150.f, -50.f }); // 140.f, -40.f
 	m_pQuestMenu->setKeyboardEnabled(false);
+	m_pQuestMenu->unregisterScriptKeypadHandler();
+	this->m_pQuestMenu->setTouchEnabled(false);
 	m_pQuestMenu->setKeypadEnabled(false);
+	this->m_pQuestMenu->setTouchPriority(-10);
+	this->m_pQuestMenu->unregisterScriptTouchHandler();
+	Utils::shareDirectorA()->getTouchDispatcher()->unregisterForcePrio(this->m_pQuestMenu);
+
 
 	for (size_t i = 0; i < m_pQuestMenu->m_mainLayer->getChildrenCount(); i++)
 	{
@@ -347,7 +364,13 @@ void BetterPause::createButtonsMenu() {
 		auto buttonExt = menuButtonsDetected[i];
 		if (buttonExt) {
 			typeinfo_cast<CCSprite*>(buttonExt->getChildren()->objectAtIndex(0))->setScale(0.6f);
-			totalHeight += buttonExt->getContentSize().height - 10.f;
+			if (i == 0) {
+				totalHeight += buttonExt->getContentSize().height - 10.f;
+			}
+			else {
+				totalHeight += (buttonExt->getContentSize().height + menuButtonsDetected[i - 1]->getContentSize().height) / 2 - 10.f;
+			}
+
 			createButtonMenu(buttonExt);
 		}
 	}
@@ -418,6 +441,11 @@ void BetterPause::createButtonsMenu2() {
 		downBtnSpriteList->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
 	}
 
+	if (Mod::get()->getSettingValue<bool>("disable-arrow-buttons")) {
+		upBtnSpriteList->setVisible(false);
+		downBtnSpriteList->setVisible(false);
+	}
+
 
 	m_pSliderMusic = Slider::create(this, (cocos2d::SEL_MenuHandler)&BetterPause::musicSliderChanged, 1.f);
 #ifdef GEODE_IS_ANDROID
@@ -426,7 +454,7 @@ void BetterPause::createButtonsMenu2() {
 #ifdef GEODE_IS_WINDOWS
 	m_pSliderMusic->setValue(Utils::from<float>(Utils::shareFMOD(), 0x168));
 #endif
-	
+
 	m_pSliderMusic->setScale(0.8f);
 	m_pSliderMusic->setAnchorPoint({ 0.f, 0.5f });
 	m_pSliderMusic->setPosition({ Utils::WinSize().width - 155.f, Utils::WinSize().height - 90.f });
@@ -477,8 +505,38 @@ void BetterPause::createLabels() {
 	m_pNameLevelLabel = cocos2d::CCLabelBMFont::create(Utils::getplayLayerA()->m_level->m_levelName.c_str(), "goldFont.fnt");
 	m_pNameLevelLabel->limitLabelWidth(150.f, 1.f, 0.1f);
 	m_pNameLevelLabel->setAnchorPoint({ 0.f, 0.5f });
-	m_pNameLevelLabel->setPosition({ 86.f, Utils::WinSize().height - 30.f});
+	m_pNameLevelLabel->setPosition({ 86.f, Utils::WinSize().height - 30.f });
 	this->addChild(m_pNameLevelLabel);
+
+	auto getCreatorName = [](GJGameLevel* lvl)
+		{
+
+			auto nameCreator = std::string(lvl->m_creatorName.c_str());
+
+			if (nameCreator.empty()) {
+				if (lvl->m_levelType == GJLevelType::Local) {
+					nameCreator = "RobTop";
+				}
+				else {
+					nameCreator = "-";
+				}
+			}
+
+			return "By " + nameCreator;
+		};
+
+
+	
+
+	if (!Mod::get()->getSettingValue<bool>("disable-creator-label")) {
+		m_pNameCreatorLevelLabel = cocos2d::CCLabelBMFont::create(getCreatorName(Utils::getplayLayerA()->m_level).c_str(), "bigFont.fnt");
+		m_pNameCreatorLevelLabel->limitLabelWidth(150.f, 0.3f, 0.1f);
+		m_pNameCreatorLevelLabel->setAnchorPoint({ 0.f, 0.5f });
+		m_pNameCreatorLevelLabel->setScale(0.3f);
+		m_pNameCreatorLevelLabel->setPosition({ 87.f, Utils::WinSize().height - 18.f });
+		this->addChild(m_pNameCreatorLevelLabel);
+	}
+	
 
 	auto getNameLevelType = [](GJLevelType type)
 		{
@@ -558,9 +616,9 @@ void BetterPause::createLabels() {
 	int seconds = totalSeconds % 60;
 
 
-	m_pTimeCurrentLevelLabel = TextArea::create(gd::string(cocos2d::CCString::createWithFormat(timeColorD.c_str(), minutes, seconds)->getCString()), "bigFont.fnt", 0.3f, 100.f, {0.f, 1.f}, 0.f, false);
+	m_pTimeCurrentLevelLabel = TextArea::create(gd::string(cocos2d::CCString::createWithFormat(timeColorD.c_str(), minutes, seconds)->getCString()), "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 0.f, false);
 	m_pTimeCurrentLevelLabel->setPosition({ 195.f + (m_pTimeCurrentLevelLabel->getContentSize().width / 2),
-										   Utils::WinSize().height - 60.f});
+										   Utils::WinSize().height - 60.f });
 	this->addChild(m_pTimeCurrentLevelLabel);
 }
 
@@ -570,13 +628,13 @@ void BetterPause::createBars() {
 	cocos2d::ccColor3B bluesky_Color = { 0, 255, 255 };
 
 	m_pNormalBarPerB = BarBetterShow::create(green_Color, !Utils::getplayLayerA()->m_isPracticeMode, !Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_normalPercent);
-	m_pNormalBarPerB->setPosition({ 86.f, Utils::WinSize().height - 90.f});
+	m_pNormalBarPerB->setPosition({ 86.f, Utils::WinSize().height - 90.f });
 	m_pNormalBarPerB->setScale(0.5f);
 	m_pNormalBarPerB->m_pBarBase->setVisible(true);
 	m_pNormalBarPerB->m_pBarBase->setOpacity(Utils::convertOpacitySimplf(0.2f));
 	this->addChild(m_pNormalBarPerB);
 
-	
+
 
 	m_pPracticeBarPerB = BarBetterShow::create(bluesky_Color, Utils::getplayLayerA()->m_isPracticeMode, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_practicePercent);
 	m_pPracticeBarPerB->setPosition({ 86.f, Utils::WinSize().height - 125.f });
@@ -684,6 +742,13 @@ void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 	text->setPosition({ pos.x - 15.f, pos.y });
 	text->setAnchorPoint({ 1.f, 0.5f });
 	this->addChild(text);
+
+	if (std::string(caption.c_str()) == "Practice Music Sync" && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
+		reinterpret_cast<CCSprite*>(reinterpret_cast<CCMenuItemSpriteExtra*>(toggleButton->getChildren()->objectAtIndex(0))->getChildren()->objectAtIndex(0))->setColor({ 150,150,150 });
+		reinterpret_cast<CCSprite*>(reinterpret_cast<CCMenuItemSpriteExtra*>(toggleButton->getChildren()->objectAtIndex(1))->getChildren()->objectAtIndex(0))->setColor({ 150,150,150 });
+		text->setColor({ 150,150,150 });
+	}
+
 }
 
 void BetterPause::onOptionsLayer(cocos2d::CCObject* pSender) {
@@ -794,7 +859,7 @@ void BetterPause::onToogleRedirection(cocos2d::CCObject* pSender) {
 	auto toggleTag = toggleButton->getTag();
 
 	if (toggleTag != -1) {
-		gameOptionsLayer->didToggle(-toggleTag - 1);
+		gameOptionsLayer->didToggleAAAA(-toggleTag - 1);
 	}
 
 	gameOptionsLayer->onClose(nullptr);
@@ -821,6 +886,12 @@ void BetterPause::onPracticeMusicSyncRedirection(cocos2d::CCObject* pSender) {
 	gameOptionsLayer->onClose(nullptr);
 	CC_SAFE_DELETE(gameOptionsLayer);
 
+	if (!GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
+		toggleButton->m_offButton->setVisible(true);
+		toggleButton->m_onButton->setVisible(false);
+		toggleButton->toggle(true);
+	}
+
 	this->clearQuickSettings();
 }
 
@@ -844,7 +915,7 @@ void BetterPause::findButtonsRecursively(CCNode* node, std::vector<std::string>&
 }
 
 void BetterPause::tryGetExternalButtonsMods() {
-	
+
 }
 
 void BetterPause::onScrollUpButton(cocos2d::CCObject* sender) {
@@ -874,4 +945,84 @@ void BetterPause::onScrollDownButton(cocos2d::CCObject* sender) {
 	}
 
 	m_buttonsList->m_contentLayer->setPositionY(newContentPosY);
+}
+
+
+bool isSpecificAspectRatio(float targetRatio) {
+	auto director = cocos2d::CCDirector::sharedDirector();
+	auto glview = director->getOpenGLView();
+	auto size = glview->getFrameSize();
+	float aspectRatio = size.width / size.height;
+	return (aspectRatio - targetRatio) == 0;
+}
+
+bool isRoundAspectRatio(float targetRatio) {
+	auto director = cocos2d::CCDirector::sharedDirector();
+	auto glview = director->getOpenGLView();
+	auto size = glview->getFrameSize();
+	float aspectRatio = size.width / size.height;
+	return std::abs(aspectRatio - targetRatio) < 0.01f;
+}
+
+void BetterPause::fixLayeror4_3AspectRation() {
+
+
+	if (isRoundAspectRatio(534.0f / 320.0f)) {
+		this->m_pSliderMusic->setScale(0.7f);
+		this->m_pSliderMusic->setPosition({ Utils::WinSize().width - 143.f, Utils::WinSize().height - 106.f });
+		this->m_pSliderSFX->setScale(0.7f);
+		this->m_pSliderSFX->setPosition({ Utils::WinSize().width - 143.f, Utils::WinSize().height - 137.f });
+		this->m_pVolumenMusicSettingsLabel->setPosition({ Utils::WinSize().width - 240.f, Utils::WinSize().height - 57.f });
+		this->m_pVolumenSFXSettingsLabel->setPosition({ Utils::WinSize().width - 236.f, Utils::WinSize().height - 87.f });
+	}
+
+	if (isSpecificAspectRatio(4.f/ 3.f) || isSpecificAspectRatio(3.f / 2.f) || isSpecificAspectRatio(5.f / 4.f) 
+		|| (isRoundAspectRatio(4.f / 3.f) || isRoundAspectRatio(3.f / 2.f) || isRoundAspectRatio(5.f / 4.f)))
+	{
+
+		this->m_pVolumenMusicSettingsLabel->setScale(0.4f);
+		m_pVolumenMusicSettingsLabel->setPositionX(m_pVolumenMusicSettingsLabel->getPositionX() + 70.f);
+		this->m_pVolumenSFXSettingsLabel->setScale(0.4f);
+		m_pVolumenSFXSettingsLabel->setPositionX(m_pVolumenSFXSettingsLabel->getPositionX() + 70.f);
+		this->m_pSliderMusic->setScale(0.5f);
+		m_pSliderMusic->setPositionX(m_pSliderMusic->getPositionX() + 35.f);
+		this->m_pSliderSFX->setScale(0.5f);
+		m_pSliderSFX->setPositionX(m_pSliderSFX->getPositionX() + 35.f);
+		m_pSliderMusic->setPositionY(m_pSliderMusic->getPositionY() - 58.f);
+		m_pSliderSFX->setPositionY(m_pSliderSFX->getPositionY() - 58.f);
+		this->m_pVolumenSettingsLabel->setScale(0.4f);
+		this->m_pQuestsLabel->setScale(0.4f);
+		if (m_pQuestMenu)
+		{
+			m_pQuestMenu->setScale(0.5f);
+			m_pQuestMenu->setPositionX(m_pQuestMenu->getPositionX() + 35.f);
+		}
+		else if (this->m_pButtonQuestAlt)
+		{
+			this->m_pButtonQuestAlt->setScale(0.5f);
+		}
+
+		this->m_pVolumenMusicSettingsLabel->setPosition({ Utils::WinSize().width - 190.f, Utils::WinSize().height - 57.f });
+		this->m_pVolumenSFXSettingsLabel->setPosition({ Utils::WinSize().width - 188.f, Utils::WinSize().height - 87.f });
+		this->m_pSliderMusic->setPosition({ Utils::WinSize().width - 112.f, Utils::WinSize().height - 148.f });
+		this->m_pSliderSFX->setPosition({ Utils::WinSize().width - 112.f, Utils::WinSize().height - 178.f });
+		this->m_pBtnMusicVPercentage->setPosition({ Utils::WinSize().width - 32.f, Utils::WinSize().height - 57.f });
+		this->m_pBtnSFXVPercentage->setPosition({ Utils::WinSize().width - 32.f, Utils::WinSize().height - 87.f });
+		this->m_pVolumenSettingsLabel->setPosition({ Utils::WinSize().width - 126.f, Utils::WinSize().height - 29.f });
+		this->m_pQuestsLabel->setPosition({ Utils::WinSize().width - 124.f, Utils::WinSize().height - 140.f });
+		if (m_pQuestMenu) {
+			m_pQuestMenu->setPosition({ 123.f, -50.f });
+		}
+		else if (this->m_pButtonQuestAlt) {
+			this->m_pButtonQuestAlt->setPosition(CCDirector::sharedDirector()->getWinSize().width - 210.f, 120.f);
+		}
+	}
+	if (isSpecificAspectRatio(3.f / 2.f)) {
+		this->m_pSliderMusic->setPositionY(this->m_pSliderMusic->getPositionY() + 10.f);
+		this->m_pSliderSFX->setPositionY(this->m_pSliderSFX->getPositionY() + 10.f);
+	}
+	if (isSpecificAspectRatio(5.f / 4.f)) {
+		this->m_pSliderMusic->setPositionY(this->m_pSliderMusic->getPositionY() - 6.f);
+		this->m_pSliderSFX->setPositionY(this->m_pSliderSFX->getPositionY() - 6.f);
+	}
 }

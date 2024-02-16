@@ -1,6 +1,7 @@
 #pragma once
 #include <Geode/Geode.hpp>
 #include <Geode/Bindings.hpp>
+#include <Geode/ui/GeodeUI.hpp>
 #include "Utils.hpp"
 #include "BetterPause.hpp"
 
@@ -15,6 +16,7 @@ public:
 	void onOptionsGame(CCObject* pSender);
 	void onOptionsPause(CCObject* pSender);
 	void keyDown(cocos2d::enumKeyCodes key);
+	void onSettingsMod(CCObject* pSender);
 	
 	CCNode* betterPauseRef = nullptr;
 	cocos2d::extension::CCScale9Sprite* m_pBG = nullptr;

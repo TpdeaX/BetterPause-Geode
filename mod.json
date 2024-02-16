@@ -1,15 +1,15 @@
 {
   "geode": "2.0.0",
   "gd": "2.204",
-  "version": "v1.5.6",
+  "version": "v1.6.0",
   "id": "tpdea.betterpause-Better",
   "name": "BetterPause",
   "developer": "Tpdea",
   "description": "A mod inspired by the collar server, an improvement for the geometry dash pause menu.",
-  "repository": "https://github.com/TpdeaX/BetterPause",
+  "repository": "https://github.com/TpdeaX/BetterPause-Geode",
   "issues": {
     "info": "Report any issues you have on GitHub issues.",
-    "url": "https://github.com/TpdeaX/BetterPause/issues"
+    "url": "https://github.com/TpdeaX/BetterPause-Geode/issues"
   },
   "early-load": false,
   "settings": {
@@ -41,6 +41,23 @@
         "arrows": true,
         "slider": false
       }
+    },
+    "Quick-Settings-Select": {
+      "name": "Quick Settings Select",
+      "description": "NONE",
+      "type": "custom"
+    },
+    "disable-arrow-buttons": {
+      "name": "Disable Arrow Buttons",
+      "description": "Disable Button List Arrow. (This will make the list look choppy, and also mods like Pause Zoom Menu that disable scrolling make it difficult to move the button list.)",
+      "type": "bool",
+      "default": false
+    },
+    "disable-creator-label": {
+      "name": "Disable Creator Level Label",
+      "description": "Disable Creator Level Label.",
+      "type": "bool",
+      "default": false
     }
   },
   "resources": {

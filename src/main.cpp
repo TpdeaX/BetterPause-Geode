@@ -11,8 +11,11 @@
 #include <Geode/modify/GJBaseGameLayer.hpp>
 #include <Geode/ui/GeodeUI.hpp>
 #include <Geode/modify/DailyLevelPage.hpp>
+#include <Geode/modify/DialogObject.hpp>
 #include "BetterPauseManager.h"
 #include "BetterPause.hpp"
+#include "CustomSettings.hpp"
+#include "SelectQuickSettings.h"
 
 using namespace geode::prelude;
 
@@ -65,6 +68,15 @@ class $modify(PauseLayer) {
 	void onResume(cocos2d::CCObject* sender) {
 
 		auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
+
+		auto betterPause = dynamic_cast<BetterPause*>(this->getChildByID("better-pause-node"));
+
+		if (betterPause) {
+			if (betterPause->m_pQuestMenu) {
+				betterPause->m_pQuestMenu->onClose(nullptr);
+			}
+		}
+
 
 		while (popuBetterPause) {
 			popuBetterPause->removeFromParentAndCleanup(true);
@@ -173,7 +185,6 @@ class $modify(MoreOptionsLayer) {
 	}
 };
 
-bool GameOptionsLayer_getSettings = false;
 
 class $modify(GameOptionsLayer) {
 
@@ -185,12 +196,12 @@ class $modify(GameOptionsLayer) {
 		BetterPause::quickSettings_enabledG.clear();
 
 		if (Utils::getplayLayerA()) {
-			GameOptionsLayer_getSettings = true;
+			SelectQuickSettings::GameOptionsLayer_getSettings = true;
 		}
 
 		auto ret = GameOptionsLayer::create(layer);
 
-		GameOptionsLayer_getSettings = false;
+		SelectQuickSettings::GameOptionsLayer_getSettings = false;
 
 		return ret;
 	}
@@ -202,11 +213,11 @@ class $modify(GJOptionsLayer) {
 	void addToggle(char const* p1, int p2, bool p3, char const* p4) {
 		GJOptionsLayer::addToggle(p1, p2, p3, p4);
 
-		if (GameOptionsLayer_getSettings) {
+		if (SelectQuickSettings::GameOptionsLayer_getSettings) {
 			if (p2 > 0 && p2 <= 10) { // Verificar límites del índice
-				BetterPause::quickSettings_NameG.resize(10);
-				BetterPause::quickSettings_numberG.resize(10);
-				BetterPause::quickSettings_enabledG.resize(10);
+				BetterPause::quickSettings_NameG.resize(99);
+				BetterPause::quickSettings_numberG.resize(99);
+				BetterPause::quickSettings_enabledG.resize(99);
 
 				BetterPause::quickSettings_NameG[p2 - 1] = p1;
 				BetterPause::quickSettings_numberG[p2 - 1] = p2;
@@ -235,6 +246,8 @@ class $modify(DailyLevelPage) {
 
 };
 
+
+
 class $modify(CustomSongWidget) {
 
 	void updateWithMultiAssets(gd::string p0, gd::string p1, int p2) {
@@ -255,6 +268,7 @@ $on_mod(Loaded) {
 	//matdash::create_console();
 #endif
 	BetterPauseManager::sharedState()->loadState();
+	Mod::get()->addCustomSetting<SettingQuickSettingsValue>("Quick-Settings-Select", "none");
 }
 
 $on_mod(DataSaved) {
