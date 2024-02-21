@@ -69,7 +69,7 @@ bool SelectQuickSettings::init()
 
 	this->handleOptionsLayers();
 
-	BetterPause::quickSettings_NameG[9] = "Practice Music Sync";
+	BetterPause::quickSettingsNamesG[9] = "Practice Music Sync";
 
 	for (size_t i = 0; i < 10; i++) {
 		if (i == 0) {
@@ -83,7 +83,7 @@ bool SelectQuickSettings::init()
 		}
 
 		auto menu = cocos2d::CCMenu::create();
-		auto nameList = cocos2d::CCLabelBMFont::create(BetterPause::quickSettings_NameG[i].c_str(), "bigFont.fnt");
+		auto nameList = cocos2d::CCLabelBMFont::create(BetterPause::quickSettingsNamesG[i].c_str(), "bigFont.fnt");
 		auto btnSelect = CCMenuItemToggler::createWithStandardSprites(this, (cocos2d::SEL_MenuHandler)&SelectQuickSettings::onToggleWithGameVariable, 0.6f);
 
 		for (int j = 0; j < 6; j++) {
@@ -93,7 +93,7 @@ bool SelectQuickSettings::init()
 			}
 		}
 
-		if (BetterPause::quickSettings_NameG[i] == "Practice Music Sync" && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
+		if (BetterPause::quickSettingsNamesG[i] == "Practice Music Sync" && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
 			reinterpret_cast<CCSprite*>(reinterpret_cast<CCMenuItemSpriteExtra*>(btnSelect->getChildren()->objectAtIndex(0))->getChildren()->objectAtIndex(0))->setColor({ 150,150,150 });
 			reinterpret_cast<CCSprite*>(reinterpret_cast<CCMenuItemSpriteExtra*>(btnSelect->getChildren()->objectAtIndex(1))->getChildren()->objectAtIndex(0))->setColor({ 150,150,150 });
 			nameList->setColor({ 150,150,150 });
@@ -117,7 +117,7 @@ bool SelectQuickSettings::init()
 		arrayList->addObject(menu);
 	}
 
-	for (size_t i = 0; i < BetterPause::quickSettings_Name.size(); i++)
+	for (size_t i = 0; i < BetterPause::quickSettingsNames.size(); i++)
 	{
 		if (i == 0) {
 			auto menu = cocos2d::CCMenu::create();
@@ -170,7 +170,7 @@ bool SelectQuickSettings::init()
 		}
 
 		auto menu = cocos2d::CCMenu::create();
-		auto nameList = cocos2d::CCLabelBMFont::create(BetterPause::quickSettings_Name[i].c_str(), "bigFont.fnt");
+		auto nameList = cocos2d::CCLabelBMFont::create(BetterPause::quickSettingsNames[i].c_str(), "bigFont.fnt");
 		auto btnSelect = CCMenuItemToggler::createWithStandardSprites(this, (cocos2d::SEL_MenuHandler)&SelectQuickSettings::onToggleWithGameVariable, 0.6f);
 		
 		for (int j = 0; j < 6; j++){
@@ -198,7 +198,7 @@ bool SelectQuickSettings::init()
 		arrayList->addObject(menu);
 	}
 
-	this->clearQuickSettings();
+	BetterPause::clearQuickSettings();
 
 	auto CustomVi = ListView::create(arrayList, 30.f, 340.f, 200.f);
 
@@ -228,12 +228,7 @@ void SelectQuickSettings::onToggleWithGameVariable(CCObject* pSender)
 		gameOptionsLayer->onClose(nullptr);
 		CC_SAFE_DELETE(gameOptionsLayer);
 
-		BetterPause::quickSettings_NameG.clear();
-		BetterPause::quickSettings_numberG.clear();
-		BetterPause::quickSettings_enabledG.clear();
-		BetterPause::quickSettings_Name.clear();
-		BetterPause::quickSettings_Desc.clear();
-		BetterPause::quickSettings_Key.clear();
+		BetterPause::clearQuickSettings();
 
 		//auto dialogObj = AttemptAtReversingDialogObject::create("Scratch", "You need a <cg>Music Unlocker</c> to play <cy>normal music</c> in <cl>practice mod e</c>.", 2, 512.f, false, { 0, 0, 0 });
 		//auto dialogLayer = DialogLayer::create(reinterpret_cast<DialogObject*>(dialogObj), 2);
@@ -332,13 +327,4 @@ void SelectQuickSettings::keyDown(cocos2d::enumKeyCodes key)
 	default:
 		CCLayer::keyDown(key);
 	}
-}
-
-void SelectQuickSettings::clearQuickSettings() {
-	BetterPause::quickSettings_NameG.clear();
-	BetterPause::quickSettings_numberG.clear();
-	BetterPause::quickSettings_enabledG.clear();
-	BetterPause::quickSettings_Name.clear();
-	BetterPause::quickSettings_Desc.clear();
-	BetterPause::quickSettings_Key.clear();
 }

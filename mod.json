@@ -1,7 +1,10 @@
 {
   "geode": "2.0.0",
-  "gd": "2.204",
-  "version": "v1.6.0",
+  "gd": {
+    "win": "2.204",
+    "android": "2.205"
+  },
+  "version": "v1.6.2",
   "id": "tpdea.betterpause-Better",
   "name": "BetterPause",
   "developer": "Tpdea",

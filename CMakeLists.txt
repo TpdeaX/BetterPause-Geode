@@ -10,13 +10,14 @@ file(GLOB SOURCES
 	src/*.cpp
 )
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES} "src/BetterPause.cpp"  "src/Utils.cpp" "src/BarBetterShow.cpp" "src/ListButtons.cpp" "src/BetterPauseManager.h" "src/BetterPauseData.h" "src/SelectQuickSettings.h" "src/ProgressPlataformerBetter.cpp" "src/BetterInfoUtils.cpp" "src/SetVolumenPopup.cpp" "src/MoreOptionsPauseLayer.cpp" "src/CustomSettings.cpp")
+add_library(${PROJECT_NAME} SHARED ${SOURCES} "src/BetterPause.cpp"  "src/Utils.cpp" "src/BarBetterShow.cpp"  "src/BetterPauseManager.h" "src/BetterPauseData.h" "src/SelectQuickSettings.h" "src/ProgressPlataformerBetter.cpp" "src/BetterInfoUtils.cpp" "src/SetVolumenPopup.cpp" "src/MoreOptionsPauseLayer.cpp" "src/CustomSettings.cpp" "src/Hooks.h" "src/SliderPlus.cpp")
 
 if (NOT DEFINED ENV{GEODE_SDK})
     message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")
 else()
     message(STATUS "Found Geode: $ENV{GEODE_SDK}")
 endif()
+
 
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 

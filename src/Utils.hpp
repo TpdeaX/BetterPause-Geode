@@ -1,8 +1,37 @@
 #pragma once
 #include <Geode/Geode.hpp>
 #include <Geode/Bindings.hpp>
+#include <Geode/ui/GeodeUI.hpp>
 #include <time.h>
 #include <string>
+
+using namespace geode::prelude;
+
+#ifdef GEODE_IS_WINDOWS
+namespace matdash {
+	struct Console {
+		std::ofstream out, in;
+		Console() {
+			AllocConsole();
+			out = decltype(out)("CONOUT$", std::ios::out);
+			in = decltype(in)("CONIN$", std::ios::in);
+			std::cout.rdbuf(out.rdbuf());
+			std::cin.rdbuf(in.rdbuf());
+
+			FILE* dummy;
+			freopen_s(&dummy, "CONOUT$", "w", stdout);
+		}
+		~Console() {
+			out.close();
+			in.close();
+		}
+	};
+
+	inline void create_console() {
+		static Console console;
+	}
+}
+#endif
 
 namespace Utils
 {
@@ -55,6 +84,15 @@ namespace Utils
 		}
 		return vec;
 	}
+
+	std::string decodeBase64Gzip(const std::string& input);
+	bool isSpecificAspectRatio(float targetRatio);
+	bool isRoundAspectRatio(float targetRatio);
+
+	std::string getFormattedCreatorName(const std::string& creatorName, GJLevelType levelType);
+	std::string getNameLevelType(GJLevelType type);
+	double getTotalSecondsPlayLayer();
+	int getTotalAttemptsPlayLayer();
 }
 
 

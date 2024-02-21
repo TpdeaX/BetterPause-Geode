@@ -23,10 +23,7 @@ namespace Utils
 	float getPercentagePerXpos()
 	{
 		auto playLayer = Utils::getplayLayerA();
-		return 0.f;
-
-
-#ifndef GEODE_IS_ANDROID
+#ifdef GEODE_IS_ANDROID
 		return playLayer->getCurrentPercent();
 #endif
 
@@ -107,7 +104,73 @@ namespace Utils
 		return Utils::shareDirectorA()->getWinSize();
 	}
 
-	
+	std::string decodeBase64Gzip(const std::string& input) {
+		return ZipUtils::decompressString(input, false, 0);
+	}
+
+	bool isSpecificAspectRatio(float targetRatio) {
+		auto director = cocos2d::CCDirector::sharedDirector();
+		auto glview = director->getOpenGLView();
+		auto size = glview->getFrameSize();
+		float aspectRatio = size.width / size.height;
+		return (aspectRatio - targetRatio) == 0;
+	}
+
+	bool isRoundAspectRatio(float targetRatio) {
+		auto director = cocos2d::CCDirector::sharedDirector();
+		auto glview = director->getOpenGLView();
+		auto size = glview->getFrameSize();
+		float aspectRatio = size.width / size.height;
+		return std::abs(aspectRatio - targetRatio) < 0.01f;
+	}
+
+	std::string getFormattedCreatorName(const std::string& creatorName, GJLevelType levelType) {
+		if (creatorName.empty()) {
+			if (levelType == GJLevelType::Local)
+				return "By RobTop";
+			else
+				return "By -";
+		}
+		return "By " + creatorName;
+	}
+
+	std::string getNameLevelType(GJLevelType type) {
+		switch (type) {
+		case GJLevelType::Editor:
+			return "Editor Level";
+		case GJLevelType::Local:
+			return "Official Level";
+		case GJLevelType::Saved:
+			return "Online Level";
+		default:
+			return "NA Level";
+		}
+	}
+
+
+	double getTotalSecondsPlayLayer() {
+#ifdef GEODE_IS_WINDOWS
+		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x320));
+#endif
+#ifdef GEODE_IS_ANDROID64
+		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x3b0));
+#endif
+#ifdef GEODE_IS_ANDROID32
+		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x318));
+#endif
+	}
+
+	int getTotalAttemptsPlayLayer() {
+#ifdef GEODE_IS_WINDOWS
+		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x29ac));
+#endif
+#ifdef GEODE_IS_ANDROID64
+		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x30ac));
+#endif
+#ifdef GEODE_IS_ANDROID32
+		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x29cc));
+#endif
+	}
 
 }
 

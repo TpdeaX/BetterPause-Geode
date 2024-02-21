@@ -3,7 +3,6 @@
 #include <Geode/Bindings.hpp>
 #include "Utils.hpp"
 #include "BetterPause.hpp"
-#include "AttemptAtReversingDialogObject.hpp"
 
 using namespace geode::prelude;
 
@@ -18,7 +17,6 @@ public:
 	void keyDown(cocos2d::enumKeyCodes key);
 	void onToggleWithGameVariable(CCObject* pSender);
 	void handleOptionsLayers();
-	void clearQuickSettings();
 
 	cocos2d::extension::CCScale9Sprite* m_pBG = nullptr;
 	cocos2d::CCSprite* m_pUnderLine = nullptr;
