@@ -226,6 +226,7 @@ void BetterPause::createQuickSettingsButtons() {
 void BetterPause::createQuestMenu() {
 
 	questMenu = ChallengesPage::create();
+	questMenu->setID("quest-menu");
 	this->addChild(questMenu);
 
 	questMenu->m_mainLayer->setScale(0.7f);
@@ -261,6 +262,7 @@ void BetterPause::createMainButtonsMenu() {
 	auto menuScrollButtons = cocos2d::CCMenu::create();
 	menuScrollButtons->setVisible(true);
 	menuScrollButtons->setPosition({ 0.f, 0.f });
+	menuScrollButtons->setID("menu-scroll-buttons");
 	this->addChild(menuScrollButtons);
 
 	buttonsList = ScrollLayer::create(LAYER_SIZE);
@@ -584,13 +586,13 @@ void BetterPause::createBars() {
 	createAndSetupBar(practiceBarPercentage, { 0, 255, 255 }, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_practicePercent, { 86.f, Utils::WinSize().height - 125.f }, "practice-bar");
 }
 
-void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible, float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position, std::string id="") {
+void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible, float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position, std::string id) {
 	bar = BarBetterShow::create(color, isVisible, isVisible, currentPercentage, targetPercentage);
 	bar->setPosition(position);
 	bar->setScale(0.5f);
 	bar->m_pBarBase->setVisible(true);
 	bar->m_pBarBase->setOpacity(Utils::convertOpacitySimplf(0.2f));
-	if (id !== "") bar->setID(id);
+	if (id) bar->setID(id);
 	this->addChild(bar);
 }
 
@@ -632,7 +634,7 @@ void BetterPause::onSetSfxVolume(cocos2d::CCObject* pSender) {
 	popup->show();
 }
 
-void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size, bool twoColumns, std::string id="") {
+void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size, bool twoColumns, std::string id) {
 	auto toggleButton = CCMenuItemToggler::createWithStandardSprites(this, (cocos2d::SEL_MenuHandler)&BetterPause::onToggleWithGameVariable, size + 0.2f);
 	toggleButton->toggle(Utils::shareManager()->getGameVariable(key));
 	toggleButton->setTag(std::stoi(key));
@@ -648,7 +650,7 @@ void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::C
 	text->setAlignment(cocos2d::kCCTextAlignmentRight);
 	text->setPosition({ pos.x - 15.f, pos.y });
 	text->setAnchorPoint({ 1.f, 0.5f });
-	if (id !== "") toggleButton->setID(id);
+	if (id) toggleButton->setID(id);
 	this->addChild(text);
 }
 
@@ -662,7 +664,7 @@ void BetterPause::onToggleWithGameVariable(cocos2d::CCObject* pSender) {
 
 void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 	cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size,
-	bool twoColumns, int tag, std::string id="") {
+	bool twoColumns, int tag, std::string id) {
 	auto toggleButton = CCMenuItemToggler::createWithStandardSprites(this, callback, size + 0.2f);
 	toggleButton->toggle(on);
 	toggleButton->setPosition(menu->convertToNodeSpace(pos));
@@ -681,7 +683,7 @@ void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 	text->setAlignment(cocos2d::kCCTextAlignmentRight);
 	text->setPosition({ pos.x - 15.f, pos.y });
 	text->setAnchorPoint({ 1.f, 0.5f });
-	if (id !== "") toggleButton->setID(id);
+	if (id) toggleButton->setID(id);
 	this->addChild(text);
 
 	if (std::string(caption.c_str()) == "Practice Music Sync" && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
