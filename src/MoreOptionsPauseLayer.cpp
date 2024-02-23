@@ -121,7 +121,7 @@ bool MoreOptionsPauseLayer::init(CCNode* ref)
 void MoreOptionsPauseLayer::onClose(cocos2d::CCObject* pSender)
 {
 	FLAlertLayer::keyBackClicked();
-	FLAlertLayer::onClose(pSender);
+	FLAlertLayer::onBtn1(pSender);
 	if (this->betterPauseRef) {
 		auto betterPause = static_cast<BetterPause*>(this->betterPauseRef);
 		betterPause->pauseLayer->onResume(nullptr);
