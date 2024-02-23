@@ -1,4 +1,5 @@
 #include "BetterPause.hpp"
+#include <optional>
 
 std::vector<std::string> BetterPause::quickSettingsNames = {};
 std::vector<std::string> BetterPause::quickSettingsDescriptions = {};
