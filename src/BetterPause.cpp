@@ -586,7 +586,7 @@ void BetterPause::createBars() {
 	createAndSetupBar(practiceBarPercentage, { 0, 255, 255 }, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_practicePercent, { 86.f, Utils::WinSize().height - 125.f }, "practice-bar");
 }
 
-void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible, float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position, std::string id) {
+void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible, float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position, const std::optional<std::string>& id = std::nullopt) {
 	bar = BarBetterShow::create(color, isVisible, isVisible, currentPercentage, targetPercentage);
 	bar->setPosition(position);
 	bar->setScale(0.5f);
@@ -634,7 +634,7 @@ void BetterPause::onSetSfxVolume(cocos2d::CCObject* pSender) {
 	popup->show();
 }
 
-void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size, bool twoColumns, std::string id) {
+void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size, bool twoColumns, const std::optional<std::string>& id = std::nullopt) {
 	auto toggleButton = CCMenuItemToggler::createWithStandardSprites(this, (cocos2d::SEL_MenuHandler)&BetterPause::onToggleWithGameVariable, size + 0.2f);
 	toggleButton->toggle(Utils::shareManager()->getGameVariable(key));
 	toggleButton->setTag(std::stoi(key));
