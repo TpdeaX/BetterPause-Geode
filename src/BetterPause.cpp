@@ -143,7 +143,7 @@ void BetterPause::createCustomSongWidget() {
 
 	if (levelSongID == 0) {
 		auto zeroIdSong = GameManager::sharedState()->getPlayLayer()->m_level->m_audioTrack;
-		songInfoObject = LevelTools::getSongObject(zeroIdSong);
+		songInfoObject = LevelTools::getSongObject(zeroIdSong,this);
 	}
 	else {
 		songInfoObject = SongInfoObject::create(levelSongID);
