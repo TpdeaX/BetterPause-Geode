@@ -37,7 +37,6 @@ jobs:
         with:
           combine: true
           target: ${{ matrix.config.target }}
-          bindings: coopeeo/Geode-bindings
       
   package:
     name: Package builds
