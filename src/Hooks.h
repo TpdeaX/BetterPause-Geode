@@ -12,29 +12,41 @@
 #include <Geode/ui/GeodeUI.hpp>
 #include <Geode/modify/DailyLevelPage.hpp>
 #include <Geode/modify/DialogObject.hpp>
+#include <Geode/modify/GameLevelOptionsLayer.hpp>
 #include "BetterPauseManager.h"
 #include "BetterPause.hpp"
 #include "CustomSettings.hpp"
 #include "SelectQuickSettings.h"
+#include <Geode/modify/CCScrollLayerExt.hpp>
 
 using namespace geode::prelude;
 
+
+namespace hooksVariables {
+	geode::Hook* GJOptionsLayerr_addToggleHookV = nullptr;
+}
+
 class $modify(PauseLayer) {
+	static void onModify(auto & self) {
+		self.setHookPriority("PauseLayer::create", -99);
+	}
+
 	static PauseLayer* create(bool isEditor) {
 		auto ret = PauseLayer::create(isEditor);
 
-		for (size_t i = 1; i < ret->getChildrenCount(); i++)
-		{
-			auto node = dynamic_cast<cocos2d::CCNode*>(ret->getChildren()->objectAtIndex(i));
-			if (node)
+		if (Mod::get()->getSettingValue<int64_t>("type-pause")) {
+			for (size_t i = 1; i < ret->getChildrenCount(); i++)
 			{
-				node->setVisible(false);
+				auto node = dynamic_cast<cocos2d::CCNode*>(ret->getChildren()->objectAtIndex(i));
+				if (node)
+				{
+					node->setVisible(false);
+				}
 			}
-		}
 
-		auto betterPauseMenu = BetterPause::create(ret);
-		betterPauseMenu->setID("better-pause-node");
-		ret->addChild(betterPauseMenu, 100);
+			auto betterPauseMenu = BetterPause::create(ret);
+			ret->addChild(betterPauseMenu, 100);
+		}
 
 		return ret;
 	}
@@ -43,17 +55,19 @@ class $modify(PauseLayer) {
 
 		auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 
-		auto betterPause = dynamic_cast<BetterPause*>(this->getChildByID("better-pause-node"));
+		auto betterPause = typeinfo_cast<BetterPause*>(this->getChildByID("better-pause-node"));
 
 		if (betterPause) {
 			if (betterPause->questMenu) {
 				betterPause->questMenu->onClose(nullptr);
 			}
+			betterPause->unregisterScriptTouchHandler();
 		}
 
 
 		while (popuBetterPause) {
-			popuBetterPause->removeFromParentAndCleanup(true);
+			typeinfo_cast<FLAlertLayer*>(popuBetterPause)->keyBackClicked();
+
 			popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 		}
 
@@ -68,6 +82,10 @@ class $modify(PlayLayer) {
 
 		if (!PlayLayer::init(p0, p1, p2)) {
 			return false;
+		}
+
+		if (this->m_level->isPlatformer()) {
+			ProgressPlataformerBetter::timeForLevelStringPlataformerSafe = BetterInfo::timeForLevelString(this->m_level->m_levelString);
 		}
 
 		return true;
@@ -96,7 +114,6 @@ class $modify(PlayLayer) {
 		if (effectGameObjectPtr) {
 			if (Utils::from<int>(effectGameObjectPtr, offsetTypeObject) == 0x1e) {
 				ProgressPlataformerBetter::m_totalPoints += Utils::from<int>(effectGameObjectPtr, offsetPointsXObj);
-				//std::cout << maximolkjnbv << std::endl;
 			}
 		}
 
@@ -176,21 +193,83 @@ class $modify(GameOptionsLayer) {
 
 };
 
+
+
+
 class $modify(GJOptionsLayer) {
 
-	void addToggle(char const* p1, int p2, bool p3, char const* p4) {
-		GJOptionsLayer::addToggle(p1, p2, p3, p4);
+	bool init(int idk) {
 
+		BetterPause::quickSettingsNamesG.clear();
+		BetterPause::quickSettingsNumbersG.clear();
+		BetterPause::quickSettingsEnabledG.clear();
+
+		BetterPause::quickSettingsNamesG.resize(99);
+		BetterPause::quickSettingsNumbersG.resize(99);
+		BetterPause::quickSettingsEnabledG.resize(99);
+
+		auto ret = GJOptionsLayer::init(idk);
+
+		
+
+		return ret;
+	}
+
+	TodoReturn addToggleInternal(char const* p1, int p2, bool p3, char const* p4) {
+		GJOptionsLayer::addToggleInternal(p1, p2, p3, p4);
 		if (SelectQuickSettings::GameOptionsLayer_getSettings) {
 			if (p2 > 0 && p2 <= 10) {
-				BetterPause::quickSettingsNamesG.resize(99);
-				BetterPause::quickSettingsNumbersG.resize(99);
-				BetterPause::quickSettingsEnabledG.resize(99);
-
 				BetterPause::quickSettingsNamesG[p2 - 1] = p1;
 				BetterPause::quickSettingsNumbersG[p2 - 1] = p2;
 				BetterPause::quickSettingsEnabledG[p2 - 1] = p3;
 			}
+		}
+	}
+
+	
+
+};
+
+class $modify(CustomSongWidget) {
+	void updateSongObject(SongInfoObject * obj) {
+		CustomSongWidget::updateSongObject(obj);
+		
+		if (Utils::getplayLayerA() && this->m_artistLabel && this->m_moreBtn) {
+			CCPoint labelPos = this->m_artistLabel->getPosition();
+			auto labelWidth = this->m_artistLabel->getContentSize().width * this->m_artistLabel->getScale();
+
+			auto menuItemX = labelPos.x + labelWidth - (Utils::WinSize().width / 2) + 30.f;
+
+			this->m_moreBtn->setPositionX(menuItemX);
+		}	
+	}
+
+	void updateSongInfo() {
+		CustomSongWidget::updateSongInfo();
+
+		if (Utils::getplayLayerA() && this->m_artistLabel && this->m_moreBtn) {
+			CCPoint labelPos = this->m_artistLabel->getPosition();
+			auto labelWidth = this->m_artistLabel->getContentSize().width * this->m_artistLabel->getScale();
+
+			auto menuItemX = labelPos.x + labelWidth - (Utils::WinSize().width / 2) + 30.f;
+
+			this->m_moreBtn->setPositionX(menuItemX);
+		}
+	}
+};
+
+class $modify(CCScrollLayerExt) {
+	void ccTouchMoved(cocos2d::CCTouch * p0, cocos2d::CCEvent * p1) {
+		CCScrollLayerExt::ccTouchMoved(p0, p1);
+		if (Utils::hasParentWithID(this, "better-pause-node")) {
+			typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"))->updateButtons();
+		}
+	}
+
+	TodoReturn scrollLayer(float p0) {
+		CCScrollLayerExt::scrollLayer(p0);
+		if (Utils::hasParentWithID(this, "better-pause-node")) {
+			typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"))->updateButtons();
 		}
 	}
 };

@@ -4,7 +4,7 @@
     "win": "2.204",
     "android": "2.205"
   },
-  "version": "v1.6.2",
+  "version": "v1.6.6",
   "id": "tpdea.betterpause-Better",
   "name": "BetterPause",
   "developer": "Tpdea",
@@ -14,8 +14,20 @@
     "info": "Report any issues you have on GitHub issues.",
     "url": "https://github.com/TpdeaX/BetterPause-Geode/issues"
   },
-  "early-load": false,
+  "early-load": true,
   "settings": {
+    "type-pause": {
+      "name": "Select Pause",
+      "description": "Choose the type of pause style you want: \n1. BetterPause \n2. ClassicPause \n3. SimplePause \n0. DisablePause (You could just disable the mod, but just in case).",
+      "type": "int",
+      "default": 1,
+      "min": 0,
+      "max": 3,
+      "control": {
+        "arrows": true,
+        "slider": true
+      }
+    },
     "level-editor-hack": {
       "name": "Level Editor Hack",
       "description": "I couldn't adapt the level edit recognition of the mods menus, sorry :(",
@@ -61,6 +73,18 @@
       "description": "Disable Creator Level Label.",
       "type": "bool",
       "default": false
+    },
+    "tolerance-in-buttons-list": {
+      "name": "Tolerance in Buttons List",
+      "description": "Being able to turn off buttons while scrolling through a list, with a set distance from the scroll button.",
+      "type": "float",
+      "default": 1.0,
+      "min": 0,
+      "max": 2,
+      "control": {
+        "arrows": true,
+        "slider": true
+      }
     }
   },
   "resources": {
@@ -68,7 +92,12 @@
       "resources/*.png"
     ]
   },
-  "tags": [
-    "Customization"
+  "tags": [ "Customization", "Interface", "Enhancement" ],
+  "dependencies": [
+    {
+      "id": "geode.node-ids",
+      "version": ">=v1.3.0",
+      "importance": "required"
+    }
   ]
 }

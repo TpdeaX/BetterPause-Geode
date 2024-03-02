@@ -9,7 +9,14 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
       "ctestCommandArgs": "",
-      "inheritEnvironments": [ "msvc_x86" ]
+      "inheritEnvironments": [ "msvc_x86" ],
+      "variables": [
+        {
+          "name": "GEODE_MOD_BINARY_SUFFIX",
+          "value": ".dll",
+          "type": "STRING"
+        }
+      ]
     }
   ]
 }

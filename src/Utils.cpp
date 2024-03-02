@@ -168,8 +168,30 @@ namespace Utils
 		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x30ac));
 #endif
 #ifdef GEODE_IS_ANDROID32
-		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x29cc));
+		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x29cc));
 #endif
+	}
+
+	bool hasParentWithID(cocos2d::CCNode* node, const std::string& parentID) {
+		cocos2d::CCNode* parentNode = node->getParent();
+		while (parentNode) {
+			if (parentNode->getID() == parentID) {
+				return true;
+			}
+			parentNode = parentNode->getParent();
+		}
+		return false;
+	}
+
+	cocos2d::CCNode* getParentWithID(cocos2d::CCNode* node, const std::string& parentID) {
+		cocos2d::CCNode* parentNode = node->getParent();
+		while (parentNode) {
+			if (parentNode->getID() == parentID) {
+				return parentNode;
+			}
+			parentNode = parentNode->getParent();
+		}
+		return nullptr; // Si no se encuentra un nodo padre con el ID especificado
 	}
 
 }

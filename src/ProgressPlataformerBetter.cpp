@@ -1,6 +1,7 @@
 #include "ProgressPlataformerBetter.hpp"
 
 int ProgressPlataformerBetter::m_totalPoints = 0;
+float ProgressPlataformerBetter::timeForLevelStringPlataformerSafe = 0.f;
 
 ProgressPlataformerBetter* ProgressPlataformerBetter::create() {
 	auto ret = new ProgressPlataformerBetter();
@@ -42,7 +43,7 @@ bool ProgressPlataformerBetter::init() {
 
     auto estimatedTime = Utils::getplayLayerA()->m_level->m_timestamp ?
         (static_cast<int>(Utils::getplayLayerA()->m_level->m_timestamp) / 240.f) :
-        BetterInfo::timeForLevelString(Utils::getplayLayerA()->m_level->m_levelString);
+        ProgressPlataformerBetter::timeForLevelStringPlataformerSafe;
 
     double currentTime = 0.0;
 

@@ -10,6 +10,7 @@ $on_mod(Loaded) {
 #endif
 	BetterPauseManager::sharedState()->loadState();
 	Mod::get()->addCustomSetting<SettingQuickSettingsValue>("Quick-Settings-Select", "none");
+	//std::cout << "0x" << std::hex << offsetof(AttemptAtReversingDialogObject, m_content) << std::endl;
 }
 
 $on_mod(DataSaved) {

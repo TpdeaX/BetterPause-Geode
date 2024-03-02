@@ -2,64 +2,53 @@
 
 bool SelectQuickSettings::GameOptionsLayer_getSettings = false;
 
-SelectQuickSettings* SelectQuickSettings::create()
-{
-	auto node = new SelectQuickSettings();
-	if (node && node->init())
-	{
-		node->autorelease();
+SelectQuickSettings* SelectQuickSettings::create(bool inGame) {
+	auto ret = new SelectQuickSettings();
+	if (ret && ret->init(440.f, 290.f, inGame)) {
+		ret->autorelease();
+		return ret;
 	}
-	else
-	{
-		CC_SAFE_DELETE(node);
-	}
-	return node;
+	CC_SAFE_DELETE(ret);
+	return nullptr;
 }
 
 void SelectQuickSettings::handleOptionsLayers() {
 	SelectQuickSettings::GameOptionsLayer_getSettings = true;
-	auto gol = GameOptionsLayer::create(Utils::getplayLayerA());
-	gol->onClose(nullptr);
-	CC_SAFE_DELETE(gol);
 
-	auto mlt = MoreOptionsLayer::create();
-	mlt->keyBackClicked();
-	CC_SAFE_DELETE(mlt);
+	auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
+	gameOptionsLayer->show();
+	cocos2d::CCTouchDispatcher::get()->unregisterForcePrio(gameOptionsLayer);
+	gameOptionsLayer->onClose(nullptr);
+
+	auto moreOptionsLayer = MoreOptionsLayer::create();
+	moreOptionsLayer->show();
+	cocos2d::CCTouchDispatcher::get()->unregisterForcePrio(moreOptionsLayer);
+	moreOptionsLayer->onClose(nullptr);
 }
 
-bool SelectQuickSettings::init()
+bool SelectQuickSettings::setup(bool inGame)
 {
-	if (!initWithColor({ 0, 0, 0, 105 }))
-		return false;
+	m_noElasticity = true;
+	m_isInGame = inGame;
 
-	if (!m_forcePrioRegistered) {
-		m_forcePrioRegistered = true;
-		Utils::shareDirectorA()->getTouchDispatcher()->registerForcePrio(this, 2);
-	}
+	this->m_bgSprite->initWithFile("GJ_square01.png");
+	this->m_bgSprite->setContentSize({ 440.f, 290.f });
+	this->m_bgSprite->setPosition({ Utils::WinSize().width / 2.f, Utils::WinSize().height / 2.f });
 
-	m_mainLayer = cocos2d::CCLayer::create();
-	this->addChild(m_mainLayer);
-
-	this->m_pBG = cocos2d::extension::CCScale9Sprite::create("GJ_square01.png");
-	this->m_pBG->setPosition({ CCDirector::sharedDirector()->getWinSize().width / 2.f, CCDirector::sharedDirector()->getWinSize().height / 2.f });
-	this->m_pBG->setContentSize({ 440.f, 290.f });
-	m_mainLayer->addChild(this->m_pBG);
-
-	m_buttonMenu = cocos2d::CCMenu::create();
 	m_buttonMenu->setPosition({ 0, 0 });
+	m_closeBtn->removeFromParentAndCleanup(true);
 	auto imageClose = cocos2d::CCSprite::createWithSpriteFrameName("GJ_backBtn_001.png");
-	auto buttonExtraItem = CCMenuItemSpriteExtra::create(imageClose, this, (cocos2d::SEL_MenuHandler)&SelectQuickSettings::onClose);
-	buttonExtraItem->setPosition({ CCDirector::sharedDirector()->getWinSize().width / 2.f - 210.f, CCDirector::sharedDirector()->getWinSize().height / 2 + 140.f });
-	m_buttonMenu->addChild(buttonExtraItem);
-	m_mainLayer->addChild(m_buttonMenu);
+	m_closeBtn = CCMenuItemSpriteExtra::create(imageClose, this, (cocos2d::SEL_MenuHandler)&SelectQuickSettings::onClose);
+	m_closeBtn->setPosition({ Utils::WinSize().width / 2.f - 210.f, Utils::WinSize().height / 2 + 140.f });
+	m_buttonMenu->addChild(m_closeBtn);
 
 	this->m_pTitleLayer = cocos2d::CCLabelBMFont::create("- Select Quick Settings -", "bigFont.fnt");
 	this->m_pTitleLayer->setScale(0.7f);
-	this->m_pTitleLayer->setPosition({ CCDirector::sharedDirector()->getWinSize().width / 2.f, CCDirector::sharedDirector()->getWinSize().height / 2.f + 120.f });
+	this->m_pTitleLayer->setPosition({ Utils::WinSize().width / 2.f, Utils::WinSize().height / 2.f + 120.f });
 	m_mainLayer->addChild(this->m_pTitleLayer);
 
 	this->m_pUnderLine = cocos2d::CCSprite::createWithSpriteFrameName("floorLine_001.png");
-	this->m_pUnderLine->setPosition({ CCDirector::sharedDirector()->getWinSize().width / 2.f, CCDirector::sharedDirector()->getWinSize().height / 2.f + 100.f });
+	this->m_pUnderLine->setPosition({ Utils::WinSize().width / 2.f, Utils::WinSize().height / 2.f + 100.f });
 	this->m_pUnderLine->setScaleX(0.5f);
 	this->m_pUnderLine->setScaleY(0.8f);
 	this->m_pUnderLine->setOpacity(100);
@@ -182,18 +171,15 @@ bool SelectQuickSettings::init()
 		
 		btnSelect->setTag(i);
 		btnSelect->setPosition({ 315.f, 15.f });
-		//auto buttonButton = CCMenuItemSpriteExtra::create(ButtonSprite::create("View", (int)(90 * 0.5), true, "bigFont.fnt", "GJ_button_01.png", 44 * 0.6f, 0.5f), menu, nullptr);
 
 		nameList->setPosition({ 10.f, 15.f });
 		nameList->setAnchorPoint({ 0.f, 0.5f });
-		//buttonButton->setPosition({ 300.f, 26.f });
 
 		menu->addChild(nameList);
 		menu->addChild(btnSelect);
 		m_toggles.push_back(btnSelect);
 		nameList->limitLabelWidth(200.f, 0.5f, 0.1f);
 
-		//menu->addChild(buttonButton);
 
 		arrayList->addObject(menu);
 	}
@@ -203,10 +189,11 @@ bool SelectQuickSettings::init()
 	auto CustomVi = ListView::create(arrayList, 30.f, 340.f, 200.f);
 
 	auto gjCommentBase = GJCommentListLayer::create(CustomVi, nullptr, { 0, 0, 0 }, 340.f, 200.f, 0);
-	gjCommentBase->setPosition({ CCDirector::sharedDirector()->getWinSize().width / 2.f - 165.f, CCDirector::sharedDirector()->getWinSize().height / 2.f - 120.f });
+	gjCommentBase->setPosition({ Utils::WinSize().width / 2.f - 165.f, Utils::WinSize().height / 2.f - 120.f });
+	gjCommentBase->setZOrder(2);
 	m_buttonMenu->addChild(gjCommentBase);
 
-	this->setKeypadEnabled(true);
+	this->setMouseEnabled(true);
 	this->setKeyboardEnabled(true);
 
 	return true;
@@ -223,12 +210,12 @@ void SelectQuickSettings::onToggleWithGameVariable(CCObject* pSender)
 		auto toggleButton = reinterpret_cast<CCMenuItemToggler*>(pSender);
 		auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
 
-		gameOptionsLayer->onPracticeMusicSync(pSender);
+		auto arr = CCArray::create();
+		arr->addObject(AttemptAtReversingDialogObject::create(gd::string("Scratch"), gd::string("What's the <cl>point</c> of adding it if you don't have it <cr>unlocked?</c>"), 13, 1, false, { 255,255,255 }));
+		auto dl = DialogLayer::createDialogLayer(nullptr, arr, 2);
+		dl->animateInRandomSide();
+		CCScene::get()->addChild(dl, CCScene::get()->getHighestChildZ());
 
-		gameOptionsLayer->onClose(nullptr);
-		CC_SAFE_DELETE(gameOptionsLayer);
-
-		BetterPause::clearQuickSettings();
 
 		//auto dialogObj = AttemptAtReversingDialogObject::create("Scratch", "You need a <cg>Music Unlocker</c> to play <cy>normal music</c> in <cl>practice mod e</c>.", 2, 512.f, false, { 0, 0, 0 });
 		//auto dialogLayer = DialogLayer::create(reinterpret_cast<DialogObject*>(dialogObj), 2);
@@ -257,35 +244,35 @@ void SelectQuickSettings::onToggleWithGameVariable(CCObject* pSender)
 
 	if (count > 6)
 	{
-		FLAlertLayer::create(
+		auto flalert = FLAlertLayer::create(
 			"Maximum Exceeded",
 			gd::string("You've exceeded the maximum number of quick settings."),
 			"OK"
-			)
-			->show();
+		);
+		flalert->show();
 		reinterpret_cast<CCMenuItemToggler*>(pSender)->toggle(true);
 	}
 
 	if (count < 3)
 	{
-		FLAlertLayer::create(
-
-			"Minimum Not Met",
+		auto flalert = FLAlertLayer::create(
+			 "Minimum Not Met",
 			gd::string("You haven't met the minimum number of quick settings."),
-			"OK")
-			->show();
+			"OK");
+		flalert->show();
 		reinterpret_cast<CCMenuItemToggler*>(pSender)->toggle(false);
 	}
 }
 
 void SelectQuickSettings::keyBackClicked()
 {
-	/*auto betterPause = static_cast<BetterPause*>(this->getParent());
-	betterPause->pauseLayer->removeFromParentAndCleanup(true);
-	Utils::shareDirectorA()->getRunningScene()->addChild(PauseLayer::create(Utils::getplayLayerA()->m_level->levelType == kGJLevelTypeEditor));*/
+	SelectQuickSettings::onClose(nullptr);
+}
 
+void SelectQuickSettings::onClose(cocos2d::CCObject* pSender)
+{
 	for (int j = 0; j < 6; j++)
-	{ // Recorremos el arreglo posQuickA
+	{
 		BetterPauseManager::sharedState()->posQuickA[j] = -1;
 	}
 
@@ -301,12 +288,7 @@ void SelectQuickSettings::keyBackClicked()
 		}
 	}
 
-	FLAlertLayer::keyBackClicked();
-}
-
-void SelectQuickSettings::onClose(cocos2d::CCObject* pSender)
-{
-	keyBackClicked();
+	Popup::onClose(pSender);
 }
 
 void SelectQuickSettings::keyDown(cocos2d::enumKeyCodes key)
