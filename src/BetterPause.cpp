@@ -673,7 +673,7 @@ void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3
 	bar->setScale(0.5f);
 	bar->m_pBarBase->setVisible(true);
 	bar->m_pBarBase->setOpacity(Utils::convertOpacitySimplf(0.2f));
-	if (id == "not-a-string") bar->setID(id);
+	if (id != "not-a-string") bar->setID(id);
 	this->addChild(bar);
 }
 
@@ -731,7 +731,7 @@ void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::C
 	text->setAlignment(cocos2d::kCCTextAlignmentRight);
 	text->setPosition({ pos.x - 15.f, pos.y });
 	text->setAnchorPoint({ 1.f, 0.5f });
-	if (id == "not-a-string") text->setID(id);
+	if (id != "not-a-string") text->setID(id);
 	this->addChild(text);
 }
 
@@ -764,7 +764,7 @@ void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 	text->setAlignment(cocos2d::kCCTextAlignmentRight);
 	text->setPosition({ pos.x - 15.f, pos.y });
 	text->setAnchorPoint({ 1.f, 0.5f });
-	if (id == "not-a-string") text->setID(id);
+	if (id != "not-a-string") text->setID(id);
 	this->addChild(text);
 
 	if (std::string(caption.c_str()) == "Practice Music Sync" && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
