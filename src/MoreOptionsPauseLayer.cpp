@@ -3,7 +3,7 @@
 MoreOptionsPauseLayer* MoreOptionsPauseLayer::create(CCNode* ref)
 {
 	auto node = new MoreOptionsPauseLayer();
-	if (node && node->init(ref))
+	if (node && node->init(250.f, 200.f, ref))
 	{
 		node->autorelease();
 	}
@@ -14,34 +14,28 @@ MoreOptionsPauseLayer* MoreOptionsPauseLayer::create(CCNode* ref)
 	return node;
 }
 
-bool MoreOptionsPauseLayer::init(CCNode* ref)
+bool MoreOptionsPauseLayer::setup(CCNode* ref)
 {
-	if (!initWithColor({ 0, 0, 0, 105 }))
-		return false;
 
-	if (!m_forcePrioRegistered) {
-		m_forcePrioRegistered = true;
-		Utils::shareDirectorA()->getTouchDispatcher()->registerForcePrio(this, 2);
-	}
+	m_noElasticity = true;
 
 	this->betterPauseRef = ref;
 
 
-	m_mainLayer = cocos2d::CCLayer::create();
 	m_mainLayer->setPosition({ Utils::WinSize().width * -1.f,  Utils::WinSize().height / 2.f});
-	this->addChild(m_mainLayer);
 
-	this->m_pBG = cocos2d::extension::CCScale9Sprite::create("GJ_square01.png");
-	this->m_pBG->setContentSize({ 250.f, 200.f });
-	m_mainLayer->addChild(this->m_pBG);
+	this->m_bgSprite->initWithFile("GJ_square01.png");
+	this->m_bgSprite->setPosition({ 0.f, 0.f });
+	this->m_bgSprite->setContentSize({ 250.f, 200.f });
 
-	m_buttonMenu = cocos2d::CCMenu::create();
+	m_closeBtn->removeFromParentAndCleanup(true);
+
 	m_buttonMenu->setPosition({ -120.f, 95.f });
 	auto imageClose = cocos2d::CCSprite::createWithSpriteFrameName("GJ_closeBtn_001.png");
 	imageClose->setScale(0.7f);
-	auto buttonExtraItem = CCMenuItemSpriteExtra::create(imageClose, this, (cocos2d::SEL_MenuHandler)&MoreOptionsPauseLayer::onClose);
-	m_buttonMenu->addChild(buttonExtraItem);
-	m_mainLayer->addChild(m_buttonMenu, 1);
+	m_closeBtn = CCMenuItemSpriteExtra::create(imageClose, this, (cocos2d::SEL_MenuHandler)&MoreOptionsPauseLayer::onClose);
+	m_buttonMenu->addChild(m_closeBtn);
+	m_buttonMenu->setZOrder(1);
 
 	auto animationEntry = cocos2d::CCEaseElasticOut::create((cocos2d::CCActionInterval*)cocos2d::CCMoveTo::create(0.5f, { Utils::WinSize().width / 2.f, Utils::WinSize().height / 2.f }), 1.f);
 	m_mainLayer->runAction(cocos2d::CCSequence::create((cocos2d::CCFiniteTimeAction*)animationEntry, nullptr));
@@ -109,10 +103,8 @@ bool MoreOptionsPauseLayer::init(CCNode* ref)
 	m_pOptionsGamePause2->setPosition({ 115.f, -150.f });
 	m_buttonMenu->addChild(m_pOptionsGamePause2);
 
-	this->setKeypadEnabled(true);
-	this->setTouchEnabled(true);
+	this->setMouseEnabled(true);
 	this->setKeyboardEnabled(true);
-
 
 	return true;
 }
@@ -121,15 +113,7 @@ bool MoreOptionsPauseLayer::init(CCNode* ref)
 void MoreOptionsPauseLayer::onClose(cocos2d::CCObject* pSender)
 {
 	FLAlertLayer::keyBackClicked();
-	FLAlertLayer::onClose(pSender);
-	if (this->betterPauseRef) {
-		auto betterPause = static_cast<BetterPause*>(this->betterPauseRef);
-		betterPause->pauseLayer->onResume(nullptr);
-		Utils::getplayLayerA()->pauseGame(false);
-	}
-	
-	
-
+	Popup::onClose(pSender);
 	//Utils::shareDirectorA()->getRunningScene()->addChild(PauseLayer::create(Utils::getplayLayerA()->m_level->m_levelType == GJLevelType::Editor));
 }
 

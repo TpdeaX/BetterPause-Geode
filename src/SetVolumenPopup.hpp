@@ -1,14 +1,17 @@
 #pragma once
 #include <Geode/Geode.hpp>
 #include <Geode/Bindings.hpp>
+#include <Geode/ui/Popup.hpp>
 #include "Utils.hpp"
 
 using namespace geode::prelude;
 
-class SetVolumenPopup : public FLAlertLayer, public cocos2d::CCTextFieldDelegate, public FLAlertLayerProtocol, public TextInputDelegate
+class SetVolumenPopup : public Popup<Slider*>, public TextInputDelegate
 {
 public:
-	cocos2d::CCMenu* m_pButtonsMenu = nullptr;
+
+	bool setup(Slider* ref) override;
+
 	CCMenuItemSpriteExtra* m_pSetValueBtn = nullptr;
 	cocos2d::extension::CCScale9Sprite* m_pBGInputTextValue = nullptr;
 	CCTextInputNode* m_pInputTextValue = nullptr;
@@ -16,7 +19,6 @@ public:
 
 	static SetVolumenPopup* create(Slider* ref);
 	virtual void keyBackClicked();
-	virtual bool init(Slider* ref);
 	void keyDown(cocos2d::enumKeyCodes key);
 	void onSet(cocos2d::CCObject* pSender);
 };

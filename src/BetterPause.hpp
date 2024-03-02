@@ -64,11 +64,15 @@ public:
     cocos2d::CCLabelBMFont* creatorNameLabel = nullptr;
     SliderPlus* sliderPlusMusic = nullptr;
     SliderPlus* sliderPlusSFX = nullptr;
+    cocos2d::CCLayerColor* layerMenuScrollButtons = nullptr;
+    int typeMenuCreate = 0;
+
+    //Classic Pause
+    cocos2d::CCMenu* menuToggles = nullptr;
 
     static BetterPause* create(PauseLayer*);
     static void clearQuickSettings();
     bool init(PauseLayer*);
-    void update(float);
     void createQuestMenu();
     void createMainButtonsMenu();
     void createSecondaryButtonsMenu();
@@ -84,6 +88,11 @@ public:
     void createToggleButton(cocos2d::SEL_MenuHandler callback, bool toggledOn,
         cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint position, float fontSize,
         bool twoColumns, int tag);
+
+    void createBetterPause();
+    void createClassicPause();
+    void createSimplePause();
+
     void handleOptionsLayers();
     void onOptionsLayer(cocos2d::CCObject* sender);
     void onHide(cocos2d::CCObject* sender);
@@ -96,10 +105,15 @@ public:
     void onLevelInfoLayer(cocos2d::CCObject* sender);
     void onRedirectionToggle(cocos2d::CCObject* sender);
     void onEditorHack(cocos2d::CCObject* sender);
-    virtual void ccTouchMoved(CCTouch* touch, CCEvent* event) override;
+    virtual void scrollWheel(float x, float y);
     void onPracticeMusicSyncRedirection(cocos2d::CCObject* sender);
     void findButtonsRecursively(CCNode* node, std::vector<std::string>& buttonIds, std::vector<CCMenuItemSpriteExtra*>& externalButtons);
     void onScrollUpButton(cocos2d::CCObject* sender);
     void onScrollDownButton(cocos2d::CCObject* sender);
     void adjustLayerForAspectRatio();
+    void updateButtons();
+    virtual void ccTouchMoved(CCTouch* pTouch, CCEvent* pEvent) override;
+
+    void createToggleButtonOldMethod(cocos2d::SEL_MenuHandler callback, bool on,
+        cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, int tag);
 };

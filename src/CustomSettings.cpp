@@ -5,5 +5,5 @@ SettingNode* SettingQuickSettingsValue::createNode(float width) {
 }
 
 void SettingQuickSettingsNode::onQuickSettings(CCObject* sender) {
-    SelectQuickSettings::create()->show();
+    SelectQuickSettings::create(false)->show();
 }

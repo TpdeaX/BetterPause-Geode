@@ -3,7 +3,7 @@
 SetVolumenPopup* SetVolumenPopup::create(Slider* m_pSliderRef)
 {
 	auto node = new SetVolumenPopup();
-	if (node && node->init(m_pSliderRef))
+	if (node && node->init(200.f, 100.f, m_pSliderRef))
 	{
 		node->autorelease();
 	}
@@ -37,48 +37,27 @@ void SetVolumenPopup::onSet(cocos2d::CCObject* pSender)
 
 void SetVolumenPopup::keyBackClicked()
 {
-	FLAlertLayer::onClose(nullptr);
 	FLAlertLayer::keyBackClicked();
 }
 
-bool SetVolumenPopup::init(Slider* m_pSliderRef)
+bool SetVolumenPopup::setup(Slider* m_pSliderRef)
 {
-	if (!initWithColor({ 0, 0, 0, 105 }))
-		return false;
-
-	if (!m_forcePrioRegistered) {
-		m_forcePrioRegistered = true;
-		Utils::shareDirectorA()->getTouchDispatcher()->registerForcePrio(this, 2);
-	}
-
 	this->m_pSliderRef = m_pSliderRef;
 
-	m_mainLayer = cocos2d::CCLayer::create();
-	m_mainLayer->setPosition({ CCDirector::sharedDirector()->getWinSize().width / 2.f, CCDirector::sharedDirector()->getWinSize().height / 2.f });
-	m_mainLayer->setAnchorPoint({ 0.f, 0.f });
-	this->addChild(m_mainLayer);
+	m_bgSprite->initWithFile("GJ_square02.png");
+	m_bgSprite->setContentSize({ 200.f, 100.f });
 
-	auto background = cocos2d::extension::CCScale9Sprite::create("GJ_square02.png");
-	background->setContentSize({ 200.f, 100.f });
-	m_mainLayer->addChild(background);
+	m_buttonMenu->setPosition({ Utils::WinSize().width / 2.f - 98.f, Utils::WinSize().height / 2.f + 50.f });
 
-	m_buttonMenu = cocos2d::CCMenu::create();
-	m_buttonMenu->setPosition({ -98.f, 50.f });
-
-	auto imageClose = cocos2d::CCSprite::createWithSpriteFrameName("GJ_closeBtn_001.png");
-	imageClose->setScale(0.7f);
-
-	auto buttonExtraItem = CCMenuItemSpriteExtra::create(imageClose, this, (cocos2d::SEL_MenuHandler)&FLAlertLayer::onClose);
-	m_buttonMenu->addChild(buttonExtraItem);
-	m_mainLayer->addChild(m_buttonMenu);
+	m_closeBtn->setPosition({ 0.f, 0.f });
 
 	auto titleLayer = cocos2d::CCLabelBMFont::create("- Set Value -", "goldFont.fnt");
 	titleLayer->setScale(0.7f);
-	titleLayer->setPositionY(35.f);
+	titleLayer->setPosition(Utils::WinSize().width / 2.f, Utils::WinSize().height / 2.f + 35.f);
 	m_mainLayer->addChild(titleLayer);
 
 	auto underline = cocos2d::CCSprite::createWithSpriteFrameName("floorLine_001.png");
-	underline->setPosition({ 0.f, 18.f });
+	underline->setPosition({ Utils::WinSize().width / 2.f, Utils::WinSize().height / 2.f + 18.f });
 	underline->setScaleX(0.4f);
 	underline->setScaleY(0.5f);
 	underline->setOpacity(100);
@@ -92,7 +71,7 @@ bool SetVolumenPopup::init(Slider* m_pSliderRef)
 	m_pBGInputTextValue = cocos2d::extension::CCScale9Sprite::create("square02_small.png");
 	m_pBGInputTextValue->setContentSize({ 70.f, 30.f });
 	m_pBGInputTextValue->setScale(1.f);
-	m_pBGInputTextValue->setPosition({ -40.f, -14.f });
+	m_pBGInputTextValue->setPosition({ Utils::WinSize().width / 2.f - 40.f, Utils::WinSize().height / 2.f - 14.f });
 	m_pBGInputTextValue->setColor({ 255, 255, 255 });
 	m_pBGInputTextValue->setOpacity(100);
 	m_mainLayer->addChild(m_pBGInputTextValue);
@@ -103,21 +82,17 @@ bool SetVolumenPopup::init(Slider* m_pSliderRef)
 	m_pInputTextValue->m_maxLabelLength = 3;
 	m_pInputTextValue->setAllowedChars("0123456789");
 	m_pInputTextValue->setMaxLabelScale(0.7f);
-	m_pInputTextValue->setPosition({ -41.f, -14.f });
+	m_pInputTextValue->setPosition({ Utils::WinSize().width / 2.f - 41.f, Utils::WinSize().height / 2.f - 14.f });
 	m_pInputTextValue->setDelegate(this);
 	m_mainLayer->addChild(m_pInputTextValue);
 
 	auto perSymbol = cocos2d::CCLabelBMFont::create("%", "bigFont.fnt");
 	perSymbol->setScale(0.6f);
-	perSymbol->setPosition({ 9.f, -15.f });
+	perSymbol->setPosition({ Utils::WinSize().width / 2.f + 9.f, Utils::WinSize().height / 2.f - 15.f });
 	m_mainLayer->addChild(perSymbol);
 
-	this->setKeypadEnabled(true);
-	this->setTouchEnabled(true);
+	this->setMouseEnabled(true);
 	this->setKeyboardEnabled(true);
-	
-	//this->setTouchPriority(3);
-	//m_pButtonsMenu->setTouchEnabled(true);
 
 	return true;
 }
