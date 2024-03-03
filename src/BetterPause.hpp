@@ -84,10 +84,10 @@ public:
     void createPlatformerTimes();
     void createAudioControls();
     void createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible,
-        float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position);
+        float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position, std::string id = "not-a-string");
     void createToggleButton(cocos2d::SEL_MenuHandler callback, bool toggledOn,
         cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint position, float fontSize,
-        bool twoColumns, int tag);
+        bool twoColumns, int tag, std::string id = "not-a-string");
 
     void createBetterPause();
     void createClassicPause();
@@ -100,7 +100,7 @@ public:
     void sfxSliderChanged(cocos2d::CCObject* sender);
     void onSetMusicVolume(cocos2d::CCObject* sender);
     void onSetSfxVolume(cocos2d::CCObject* sender);
-    void createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint position, float fontSize, bool twoColumns);
+    void createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint position, float fontSize, bool twoColumns, std::string id = "not-a-string");
     void onToggleWithGameVariable(cocos2d::CCObject* sender);
     void onLevelInfoLayer(cocos2d::CCObject* sender);
     void onRedirectionToggle(cocos2d::CCObject* sender);
@@ -115,5 +115,5 @@ public:
     virtual void ccTouchMoved(CCTouch* pTouch, CCEvent* pEvent) override;
 
     void createToggleButtonOldMethod(cocos2d::SEL_MenuHandler callback, bool on,
-        cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, int tag);
+        cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, int tag, std::string id = "not-a-string");
 };

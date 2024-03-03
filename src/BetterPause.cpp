@@ -1,4 +1,5 @@
 #include "BetterPause.hpp"
+#include <optional>
 
 std::vector<std::string> BetterPause::quickSettingsNames = {};
 std::vector<std::string> BetterPause::quickSettingsDescriptions = {};
@@ -50,7 +51,7 @@ bool BetterPause::init(PauseLayer* pauLa)
 		break;
 	}
 	}
-	
+
 
 	//this->setMouseEnabled(true);
 	//this->setTouchEnabled(true);
@@ -97,13 +98,13 @@ void BetterPause::createSimplePause() {
 	bgPause->setVisible(true);
 	titleLevel->setVisible(true);
 
-	if(barNormal)barNormal->setVisible(true);
-	if(barPractice)barPractice->setVisible(true);
-	if(perNormal)perNormal->setVisible(true);
-	if(perPractice)perPractice->setVisible(true);
+	if (barNormal)barNormal->setVisible(true);
+	if (barPractice)barPractice->setVisible(true);
+	if (perNormal)perNormal->setVisible(true);
+	if (perPractice)perPractice->setVisible(true);
 
-	if(pointsLabel)pointsLabel->setVisible(true);
-	if(timeLabel)timeLabel->setVisible(true);
+	if (pointsLabel)pointsLabel->setVisible(true);
+	if (timeLabel)timeLabel->setVisible(true);
 
 	buttonsMenu->setVisible(true);
 
@@ -159,6 +160,7 @@ void BetterPause::createSimplePause() {
 
 	secondaryMenuButtons = cocos2d::CCMenu::create();
 	secondaryMenuButtons->setPosition({ 40.f, Utils::WinSize().height - 50.f });
+	secondaryMenuButtons->setID("secondary-menu-buttons");
 	this->addChild(secondaryMenuButtons);
 
 	auto settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
@@ -191,13 +193,14 @@ void BetterPause::createClassicPause() {
 	else {
 		this->createToggleButtonOldMethod((cocos2d::SEL_MenuHandler)&BetterPause::onRedirectionToggle, Utils::shareManager()->m_showProgressBar, menuToggles, "Bar", pointBeggind, -4);
 		pointBeggind.x += 70.f;
-		this->createToggleButtonOldMethod((cocos2d::SEL_MenuHandler)&BetterPause::onRedirectionToggle, Utils::shareManager()->getGameVariable("0040"), menuToggles, "%", pointBeggind, -5);	
+		this->createToggleButtonOldMethod((cocos2d::SEL_MenuHandler)&BetterPause::onRedirectionToggle, Utils::shareManager()->getGameVariable("0040"), menuToggles, "%", pointBeggind, -5);
 	}
 	this->addChild(menuToggles);
 
 	auto settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
 	settingsButtonImage->setScale(0.6f);
 	auto settingsButton = CCMenuItemSpriteExtra::create(settingsButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onOptionsLayer);
+	settingsButton->setID("better-pause-button");
 
 	if (auto menu = pauseLayer->getChildByID("right-button-menu")) {
 		menu->addChild(settingsButton);
@@ -211,18 +214,21 @@ void BetterPause::createSectionTitles() {
 	this->quickSettingsLabel = cocos2d::CCLabelBMFont::create("Quick Settings", "goldFont.fnt");
 	this->quickSettingsLabel->setScale(0.5f);
 	this->quickSettingsLabel->setPosition({ 165.f, 164.f });
+	this->quickSettingsLabel->setID("quick-settings-title-label");
 	this->addChild(this->quickSettingsLabel);
 
 	this->volumeSettingsLabel = cocos2d::CCLabelBMFont::create("Volume Settings:", "bigFont.fnt");
 	this->volumeSettingsLabel->setScale(0.5f);
 	this->volumeSettingsLabel->setPosition({ Utils::WinSize().width - 80.f, Utils::WinSize().height - 40.f });
 	this->volumeSettingsLabel->setAnchorPoint({ 1.f, 0.f });
+	this->volumeSettingsLabel->setID("volume-settings-title-label");
 	this->addChild(this->volumeSettingsLabel);
 
 	this->questsLabel = cocos2d::CCLabelBMFont::create("Quest:", "bigFont.fnt");
 	this->questsLabel->setScale(0.5f);
 	this->questsLabel->setPosition({ Utils::WinSize().width - 120.f, Utils::WinSize().height - 120.f });
 	this->questsLabel->setAnchorPoint({ 1.f, 0.f });
+	this->questsLabel->setID("quest-title-label");
 	this->addChild(this->questsLabel);
 
 }
@@ -243,6 +249,7 @@ void BetterPause::handleOptionsLayers() {
 void BetterPause::createPlatformerTimes() {
 	auto platformerProgressBetter = ProgressPlataformerBetter::create();
 	platformerProgressBetter->setPosition({ 86.f, Utils::WinSize().height - 90.f });
+	platformerProgressBetter->setID("progress-plataformer-node");
 	this->addChild(platformerProgressBetter);
 }
 
@@ -251,7 +258,8 @@ void BetterPause::createCustomSongWidget() {
 	SongInfoObject* songInfoObject = nullptr;
 
 	if (levelSongID == 0) {
-		songInfoObject = LevelTools::getSongObject(GameManager::sharedState()->getPlayLayer()->m_level->m_audioTrack);
+		auto zeroIdSong = GameManager::sharedState()->getPlayLayer()->m_level->m_audioTrack;
+		songInfoObject = LevelTools::getSongObject(zeroIdSong);
 	}
 	else {
 		songInfoObject = SongInfoObject::create(levelSongID);
@@ -260,6 +268,7 @@ void BetterPause::createCustomSongWidget() {
 	this->customSongWidget = CustomSongWidget::create(songInfoObject, 0, 0, 0, 1, levelSongID == 0, 0, 0);
 	this->customSongWidget->setPosition(172.f, 50.f);
 	this->customSongWidget->setScale(0.6f);
+	this->customSongWidget->setID("custom-song-widget");
 	this->addChild(customSongWidget);
 
 	intptr_t offsetUnkFloatCSW = 0;
@@ -274,18 +283,6 @@ void BetterPause::createCustomSongWidget() {
 	offsetUnkFloatCSW = 0x128;
 #endif
 
-	// Interpretar como void*
-	void* voidPtrValue = Utils::from<void*>(songInfoObject, offsetUnkFloatCSW);
-	std::cout << "void* value: " << voidPtrValue << std::endl;
-
-	// Interpretar como int
-	int intValue = Utils::from<int>(songInfoObject, offsetUnkFloatCSW);
-	std::cout << "int value: " << intValue << std::endl;
-
-	// Interpretar como float
-	float floatValue = Utils::from<float>(songInfoObject, offsetUnkFloatCSW);
-	std::cout << "float value: " << floatValue << std::endl;
-
 	if (Utils::from<void*>(songInfoObject, offsetUnkFloatCSW) != 0) {
 		customSongWidget->onGetSongInfo(customSongWidget);
 	}
@@ -298,6 +295,7 @@ void BetterPause::createCustomSongWidget() {
 
 void BetterPause::createQuickSettingsButtons() {
 	this->quickSettingsMenu = cocos2d::CCMenu::create();
+	this->quickSettingsMenu->setID("quick-settings-buttons-menu");
 	this->addChild(this->quickSettingsMenu);
 
 	this->handleOptionsLayers();
@@ -347,6 +345,7 @@ void BetterPause::createQuickSettingsButtons() {
 void BetterPause::createQuestMenu() {
 
 	questMenu = ChallengesPage::create();
+	questMenu->setID("quest-menu");
 	this->addChild(questMenu);
 
 	questMenu->m_mainLayer->setScale(0.7f);
@@ -382,6 +381,7 @@ void BetterPause::createMainButtonsMenu() {
 	layerMenuScrollButtons = cocos2d::CCLayerColor::create();
 	layerMenuScrollButtons->setPosition({ 0.f, 0.f });
 	layerMenuScrollButtons->setContentSize({ 45.f, 180.f });
+	layerMenuScrollButtons->setID("layer-menu-scroll-buttons");
 	this->addChild(layerMenuScrollButtons);
 
 	buttonsList = ScrollLayer::create(LAYER_SIZE);
@@ -501,6 +501,7 @@ void BetterPause::createMainButtonsMenu() {
 
 void BetterPause::createSecondaryButtonsMenu() {
 	secondaryMenuButtons = cocos2d::CCMenu::create();
+	secondaryMenuButtons->setID("secondary-menu-buttons");
 	secondaryMenuButtons->setPosition({ 40.f, 42.f });
 	this->addChild(secondaryMenuButtons);
 
@@ -575,6 +576,7 @@ void BetterPause::createAudioControls() {
 	sliderPlusMusic->setPosition({ Utils::WinSize().width, Utils::WinSize().height - 60.f });
 	sliderPlusMusic->setAnchorPoint({ 1.f, 0.f });
 	sliderPlusMusic->setScale(0.9f);
+	sliderPlusMusic->setID("slider-music-plus");
 	this->addChild(sliderPlusMusic);
 
 	sliderPlusSFX = SliderPlus::create("SFX", this, (cocos2d::SEL_MenuHandler)&PauseLayer::sfxSliderChanged,
@@ -582,6 +584,7 @@ void BetterPause::createAudioControls() {
 	sliderPlusSFX->setPosition({ Utils::WinSize().width, Utils::WinSize().height - 90.f });
 	sliderPlusSFX->setAnchorPoint({ 1.f, 0.f });
 	sliderPlusSFX->setScale(0.9f);
+	sliderPlusSFX->setID("slider-sfx-plus");
 	this->addChild(sliderPlusSFX);
 }
 
@@ -595,6 +598,7 @@ void BetterPause::createLabels() {
 	levelNameLabel->limitLabelWidth(150.f, 1.f, 0.1f);
 	levelNameLabel->setAnchorPoint({ 0.f, 0.5f });
 	levelNameLabel->setPosition({ 86.f, Utils::WinSize().height - 30.f });
+	levelNameLabel->setID("level-name");
 	this->addChild(levelNameLabel);
 
 	if (!Mod::get()->getSettingValue<bool>("disable-creator-label")) {
@@ -604,6 +608,7 @@ void BetterPause::createLabels() {
 		creatorNameLabel->setAnchorPoint({ 0.f, 0.5f });
 		creatorNameLabel->setScale(0.3f);
 		creatorNameLabel->setPosition({ 87.f, Utils::WinSize().height - 18.f });
+		creatorNameLabel->setID("creator-name");
 		this->addChild(creatorNameLabel);
 	}
 
@@ -611,6 +616,7 @@ void BetterPause::createLabels() {
 	levelTypeLabel->setScale(0.3f);
 	levelTypeLabel->setPosition({ 86.f, Utils::WinSize().height - 45.f });
 	levelTypeLabel->setAnchorPoint({ 0.f, 1.f });
+	levelTypeLabel->setID("level-type");
 	this->addChild(levelTypeLabel);
 
 	levelStatusLabel = cocos2d::CCLabelBMFont::create(Utils::getplayLayerA()->m_isPracticeMode ? "Practice Mode" : "Normal Mode", "bigFont.fnt");
@@ -618,6 +624,7 @@ void BetterPause::createLabels() {
 	levelStatusLabel->setColor(isPracticeMode ? cocos2d::ccColor3B{ 0, 255, 255 } : cocos2d::ccColor3B{ 0, 255, 0 });
 	levelStatusLabel->setPosition({ 195.f, Utils::WinSize().height - 45.f });
 	levelStatusLabel->setAnchorPoint({ 0.f, 1.f });
+	levelStatusLabel->setID("level-status");
 	this->addChild(levelStatusLabel);
 
 	std::string attemptColor;
@@ -637,6 +644,7 @@ void BetterPause::createLabels() {
 	auto currentAttemptText = gd::string(cocos2d::CCString::createWithFormat("Attempt: %s%i</c>", attemptColor.c_str(), Utils::getTotalAttemptsPlayLayer())->getCString());
 	currentAttemptLabel = TextArea::create(currentAttemptText, "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 0.f, false);
 	currentAttemptLabel->setPosition({ 86.f + (currentAttemptLabel->getContentSize().width / 2), Utils::WinSize().height - 60.f });
+	currentAttemptLabel->setID("current-attempt");
 	this->addChild(currentAttemptLabel);
 
 	int totalSeconds = Utils::getTotalSecondsPlayLayer();
@@ -649,20 +657,22 @@ void BetterPause::createLabels() {
 	auto currentTimeText = gd::string(cocos2d::CCString::createWithFormat(timeLabelFormat.c_str(), minutes, seconds)->getCString());
 	currentTimeLabel = TextArea::create(currentTimeText, "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 0.f, false);
 	currentTimeLabel->setPosition({ 195.f + (currentTimeLabel->getContentSize().width / 2), Utils::WinSize().height - 60.f });
+	currentTimeLabel->setID("current-time");
 	this->addChild(currentTimeLabel);
 }
 
 void BetterPause::createBars() {
-	createAndSetupBar(normalBarPercentage, { 0, 255, 0 }, !Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_normalPercent, { 86.f, Utils::WinSize().height - 90.f });
-	createAndSetupBar(practiceBarPercentage, { 0, 255, 255 }, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_practicePercent, { 86.f, Utils::WinSize().height - 125.f });
+	createAndSetupBar(normalBarPercentage, { 0, 255, 0 }, !Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_normalPercent, { 86.f, Utils::WinSize().height - 90.f }, "normal-bar");
+	createAndSetupBar(practiceBarPercentage, { 0, 255, 255 }, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_practicePercent, { 86.f, Utils::WinSize().height - 125.f }, "practice-bar");
 }
 
-void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible, float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position) {
+void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible, float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position, std::string id) {
 	bar = BarBetterShow::create(color, isVisible, isVisible, currentPercentage, targetPercentage);
 	bar->setPosition(position);
 	bar->setScale(0.5f);
 	bar->m_pBarBase->setVisible(true);
 	bar->m_pBarBase->setOpacity(Utils::convertOpacitySimplf(0.2f));
+	if (id != "not-a-string") bar->setID(id);
 	this->addChild(bar);
 }
 
@@ -704,7 +714,7 @@ void BetterPause::onSetSfxVolume(cocos2d::CCObject* pSender) {
 	popup->show();
 }
 
-void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size, bool twoColumns) {
+void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size, bool twoColumns, std::string id) {
 	auto toggleButton = CCMenuItemToggler::createWithStandardSprites(this, (cocos2d::SEL_MenuHandler)&BetterPause::onToggleWithGameVariable, size + 0.2f);
 	toggleButton->toggle(Utils::shareManager()->getGameVariable(key));
 	toggleButton->setTag(std::stoi(key));
@@ -720,6 +730,7 @@ void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::C
 	text->setAlignment(cocos2d::kCCTextAlignmentRight);
 	text->setPosition({ pos.x - 15.f, pos.y });
 	text->setAnchorPoint({ 1.f, 0.5f });
+	if (id != "not-a-string") text->setID(id);
 	this->addChild(text);
 }
 
@@ -733,7 +744,7 @@ void BetterPause::onToggleWithGameVariable(cocos2d::CCObject* pSender) {
 
 void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 	cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size,
-	bool twoColumns, int tag) {
+	bool twoColumns, int tag, std::string id) {
 	auto toggleButton = CCMenuItemToggler::createWithStandardSprites(this, callback, size + 0.2f);
 	toggleButton->toggle(on);
 	toggleButton->setPosition(menu->convertToNodeSpace(pos));
@@ -752,6 +763,7 @@ void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 	text->setAlignment(cocos2d::kCCTextAlignmentRight);
 	text->setPosition({ pos.x - 15.f, pos.y });
 	text->setAnchorPoint({ 1.f, 0.5f });
+	if (id != "not-a-string") text->setID(id);
 	this->addChild(text);
 
 	if (std::string(caption.c_str()) == "Practice Music Sync" && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
@@ -1139,7 +1151,7 @@ void BetterPause::updateButtons() {
 }
 
 void BetterPause::createToggleButtonOldMethod(cocos2d::SEL_MenuHandler callback, bool on,
-	cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, int tag) {
+	cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, int tag, std::string id) {
 
 	auto toggleButton = CCMenuItemToggler::createWithStandardSprites(this, callback, 0.6f);
 	toggleButton->toggle(on);
@@ -1156,5 +1168,6 @@ void BetterPause::createToggleButtonOldMethod(cocos2d::SEL_MenuHandler callback,
 	text->setPosition(pos);
 	text->setPositionX(pos.x + 18.f);
 	text->setAnchorPoint({ 0.f, 0.5f });
+	if (id != "not-a-string") text->setID(id);
 	this->addChild(text);
 }
