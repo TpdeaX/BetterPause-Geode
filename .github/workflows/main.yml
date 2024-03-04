@@ -37,7 +37,7 @@ jobs:
         with:
           combine: true
           target: ${{ matrix.config.target }}
-          bindings: coopeeo/Geode-bindings
+          bindings: TpdeaX/indexer
           
   package:
     name: Package builds
