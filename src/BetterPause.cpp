@@ -855,11 +855,7 @@ void BetterPause::onRedirectionToggle(cocos2d::CCObject* pSender) {
 	auto toggleTag = toggleButton->getTag();
 
 	if ((toggleTag != -1)) {
-#ifdef GEODE_IS_WINDOWS
-		gameOptionsLayer->didToggle_(-toggleTag - 1);
-#else
 		gameOptionsLayer->didToggle(-toggleTag - 1);
-#endif
 	}
 
 	gameOptionsLayer->onClose(nullptr);
