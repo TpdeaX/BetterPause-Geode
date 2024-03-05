@@ -66,6 +66,7 @@ void BetterPause::createBetterPause() {
 	this->createMainButtonsMenu();
 	this->createSecondaryButtonsMenu();
 	this->createLabels();
+	this->createExtras();
 
 	if (!Utils::getplayLayerA()->m_level->isPlatformer())
 	{
@@ -461,18 +462,26 @@ void BetterPause::createMainButtonsMenu() {
 										"play-button", "exit-button", "retry-button", "options-button" };
 	this->findButtonsRecursively(this->pauseLayer, buttonIds, menuButtonsDetected);
 
-	for (auto buttonExt : menuButtonsDetected) {
+	for (int i = 0; i < menuButtonsDetected.size(); ++i) {
+		auto buttonExt = menuButtonsDetected[i];
+
 		if (buttonExt) {
 			typeinfo_cast<CCSprite*>(buttonExt->getNormalImage())->setScale(0.6f);
-			if (!menuButtonsDetected.empty()) {
-				totalHeight += (buttonExt->getNormalImage()->getContentSize().height + menuButtonsDetected.back()->getContentSize().height) / 2 + 2.f;
+			float mult = 1.f;
+			if (buttonExt->getID() == "info-button") {
+				mult = 2.f;
+			}
+			if (i == 0) {
+				totalHeight += ((buttonExt->getContentSize().height + menuButtonsDetected[i - 0]->getContentSize().height) / 2.f - 23.f) * mult;
 			}
 			else {
-				totalHeight += buttonExt->getNormalImage()->getContentSize().height + 2.f;
+				totalHeight += ((buttonExt->getContentSize().height + menuButtonsDetected[i - 1]->getContentSize().height) / 2.f - 10.f) * mult;
 			}
+
 			createButtonMenu(buttonExt);
 		}
 	}
+
 
 	auto allChildrens = buttonsList->m_contentLayer->getChildren();
 	CCObject* node;
@@ -492,7 +501,7 @@ void BetterPause::createMainButtonsMenu() {
 	float xContentSize = 50.f;
 
 #ifdef GEODE_IS_ANDROID
-	xContentSize = 80.0f;
+	xContentSize = 100.0f;
 #endif
 	buttonsList->setContentSize({ xContentSize, 180.f });
 
@@ -642,8 +651,9 @@ void BetterPause::createLabels() {
 	std::cout << Utils::getTotalAttemptsPlayLayer() << std::endl;
 
 	auto currentAttemptText = gd::string(cocos2d::CCString::createWithFormat("Attempt: %s%i</c>", attemptColor.c_str(), Utils::getTotalAttemptsPlayLayer())->getCString());
-	currentAttemptLabel = TextArea::create(currentAttemptText, "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 0.f, false);
-	currentAttemptLabel->setPosition({ 86.f + (currentAttemptLabel->getContentSize().width / 2), Utils::WinSize().height - 60.f });
+	currentAttemptLabel = TextArea::create(currentAttemptText, "bigFont.fnt", 0.3f, Utils::WinSize().width / 2.f, {0.f, 1.f}, 0.f, false);
+	currentAttemptLabel->setPosition({ 86.f, Utils::WinSize().height - 60.f });
+	currentAttemptLabel->setAnchorPoint({ 0.f, 0.f });
 	currentAttemptLabel->setID("current-attempt");
 	this->addChild(currentAttemptLabel);
 
@@ -652,11 +662,12 @@ void BetterPause::createLabels() {
 		totalSeconds = BetterPause::totalLevelTimeBackup;
 	}
 	int minutes = totalSeconds / 60;
-	int seconds = totalSeconds % 60;
+	int seconds = totalSeconds % 60; 
 
 	auto currentTimeText = gd::string(cocos2d::CCString::createWithFormat(timeLabelFormat.c_str(), minutes, seconds)->getCString());
-	currentTimeLabel = TextArea::create(currentTimeText, "bigFont.fnt", 0.3f, 100.f, { 0.f, 1.f }, 0.f, false);
-	currentTimeLabel->setPosition({ 195.f + (currentTimeLabel->getContentSize().width / 2), Utils::WinSize().height - 60.f });
+	currentTimeLabel = TextArea::create(currentTimeText, "bigFont.fnt", 0.3f, Utils::WinSize().width / 2.f, { 0.f, 1.f }, 0.f, false);
+	currentTimeLabel->setPosition({ 195.f, Utils::WinSize().height - 60.f });
+	currentTimeLabel->setAnchorPoint({ 0.f, 0.f });
 	currentTimeLabel->setID("current-time");
 	this->addChild(currentTimeLabel);
 }
@@ -676,6 +687,39 @@ void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3
 	this->addChild(bar);
 }
 
+void BetterPause::createExtras() {
+
+	if (Mod::get()->getSettingValue<bool>("enabled-info-button")) {
+		thirdMenu = cocos2d::CCMenu::create();
+		thirdMenu->setPosition(0.f, 0.f);
+		this->addChild(thirdMenu);
+
+		auto infoButtonSprite = ButtonSprite::createWithSpriteFrameName("GJ_infoIcon_001.png");
+		infoButtonSprite->setScale(0.6f);
+		auto infoButton = CCMenuItemSpriteExtra::create(infoButtonSprite, thirdMenu, (cocos2d::SEL_MenuHandler)&BetterPause::onInfoLevelOpen);
+		infoButton->setPosition({ 75.f, 287.f });
+		thirdMenu->addChild(infoButton);
+	}
+
+	if (Mod::get()->getSettingValue<bool>("enabled-coins-viewer")) {
+		coinViewer = CoinsViewerSprites::create(PlayLayer::get()->m_level->m_levelType == GJLevelType::Local);
+		coinViewer->setScale(0.3f);
+		coinViewer->setPosition({ 257.f, Utils::WinSize().height - 20.f });
+		this->addChild(coinViewer);
+	}
+}
+
+
+void BetterPause::onInfoLevelOpen(cocos2d::CCObject* sender) {
+	static LevelPage* lvlInfo = nullptr;
+	if (!lvlInfo) {
+		lvlInfo = LevelPage::create(0);
+	}
+
+	lvlInfo->m_level = Utils::getplayLayerA()->m_level;
+	lvlInfo->onInfo(sender);
+	lvlInfo->m_level = 0;
+}
 
 void BetterPause::onLevelInfoLayer(cocos2d::CCObject* pSender) {
 	if (Utils::getplayLayerA()) {
@@ -704,14 +748,17 @@ void BetterPause::sfxSliderChanged(cocos2d::CCObject* pSender) {
 
 void BetterPause::onSetMusicVolume(cocos2d::CCObject* pSender) {
 	auto popup = SetVolumenPopup::create(this->musicSlider);
-	popup->setID("popup-betterpause");
+	auto zOrderP = CCScene::get()->getHighestChildZ();
 	popup->show();
+	popup->setZOrder(zOrderP);
 }
 
 void BetterPause::onSetSfxVolume(cocos2d::CCObject* pSender) {
 	auto popup = SetVolumenPopup::create(this->sfxSlider);
 	popup->setID("popup-betterpause");
+	auto zOrderP = CCScene::get()->getHighestChildZ();
 	popup->show();
+	popup->setZOrder(zOrderP);
 }
 
 void BetterPause::createToggleButtonWithGameVariable(const char* key, cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, float size, bool twoColumns, std::string id) {
@@ -777,7 +824,10 @@ void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 void BetterPause::onOptionsLayer(cocos2d::CCObject* pSender) {
 	auto popup = MoreOptionsPauseLayer::create(this);
 	popup->setID("popup-betterpause");
+	std::cout << CCScene::get()->getHighestChildZ() << std::endl;
+	auto zOrderP = CCScene::get()->getHighestChildZ();
 	popup->show();
+	popup->setZOrder(zOrderP);
 }
 
 void BetterPause::onHide(cocos2d::CCObject* pSender) {
@@ -1166,4 +1216,35 @@ void BetterPause::createToggleButtonOldMethod(cocos2d::SEL_MenuHandler callback,
 	text->setAnchorPoint({ 0.f, 0.5f });
 	if (id != "not-a-string") text->setID(id);
 	this->addChild(text);
+}
+
+void BetterPause::setEnabledForButtons(bool enabled) {
+	if (buttonsList == nullptr) {
+		return;
+	}
+
+	auto allChildrens = buttonsList->m_contentLayer->getChildren();
+	CCObject* node;
+	CCARRAY_FOREACH(allChildrens, node) {
+		CCNode* child = dynamic_cast<CCNode*>(node);
+		if (child) {
+			CCArray* children = child->getChildren();
+			if (children && children->count() > 0) {
+				CCNode* innerChild = dynamic_cast<CCNode*>(children->objectAtIndex(0));
+				if (innerChild) {
+					CCMenu* ccmenu = dynamic_cast<CCMenu*>(innerChild);
+					if (ccmenu) {
+						CCArray* menuItems = ccmenu->getChildren();
+						if (menuItems && menuItems->count() > 0) {
+							CCMenuItemSpriteExtra* btn = dynamic_cast<CCMenuItemSpriteExtra*>(menuItems->objectAtIndex(0));
+							if (btn) {
+								btn->unselected();
+								btn->setEnabled(enabled);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }

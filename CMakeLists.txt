@@ -10,7 +10,7 @@ file(GLOB SOURCES
 	src/*.cpp
 )
 
-add_library(${PROJECT_NAME} SHARED ${SOURCES} "src/BetterPause.cpp"  "src/Utils.cpp" "src/BarBetterShow.cpp"  "src/BetterPauseManager.h"  "src/SelectQuickSettings.h" "src/ProgressPlataformerBetter.cpp" "src/BetterInfoUtils.cpp" "src/SetVolumenPopup.cpp" "src/MoreOptionsPauseLayer.cpp" "src/CustomSettings.cpp" "src/Hooks.h" "src/SliderPlus.cpp"  )
+add_library(${PROJECT_NAME} SHARED ${SOURCES} "src/BetterPause.cpp"  "src/Utils.cpp" "src/BarBetterShow.cpp"  "src/BetterPauseManager.h"  "src/SelectQuickSettings.h" "src/ProgressPlataformerBetter.cpp" "src/BetterInfoUtils.cpp" "src/SetVolumenPopup.cpp" "src/MoreOptionsPauseLayer.cpp" "src/CustomSettings.cpp" "src/Hooks.h" "src/SliderPlus.cpp"   "src/CoinsViewerSprites.cpp")
 
 if (NOT DEFINED ENV{GEODE_SDK})
     message(FATAL_ERROR "Unable to find Geode SDK! Please define GEODE_SDK environment variable to point to Geode")

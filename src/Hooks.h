@@ -13,11 +13,13 @@
 #include <Geode/modify/DailyLevelPage.hpp>
 #include <Geode/modify/DialogObject.hpp>
 #include <Geode/modify/GameLevelOptionsLayer.hpp>
+#include <Geode/modify/InfoLayer.hpp>
 #include "BetterPauseManager.h"
 #include "BetterPause.hpp"
 #include "CustomSettings.hpp"
 #include "SelectQuickSettings.h"
 #include <Geode/modify/CCScrollLayerExt.hpp>
+#include "CoinsViewerSprites.hpp"
 
 using namespace geode::prelude;
 
@@ -79,6 +81,7 @@ class $modify(PlayLayer) {
 	bool init(GJGameLevel * p0, bool p1, bool p2) {
 		BetterPause::totalLevelTimeBackup = 0.f;
 		ProgressPlataformerBetter::m_totalPoints = 0;
+		CoinsViewerSprites::coinsInVector.clear();
 
 		if (!PlayLayer::init(p0, p1, p2)) {
 			return false;
@@ -114,6 +117,17 @@ class $modify(PlayLayer) {
 		if (effectGameObjectPtr) {
 			if (Utils::from<int>(effectGameObjectPtr, offsetTypeObject) == 0x1e) {
 				ProgressPlataformerBetter::m_totalPoints += Utils::from<int>(effectGameObjectPtr, offsetPointsXObj);
+			}
+		}
+
+		bool isCoin = p0->m_objectType == GameObjectType::SecretCoin || p0->m_objectType == GameObjectType::UserCoin;
+
+		if (isCoin) {
+			bool isObjectInVector = std::find(CoinsViewerSprites::coinsInVector.begin(), CoinsViewerSprites::coinsInVector.end(), p0) != CoinsViewerSprites::coinsInVector.end();
+			if (!isObjectInVector) {
+				p0->retain();
+				CoinsViewerSprites::coinsInVector.push_back(p0);
+				p0->release();
 			}
 		}
 
@@ -262,7 +276,28 @@ class $modify(CCScrollLayerExt) {
 	void ccTouchMoved(cocos2d::CCTouch * p0, cocos2d::CCEvent * p1) {
 		CCScrollLayerExt::ccTouchMoved(p0, p1);
 		if (Utils::hasParentWithID(this, "better-pause-node")) {
-			typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"))->updateButtons();
+
+			auto betterPause = typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"));
+			betterPause->updateButtons();
+			betterPause->setEnabledForButtons(false);
+		}
+	}
+
+	void ccTouchEnded(CCTouch* pTouch, CCEvent* pEvent) {
+		CCScrollLayerExt::ccTouchEnded(pTouch, pEvent);
+		if (Utils::hasParentWithID(this, "better-pause-node")) {
+			auto betterPause = typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"));
+			betterPause->setEnabledForButtons(true);
+			betterPause->updateButtons();
+		}
+	}
+
+	void ccTouchCancelled(CCTouch* pTouch, CCEvent* pEvent) {
+		CCScrollLayerExt::ccTouchCancelled(pTouch, pEvent);
+		if (Utils::hasParentWithID(this, "better-pause-node")) {
+			auto betterPause = typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"));
+			betterPause->setEnabledForButtons(true);
+			betterPause->updateButtons();
 		}
 	}
 
@@ -272,4 +307,18 @@ class $modify(CCScrollLayerExt) {
 			typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"))->updateButtons();
 		}
 	}
+};
+
+class $modify(InfoLayer) {
+
+	void onClose(cocos2d::CCObject * sender) {
+		InfoLayer::onClose(sender);
+		if (auto pauseLayer = CCScene::get()->getChildByID("PauseLayer"); pauseLayer) {
+			if (auto betterPause = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node")); betterPause) {
+				handleTouchPriority(pauseLayer);
+				handleTouchPriority(betterPause);
+			}
+		}
+	}
+
 };

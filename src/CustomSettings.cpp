@@ -5,5 +5,8 @@ SettingNode* SettingQuickSettingsValue::createNode(float width) {
 }
 
 void SettingQuickSettingsNode::onQuickSettings(CCObject* sender) {
-    SelectQuickSettings::create(false)->show();
+    auto zOrderP = CCScene::get()->getHighestChildZ();
+    auto popup = SelectQuickSettings::create(false);
+    popup->show();
+    popup->setZOrder(zOrderP);
 }

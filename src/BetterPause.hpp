@@ -8,6 +8,7 @@
 #include "SetVolumenPopup.hpp"
 #include "MoreOptionsPauseLayer.hpp"
 #include "SliderPlus.hpp"
+#include "CoinsViewerSprites.hpp"
 
 using namespace geode::prelude;
 
@@ -66,6 +67,8 @@ public:
     SliderPlus* sliderPlusSFX = nullptr;
     cocos2d::CCLayerColor* layerMenuScrollButtons = nullptr;
     int typeMenuCreate = 0;
+    cocos2d::CCMenu* thirdMenu = nullptr;
+    CoinsViewerSprites* coinViewer = nullptr;
 
     //Classic Pause
     cocos2d::CCMenu* menuToggles = nullptr;
@@ -83,6 +86,7 @@ public:
     void createSectionTitles();
     void createPlatformerTimes();
     void createAudioControls();
+    void createExtras();
     void createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible,
         float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position, std::string id = "not-a-string");
     void createToggleButton(cocos2d::SEL_MenuHandler callback, bool toggledOn,
@@ -116,4 +120,6 @@ public:
 
     void createToggleButtonOldMethod(cocos2d::SEL_MenuHandler callback, bool on,
         cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, int tag, std::string id = "not-a-string");
+    void setEnabledForButtons(bool enabled);
+    void onInfoLevelOpen(cocos2d::CCObject* sender);
 };

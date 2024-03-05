@@ -2,7 +2,8 @@
   "geode": "2.0.0",
   "gd": {
     "win": "2.204",
-    "android": "2.205"
+    "android": "2.205",
+    "mac": "2.200"
   },
   "version": "v1.6.6",
   "id": "tpdea.betterpause-Better",
@@ -85,6 +86,18 @@
         "arrows": true,
         "slider": true
       }
+    },
+    "enabled-info-button": {
+      "name": "Enabled Info Button",
+      "description": "Enabled Info Level. (Recommend using \"Level Info in Pause Menu\")",
+      "type": "bool",
+      "default": false
+    },
+    "enabled-coins-viewer": {
+      "name": "Enabled Coins Viewer",
+      "description": "Enabled Coins Viewer. (Recommend using \"Coins in the Pause Menu\")",
+      "type": "bool",
+      "default": false
     }
   },
   "resources": {
