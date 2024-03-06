@@ -136,11 +136,12 @@ namespace Utils
 
 	std::string buildStarRatingString(int rating, int requested, bool platformer) {
 		auto starRating = rating;
-		auto starsOrMoons = " stars";
-		auto requestedSuffix = " requested";
-		if (platformer) { starsOrMoons = " moons"; }
+		std::string starsOrMoons = " star";
+		std::string requestedSuffix = " requested";
+		if (platformer) { starsOrMoons = " moon"; }
 		if (rating == 0) { starRating = requested; }
 		else { requestedSuffix = ""; }
+		if (starRating != 1) starsOrMoons = starsOrMoons + "s";
 		return std::to_string(starRating) + starsOrMoons + requestedSuffix;
 	}
 
