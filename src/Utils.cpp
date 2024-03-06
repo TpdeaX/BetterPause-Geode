@@ -134,6 +134,16 @@ namespace Utils
 		return "By " + creatorName;
 	}
 
+	std::string buildStarRatingString(int rating, int requested, bool platformer) {
+		auto starRating = rating;
+		auto starsOrMoons = " stars";
+		auto requestedSuffix = " requested";
+		if (platformer) { starsOrMoons = " moons"; }
+		if (rating == 0) { starRating = requested; }
+		else { requestedSuffix = ""; }
+		return std::to_string(starRating) + starsOrMoons + requestedSuffix;
+	}
+
 	std::string getNameLevelType(GJLevelType type) {
 		switch (type) {
 		case GJLevelType::Editor:
