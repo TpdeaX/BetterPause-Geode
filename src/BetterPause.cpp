@@ -613,8 +613,8 @@ void BetterPause::createLabels() {
 
 	if (!Mod::get()->getSettingValue<bool>("disable-creator-label")) {
 		std::string formattedCreatorName = Utils::getFormattedCreatorName(creatorName, levelType);
-		std::string formattedRatingString = Utils::buildStarRatingString(theLevel->m_ratings, theLevel->m_starsRequested, theLevel->isPlatformer());
-		std::string formattedCombined = formattedCreatorName + " " + formattedRatingString;
+		std::string formattedRatingString = Utils::buildStarRatingString(theLevel->m_stars.value(), theLevel->m_starsRequested, theLevel->isPlatformer());
+		std::string formattedCombined = formattedCreatorName + " | " + formattedRatingString;
 		creatorNameLabel = cocos2d::CCLabelBMFont::create(formattedCombined.c_str(), "bigFont.fnt");
 		creatorNameLabel->limitLabelWidth(150.f, 0.3f, 0.1f);
 		creatorNameLabel->setAnchorPoint({ 0.f, 0.5f });
