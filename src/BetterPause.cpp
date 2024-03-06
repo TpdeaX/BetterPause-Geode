@@ -602,6 +602,7 @@ void BetterPause::createLabels() {
 	auto creatorName = Utils::getplayLayerA()->m_level->m_creatorName;
 	auto levelType = Utils::getplayLayerA()->m_level->m_levelType;
 	auto isPracticeMode = Utils::getplayLayerA()->m_isPracticeMode;
+	auto levelDifficulty = ("Rating: " + std::to_string(Utils::getplayLayerA()->m_level->m_ratings) + " stars").c_str();
 
 	levelNameLabel = cocos2d::CCLabelBMFont::create(levelName.c_str(), "goldFont.fnt");
 	levelNameLabel->limitLabelWidth(150.f, 1.f, 0.1f);
@@ -612,7 +613,8 @@ void BetterPause::createLabels() {
 
 	if (!Mod::get()->getSettingValue<bool>("disable-creator-label")) {
 		std::string formattedCreatorName = Utils::getFormattedCreatorName(creatorName, levelType);
-		creatorNameLabel = cocos2d::CCLabelBMFont::create(formattedCreatorName.c_str(), "bigFont.fnt");
+		std::string customVar = formattedCreatorName + "  " + levelDifficulty;
+		creatorNameLabel = cocos2d::CCLabelBMFont::create(customVar.c_str(), "bigFont.fnt");
 		creatorNameLabel->limitLabelWidth(150.f, 0.3f, 0.1f);
 		creatorNameLabel->setAnchorPoint({ 0.f, 0.5f });
 		creatorNameLabel->setScale(0.3f);
