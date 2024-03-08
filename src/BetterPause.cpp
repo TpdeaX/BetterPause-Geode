@@ -598,9 +598,10 @@ void BetterPause::createAudioControls() {
 }
 
 void BetterPause::createLabels() {
-	auto levelName = Utils::getplayLayerA()->m_level->m_levelName;
-	auto creatorName = Utils::getplayLayerA()->m_level->m_creatorName;
-	auto levelType = Utils::getplayLayerA()->m_level->m_levelType;
+	auto theLevel = Utils::getplayLayerA()->m_level;
+	auto levelName = theLevel->m_levelName;
+	auto creatorName = theLevel->m_creatorName;
+	auto levelType = theLevel->m_levelType;
 	auto isPracticeMode = Utils::getplayLayerA()->m_isPracticeMode;
 
 	levelNameLabel = cocos2d::CCLabelBMFont::create(levelName.c_str(), "goldFont.fnt");
@@ -612,7 +613,9 @@ void BetterPause::createLabels() {
 
 	if (!Mod::get()->getSettingValue<bool>("disable-creator-label")) {
 		std::string formattedCreatorName = Utils::getFormattedCreatorName(creatorName, levelType);
-		creatorNameLabel = cocos2d::CCLabelBMFont::create(formattedCreatorName.c_str(), "bigFont.fnt");
+		std::string formattedRatingString = Utils::buildStarRatingString(theLevel->m_stars.value(), theLevel->m_starsRequested, theLevel->isPlatformer());
+		std::string formattedCombined = formattedCreatorName + " | " + formattedRatingString;
+		creatorNameLabel = cocos2d::CCLabelBMFont::create(formattedCombined.c_str(), "bigFont.fnt");
 		creatorNameLabel->limitLabelWidth(150.f, 0.3f, 0.1f);
 		creatorNameLabel->setAnchorPoint({ 0.f, 0.5f });
 		creatorNameLabel->setScale(0.3f);

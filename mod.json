@@ -70,8 +70,8 @@
       "default": false
     },
     "disable-creator-label": {
-      "name": "Disable Creator Level Label",
-      "description": "Disable Creator Level Label.",
+      "name": "Disable Level Author and Rating Label",
+      "description": "Disable Level Author and Rating Label.",
       "type": "bool",
       "default": false
     },
