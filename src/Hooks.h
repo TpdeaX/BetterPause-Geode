@@ -12,7 +12,6 @@
 #include <Geode/ui/GeodeUI.hpp>
 #include <Geode/modify/DailyLevelPage.hpp>
 #include <Geode/modify/DialogObject.hpp>
-#include <Geode/modify/GameLevelOptionsLayer.hpp>
 #include <Geode/modify/InfoLayer.hpp>
 #include "BetterPauseManager.h"
 #include "BetterPause.hpp"
