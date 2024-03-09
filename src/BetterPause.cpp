@@ -245,16 +245,16 @@ void BetterPause::handleOptionsLayers() {
 	gameOptionsLayer->unregisterScriptTouchHandler();
 	Utils::shareDirectorA()->getTouchDispatcher()->unregisterForcePrio(gameOptionsLayer);
 #ifdef GEODE_IS_MACOS
-	auto functionPointer = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
-	functionPointer(nullptr);
+	auto functionPointer2 = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
+	functionPointer2(nullptr);
 #else
 	gameOptionsLayer->onClose(nullptr);
 #endif
 
 	auto moreOptionsLayer = MoreOptionsLayer::create();
 #ifdef GEODE_IS_MACOS
-	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(moreOptionsLayer) + 0x508);
-	functionPointer();
+	auto functionPointer3 = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(moreOptionsLayer) + 0x508);
+	functionPointer3();
 #else
 	moreOptionsLayer->show();
 #endif
