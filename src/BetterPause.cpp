@@ -236,13 +236,28 @@ void BetterPause::createSectionTitles() {
 
 void BetterPause::handleOptionsLayers() {
 	auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x508);
+	functionPointer();
+#else
 	gameOptionsLayer->show();
+#endif
 	gameOptionsLayer->unregisterScriptTouchHandler();
 	Utils::shareDirectorA()->getTouchDispatcher()->unregisterForcePrio(gameOptionsLayer);
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
+	functionPointer(nullptr);
+#else
 	gameOptionsLayer->onClose(nullptr);
+#endif
 
 	auto moreOptionsLayer = MoreOptionsLayer::create();
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(moreOptionsLayer) + 0x508);
+	functionPointer();
+#else
 	moreOptionsLayer->show();
+#endif
 	moreOptionsLayer->onClose(nullptr);
 }
 
@@ -612,15 +627,9 @@ void BetterPause::createAudioControls() {
 
 void BetterPause::createLabels() {
 	auto theLevel = Utils::getplayLayerA()->m_level;
-<<<<<<< HEAD
 	auto levelName = Utils::getplayLayerA()->m_level->m_levelName;
 	auto creatorName = Utils::getplayLayerA()->m_level->m_creatorName;
 	auto levelType = Utils::getplayLayerA()->m_level->m_levelType;
-=======
-	auto levelName = theLevel->m_levelName;
-	auto creatorName = theLevel->m_creatorName;
-	auto levelType = theLevel->m_levelType;
->>>>>>> f75cfa5397678004ca50fdf2184cfef4e3bc8b09
 	auto isPracticeMode = Utils::getplayLayerA()->m_isPracticeMode;
 
 	levelNameLabel = cocos2d::CCLabelBMFont::create(levelName.c_str(), "goldFont.fnt");
@@ -632,7 +641,6 @@ void BetterPause::createLabels() {
 
 	if (!Mod::get()->getSettingValue<bool>("disable-creator-label")) {
 		std::string formattedCreatorName = Utils::getFormattedCreatorName(creatorName, levelType);
-<<<<<<< HEAD
 
 		bool disableRatingLabel = Mod::get()->getSettingValue<bool>("disable-rating-plus-label");
 		bool disableIconRatingLabel = Mod::get()->getSettingValue<bool>("disable-icon-rating-plus-label");
@@ -643,11 +651,6 @@ void BetterPause::createLabels() {
 		}
 
 		creatorNameLabel = cocos2d::CCLabelBMFont::create(formattedCreatorName.c_str(), "bigFont.fnt");
-=======
-		std::string formattedRatingString = Utils::buildStarRatingString(theLevel->m_stars.value(), theLevel->m_starsRequested, theLevel->isPlatformer());
-		std::string formattedCombined = formattedCreatorName + " | " + formattedRatingString;
-		creatorNameLabel = cocos2d::CCLabelBMFont::create(formattedCombined.c_str(), "bigFont.fnt");
->>>>>>> f75cfa5397678004ca50fdf2184cfef4e3bc8b09
 		creatorNameLabel->limitLabelWidth(150.f, 0.3f, 0.1f);
 		creatorNameLabel->setAnchorPoint({ 0.f, 0.5f });
 		creatorNameLabel->setScale(0.3f);
@@ -959,7 +962,12 @@ void BetterPause::onRedirectionToggle(cocos2d::CCObject* pSender) {
 		gameOptionsLayer->didToggle(-toggleTag - 1);
 	}
 
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
+	functionPointer(nullptr);
+#else
 	gameOptionsLayer->onClose(nullptr);
+#endif
 
 	this->clearQuickSettings();
 }
@@ -976,9 +984,19 @@ void BetterPause::clearQuickSettings() {
 void BetterPause::onPracticeMusicSyncRedirection(cocos2d::CCObject* pSender) {
 	auto toggleButton = reinterpret_cast<CCMenuItemToggler*>(pSender);
 	auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x508);
+	functionPointer();
+#else
 	gameOptionsLayer->show();
+#endif
 	gameOptionsLayer->onPracticeMusicSync(pSender);
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
+	functionPointer(nullptr);
+#else
 	gameOptionsLayer->onClose(nullptr);
+#endif
 
 	if (!GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
 		toggleButton->m_offButton->setVisible(true);

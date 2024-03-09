@@ -16,12 +16,27 @@ void SelectQuickSettings::handleOptionsLayers() {
 	SelectQuickSettings::GameOptionsLayer_getSettings = true;
 
 	auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x508);
+	functionPointer();
+#else
 	gameOptionsLayer->show();
+#endif
 	cocos2d::CCTouchDispatcher::get()->unregisterForcePrio(gameOptionsLayer);
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
+	functionPointer(nullptr);
+#else
 	gameOptionsLayer->onClose(nullptr);
+#endif
 
 	auto moreOptionsLayer = MoreOptionsLayer::create();
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(moreOptionsLayer) + 0x508);
+	functionPointer();
+#else
 	moreOptionsLayer->show();
+#endif
 	cocos2d::CCTouchDispatcher::get()->unregisterForcePrio(moreOptionsLayer);
 	moreOptionsLayer->onClose(nullptr);
 }
