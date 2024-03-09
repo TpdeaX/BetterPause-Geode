@@ -963,8 +963,8 @@ void BetterPause::onRedirectionToggle(cocos2d::CCObject* pSender) {
 	}
 
 #ifdef GEODE_IS_MACOS
-	auto functionPointer = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
-	functionPointer(nullptr);
+	auto functionPointer2 = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
+	functionPointer2(nullptr);
 #else
 	gameOptionsLayer->onClose(nullptr);
 #endif
@@ -992,8 +992,8 @@ void BetterPause::onPracticeMusicSyncRedirection(cocos2d::CCObject* pSender) {
 #endif
 	gameOptionsLayer->onPracticeMusicSync(pSender);
 #ifdef GEODE_IS_MACOS
-	auto functionPointer = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
-	functionPointer(nullptr);
+	auto functionPointer2 = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
+	functionPointer2(nullptr);
 #else
 	gameOptionsLayer->onClose(nullptr);
 #endif
