@@ -376,7 +376,7 @@ void BetterPause::createQuestMenu() {
 
 
 void BetterPause::createMainButtonsMenu() {
-	cocos2d::CCSize LAYER_SIZE = { 50.f, 50.f };
+	cocos2d::CCSize LAYER_SIZE = { 50.f, 180.f };
 	float totalHeight = 0.0f;
 
 	layerMenuScrollButtons = cocos2d::CCLayerColor::create();
@@ -436,7 +436,17 @@ void BetterPause::createMainButtonsMenu() {
 
 	auto quitButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_menuBtn_001.png");
 	quitButtonImage->setScale(0.5f);
-	auto quitButton = CCMenuItemSpriteExtra::create(quitButtonImage, pauseLayer, (cocos2d::SEL_MenuHandler)&PauseLayer::tryQuit);
+
+	cocos2d::SEL_MenuHandler handler;
+
+#ifdef GEODE_IS_MACOS
+	handler = (cocos2d::SEL_MenuHandler)&PauseLayer::onQuit;
+#else
+	handler = (cocos2d::SEL_MenuHandler)&PauseLayer::tryQuit;
+
+#endif 
+
+	auto quitButton = CCMenuItemSpriteExtra::create(quitButtonImage, pauseLayer, handler);
 	totalHeight += quitButtonImage->getContentSize().height - 24.f;
 	createButtonMenu(quitButton);
 
@@ -449,7 +459,10 @@ void BetterPause::createMainButtonsMenu() {
 	}
 
 	if (Mod::get()->getSettingValue<bool>("show-comment-button")) {
-		auto showCommentsImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_chatBtn_001.png");
+
+		auto spriteName = Mod::get()->getSettingValue<bool>("original-comment-button-sprite") ? "GJ_infoBtn_001.png" : "GJ_chatBtn_001.png";
+
+		auto showCommentsImage = cocos2d::CCSprite::createWithSpriteFrameName(spriteName);
 		showCommentsImage->setScale(0.6f);
 		auto showCommentsButton = CCMenuItemSpriteExtra::create(showCommentsImage, pauseLayer, (cocos2d::SEL_MenuHandler)&BetterPause::onLevelInfoLayer);
 		totalHeight += showCommentsImage->getContentSize().height - 8.f;
@@ -598,6 +611,7 @@ void BetterPause::createAudioControls() {
 }
 
 void BetterPause::createLabels() {
+	auto theLevel = Utils::getplayLayerA()->m_level;
 	auto levelName = Utils::getplayLayerA()->m_level->m_levelName;
 	auto creatorName = Utils::getplayLayerA()->m_level->m_creatorName;
 	auto levelType = Utils::getplayLayerA()->m_level->m_levelType;
@@ -612,6 +626,15 @@ void BetterPause::createLabels() {
 
 	if (!Mod::get()->getSettingValue<bool>("disable-creator-label")) {
 		std::string formattedCreatorName = Utils::getFormattedCreatorName(creatorName, levelType);
+
+		bool disableRatingLabel = Mod::get()->getSettingValue<bool>("disable-rating-plus-label");
+		bool disableIconRatingLabel = Mod::get()->getSettingValue<bool>("disable-icon-rating-plus-label");
+
+		if (!disableRatingLabel) {
+			std::string formattedRatingString = Utils::buildStarRatingString(theLevel->m_stars.value(), theLevel->m_starsRequested, theLevel->isPlatformer());
+			formattedCreatorName += " | " + formattedRatingString;
+		}
+
 		creatorNameLabel = cocos2d::CCLabelBMFont::create(formattedCreatorName.c_str(), "bigFont.fnt");
 		creatorNameLabel->limitLabelWidth(150.f, 0.3f, 0.1f);
 		creatorNameLabel->setAnchorPoint({ 0.f, 0.5f });
@@ -619,7 +642,15 @@ void BetterPause::createLabels() {
 		creatorNameLabel->setPosition({ 87.f, Utils::WinSize().height - 18.f });
 		creatorNameLabel->setID("creator-name");
 		this->addChild(creatorNameLabel);
+
+		if (!disableRatingLabel && !disableIconRatingLabel) {
+			auto iconRatingtxt = theLevel->isPlatformer() ? "moon_small01_001.png" : "star_small01_001.png";
+			auto iconRating = cocos2d::CCSprite::createWithSpriteFrameName(iconRatingtxt);
+			iconRating->setPosition({ 87.f + creatorNameLabel->getContentSize().width * creatorNameLabel->getScale() + 10.f, Utils::WinSize().height - 18.f });
+			this->addChild(iconRating);
+		}
 	}
+
 
 	levelTypeLabel = cocos2d::CCLabelBMFont::create(Utils::getNameLevelType(Utils::getplayLayerA()->m_level->m_levelType).c_str(), "bigFont.fnt");
 	levelTypeLabel->setScale(0.3f);
@@ -901,7 +932,15 @@ void BetterPause::onRedirectionToggle(cocos2d::CCObject* pSender) {
 
 	auto toggleButton = reinterpret_cast<CCMenuItemToggler*>(pSender);
 	auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
+
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x508);
+	functionPointer();
+#else
 	gameOptionsLayer->show();
+#endif
+
+
 	auto toggleTag = toggleButton->getTag();
 
 	if ((toggleTag != -1)) {

@@ -33,7 +33,7 @@
       "name": "Level Editor Hack",
       "description": "I couldn't adapt the level edit recognition of the mods menus, sorry :(",
       "type": "bool",
-      "default": true
+      "default": false
     },
     "show-comment-button": {
       "name": "Show Comment button",
@@ -70,8 +70,8 @@
       "default": false
     },
     "disable-creator-label": {
-      "name": "Disable Creator Level Label",
-      "description": "Disable Creator Level Label.",
+      "name": "Disable Level Author and Rating Label",
+      "description": "Disable Level Author and Rating Label.",
       "type": "bool",
       "default": false
     },
@@ -96,6 +96,24 @@
     "enabled-coins-viewer": {
       "name": "Enabled Coins Viewer",
       "description": "Enabled Coins Viewer. (Recommend using \"Coins in the Pause Menu\")",
+      "type": "bool",
+      "default": false
+    },
+    "original-comment-button-sprite": {
+      "name": "Original Comment Button Sprite",
+      "description": "Change Comment Button Sprite to Original",
+      "type": "bool",
+      "default": false
+    },
+    "disable-rating-plus-label": {
+      "name": "Disable Rating Label",
+      "description": "Disable Rating Label In Creator Label.",
+      "type": "bool",
+      "default": false
+    },
+    "disable-icon-rating-plus-label": {
+      "name": "Disable Icon Rating Label",
+      "description": "Disable Icon Rating Label In Creator Label.",
       "type": "bool",
       "default": false
     }

@@ -90,6 +90,7 @@ namespace Utils
 	bool isRoundAspectRatio(float targetRatio);
 
 	std::string getFormattedCreatorName(const std::string& creatorName, GJLevelType levelType);
+	std::string buildStarRatingString(int rating, int requested, bool platformer);
 	std::string getNameLevelType(GJLevelType type);
 	double getTotalSecondsPlayLayer();
 	int getTotalAttemptsPlayLayer();
