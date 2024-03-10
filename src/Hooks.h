@@ -96,7 +96,7 @@ class $modify(PlayLayer) {
 	void addObject(GameObject * p0) {
 		PlayLayer::addObject(p0);
 
-		auto effectGameObjectPtr = dynamic_cast<EffectGameObject*>(p0);
+		auto effectGameObjectPtr = reinterpret_cast<EffectGameObject*>(p0);
 
 		intptr_t offsetTypeObject = 0;
 		intptr_t offsetPointsXObj = 0;
