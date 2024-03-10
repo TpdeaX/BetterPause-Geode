@@ -617,7 +617,7 @@ void BetterPause::createAudioControls() {
 
 #ifdef GEODE_IS_WINDOWS
 	sfxValue = Utils::from<float>(Utils::shareFMOD(), 0x16C);
-#else  GEODE_IS_ANDROID
+#else
 	sfxValue = Utils::shareFMOD()->getEffectsVolume();
 #endif
 
