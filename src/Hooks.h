@@ -119,7 +119,16 @@ class $modify(PlayLayer) {
 			}
 		}
 
-		bool isCoin = p0->m_objectType == GameObjectType::SecretCoin || p0->m_objectType == GameObjectType::UserCoin;
+		GameObjectType objTypeV = GameObjectType::Solid;
+
+#ifdef GEODE_IS_MACOS
+		objTypeV = Utils::from<GameObjectType>(p0, 0x398);
+#else
+		objTypeV = p0->m_objectType;
+#endif
+
+
+		bool isCoin = objTypeV == GameObjectType::SecretCoin || objTypeV == GameObjectType::UserCoin;
 
 		if (isCoin) {
 			bool isObjectInVector = std::find(CoinsViewerSprites::coinsInVector.begin(), CoinsViewerSprites::coinsInVector.end(), p0) != CoinsViewerSprites::coinsInVector.end();

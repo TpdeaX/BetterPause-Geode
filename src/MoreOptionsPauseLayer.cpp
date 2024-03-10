@@ -147,7 +147,13 @@ void MoreOptionsPauseLayer::onOptionsGame(cocos2d::CCObject* pSender)
 void MoreOptionsPauseLayer::onOptionsPause(cocos2d::CCObject* pSender)
 {
 	auto dropDown = GameOptionsLayer::create(Utils::getplayLayerA());
-	this->addChild(dropDown);
+#ifdef GEODE_IS_MACOS
+	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(dropDown) + 0x508);
+	functionPointer();
+#else
+	dropDown->show();
+#endif
+	//this->addChild(dropDown);
 	//dropDown->setPosition(0.0f, 0.0f);
 }
 
