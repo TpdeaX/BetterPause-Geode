@@ -295,7 +295,9 @@ void BetterPause::createCustomSongWidget() {
 	offsetUnkFloatCSW = 0x170;
 #elif GEODE_IS_ANDROID32
 	offsetUnkFloatCSW = 0x128;
-#elif GEODE_IS_MACOS
+#endif
+
+#ifdef GEODE_IS_MACOS
 	offsetUnkFloatCSW = 0x1c0;
 #endif
 
