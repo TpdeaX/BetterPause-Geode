@@ -53,7 +53,9 @@ bool ProgressPlataformerBetter::init() {
     currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x3480);
 #elif GEODE_IS_ANDROID32
     currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x2c18);
-#elif GEODE_IS_MACOS
+#endif 
+
+#ifdef GEODE_IS_MACOS
     currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x32b0);
 #endif
     
@@ -86,7 +88,9 @@ bool ProgressPlataformerBetter::init() {
     currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x884);
 #elif GEODE_IS_ANDROID32
     currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x5ec);
-#elif GEODE_IS_MACOS
+#endif
+
+#ifdef GEODE_IS_MACOS
     currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x32bc);
 #endif
 

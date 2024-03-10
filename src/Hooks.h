@@ -110,7 +110,9 @@ class $modify(PlayLayer) {
 #elif GEODE_IS_ANDROID32
 		offsetTypeObject = 0x308;
 		offsetPointsXObj = 0x5e4;
-#elif GEODE_IS_MACOS
+#endif
+
+#ifdef GEODE_IS_MACOS
 		offsetTypeObject = 0x398;
 		offsetPointsXObj = 0x6a0;
 #endif

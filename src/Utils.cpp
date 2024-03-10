@@ -23,7 +23,11 @@ namespace Utils
 	float getPercentagePerXpos()
 	{
 		auto playLayer = Utils::getplayLayerA();
-#ifdef GEODE_IS_ANDROID || GEODE_IS_MACOS
+#ifdef GEODE_IS_ANDROID
+		return playLayer->getCurrentPercent();
+#endif
+
+#ifdef GEODE_IS_MACOS
 		return playLayer->getCurrentPercent();
 #endif
 
@@ -166,7 +170,9 @@ namespace Utils
 		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x3b0));
 #elif GEODE_IS_ANDROID32
 		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x318));
-#elif GEODE_IS_MACOS
+#endif
+
+#ifdef GEODE_IS_MACOS
 		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x3a0));
 #endif
 	}
@@ -178,7 +184,9 @@ namespace Utils
 		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x30ac));
 #elif GEODE_IS_ANDROID32
 		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x29cc));
-#elif GEODE_IS_MACOS
+#endif
+
+#ifdef GEODE_IS_MACOS
 		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x2f0c));
 #endif
 	}
