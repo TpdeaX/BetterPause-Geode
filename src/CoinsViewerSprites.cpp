@@ -31,7 +31,7 @@ bool CoinsViewerSprites::init(bool isLocal) {
 	std::vector<std::string> coinSprites = { };
 
 	for (size_t i = 0; i < coinsInVector.size(); i++) {
-		if (playLayer->hasUniqueCoin(typeinfo_cast<EffectGameObject*>(coinsInVector[i]))) {
+		if (playLayer->hasUniqueCoin(reinterpret_cast<EffectGameObject*>(coinsInVector[i]))) {
 			coinSprites.push_back(withCoinSprite);
 		}
 		else {
@@ -42,7 +42,7 @@ bool CoinsViewerSprites::init(bool isLocal) {
 	for (size_t i = 0; i < coinSprites.size(); i++) {
 		auto coin = cocos2d::CCSprite::createWithSpriteFrameName(coinSprites[i].c_str());
 		addChild(coin);
-		auto spriteName = playLayer->hasUniqueCoin(typeinfo_cast<EffectGameObject*>(coinsInVector[i])) ? withCoinSprite : withoutCoinSprite;
+		auto spriteName = playLayer->hasUniqueCoin(reinterpret_cast<EffectGameObject*>(coinsInVector[i])) ? withCoinSprite : withoutCoinSprite;
 		m_coinsSprites.push_back(coin);
 		this->setCoinSprite(m_coinsSprites[i], coinSprites[i], i);
 	}
