@@ -291,12 +291,12 @@ void BetterPause::createCustomSongWidget() {
 
 #ifdef GEODE_IS_WINDOWS
 	offsetUnkFloatCSW = 0x18c;
-#endif
-#ifdef GEODE_IS_ANDROID64
+#elif GEODE_IS_ANDROID64
 	offsetUnkFloatCSW = 0x170;
-#endif
-#ifdef GEODE_IS_ANDROID32
+#elif GEODE_IS_ANDROID32
 	offsetUnkFloatCSW = 0x128;
+#elif GEODE_IS_MACOS
+	offsetUnkFloatCSW = 0x1c0;
 #endif
 
 	if (Utils::from<void*>(songInfoObject, offsetUnkFloatCSW) != 0) {
@@ -611,15 +611,13 @@ void BetterPause::createAudioControls() {
 
 #ifdef GEODE_IS_WINDOWS
 	musicValue = Utils::from<float>(Utils::shareFMOD(), 0x168);
-#endif
-#ifdef  GEODE_IS_ANDROID
+#else
 	musicValue = Utils::shareFMOD()->getBackgroundMusicVolume();
 #endif
 
 #ifdef GEODE_IS_WINDOWS
 	sfxValue = Utils::from<float>(Utils::shareFMOD(), 0x16C);
-#endif
-#ifdef  GEODE_IS_ANDROID
+#else  GEODE_IS_ANDROID
 	sfxValue = Utils::shareFMOD()->getEffectsVolume();
 #endif
 

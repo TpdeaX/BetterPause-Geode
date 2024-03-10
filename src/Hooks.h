@@ -104,14 +104,15 @@ class $modify(PlayLayer) {
 #ifdef GEODE_IS_WINDOWS
 		offsetTypeObject = 0x31c;
 		offsetPointsXObj = 0x5f8;
-#endif
-#ifdef GEODE_IS_ANDROID64
+#elif GEODE_IS_ANDROID64
 		offsetTypeObject = 0x388;
 		offsetPointsXObj = 0x690;
-#endif
-#ifdef GEODE_IS_ANDROID32
+#elif GEODE_IS_ANDROID32
 		offsetTypeObject = 0x308;
 		offsetPointsXObj = 0x5e4;
+#elif GEODE_IS_MACOS
+		offsetTypeObject = 0x398;
+		offsetPointsXObj = 0x6a0;
 #endif
 		if (effectGameObjectPtr) {
 			if (Utils::from<int>(effectGameObjectPtr, offsetTypeObject) == 0x1e) {
