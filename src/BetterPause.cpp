@@ -371,11 +371,26 @@ void BetterPause::createQuestMenu() {
 
 
 	questMenu->setKeyboardEnabled(false);
-	questMenu->unregisterScriptKeypadHandler();
 	questMenu->setTouchEnabled(false);
 	questMenu->setKeypadEnabled(false);
 	questMenu->setTouchPriority(-10);
+	
+	//WHY!!!!
+#ifdef GEODE_IS_MACOS
+	if (Utils::from<void*>(questMenu, 0x170) != 0) {
+		questMenu->release();
+		Utils::from<void*>(questMenu, 0x170) = 0;
+}
+	if (Utils::from<void*>(questMenu, 0x178) != 0) {
+		questMenu->release();
+		Utils::from<void*>(questMenu, 0x178) = 0;
+	}
+#else 
 	questMenu->unregisterScriptTouchHandler();
+	questMenu->unregisterScriptKeypadHandler();
+#endif
+
+
 	Utils::shareDirectorA()->getTouchDispatcher()->unregisterForcePrio(this->questMenu);
 
 	for (size_t i = 0; i < questMenu->m_mainLayer->getChildrenCount(); i++)
@@ -394,7 +409,7 @@ void BetterPause::createMainButtonsMenu() {
 	cocos2d::CCSize LAYER_SIZE = { 50.f, 180.f };
 	float totalHeight = 0.0f;
 
-	layerMenuScrollButtons = cocos2d::CCLayerColor::create();
+	layerMenuScrollButtons = cocos2d::CCLayerColor::create({ 0, 0, 0 });
 	layerMenuScrollButtons->setPosition({ 0.f, 0.f });
 	layerMenuScrollButtons->setContentSize({ 45.f, 180.f });
 	layerMenuScrollButtons->setID("layer-menu-scroll-buttons");
