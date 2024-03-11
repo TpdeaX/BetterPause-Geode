@@ -13,6 +13,7 @@
 #include <Geode/modify/DailyLevelPage.hpp>
 #include <Geode/modify/DialogObject.hpp>
 #include <Geode/modify/InfoLayer.hpp>
+#include <Geode/modify/GJGameLevel.hpp>
 #include "BetterPauseManager.h"
 #include "BetterPause.hpp"
 #include "CustomSettings.hpp"
@@ -27,7 +28,15 @@ namespace hooksVariables {
 	geode::Hook* GJOptionsLayerr_addToggleHookV = nullptr;
 }
 
+class ButtonsClass : public FLAlertLayerProtocol {
+
+};
+
 class $modify(PauseLayer) {
+
+	bool hasPosibleExitHotKey = false;
+	bool hasConfirmPopup = false;
+
 	static void onModify(auto & self) {
 		self.setHookPriority("PauseLayer::create", -99);
 	}
@@ -53,6 +62,11 @@ class $modify(PauseLayer) {
 	}
 
 	void onResume(cocos2d::CCObject * sender) {
+		if (m_fields->hasConfirmPopup) {
+			PauseLayer::onResume(sender);
+			return;
+		}
+
 
 		auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 
@@ -72,8 +86,184 @@ class $modify(PauseLayer) {
 			popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 		}
 
+		if (Mod::get()->getSettingValue<bool>("confirm-resume-level")) {
+			geode::createQuickPopup(
+				"Resume Level",
+				std::string("Are you sure you want to <cr>resume</c>?"),
+				"Cancel", "Resume",
+				[this, sender](FLAlertLayer* fla, bool btn2) {
+					if (btn2) {
+						m_fields->hasConfirmPopup = true;
+						PauseLayer::onResume(sender);
+						m_fields->hasConfirmPopup = false;
+					}
+				}
+			);
+			return;
+		}
+
 		PauseLayer::onResume(sender);
 	}
+
+	void onPracticeMode(cocos2d::CCObject* sender) {
+		if (m_fields->hasConfirmPopup) {
+			PauseLayer::onPracticeMode(sender);
+			return;
+		}
+
+		if (Mod::get()->getSettingValue<bool>("confirm-practice-level")) {
+			auto popupConfirm = geode::createQuickPopup(
+				"Practice Level",
+				std::string("Do you want to <cg>Enter</c> the practice mode?"),
+				"Cancel",
+				"Enter",
+				[this, sender](FLAlertLayer* fla, bool btn2) {
+					if (btn2) {
+						m_fields->hasConfirmPopup = true;
+						PauseLayer::onPracticeMode(sender);
+						m_fields->hasConfirmPopup = false;
+					}
+				}
+			);
+
+			popupConfirm->m_button2->updateBGImage("GJ_button_02.png");
+			return;
+		}
+
+		PauseLayer::onPracticeMode(sender);
+	}
+
+	void onNormalMode(cocos2d::CCObject* sender) {
+		if (m_fields->hasConfirmPopup) {
+			PauseLayer::onNormalMode(sender);
+			return;
+		}
+
+		if (Mod::get()->getSettingValue<bool>("confirm-normal-level")) {
+			auto popupConfirm = geode::createQuickPopup(
+				"Normal Level",
+				std::string("Do you want to <cr>Exit</c> the practice mode?"),
+				"Cancel",
+				"Exit",
+				[this, sender](FLAlertLayer* fla, bool btn2) {
+					if (btn2) {
+						m_fields->hasConfirmPopup = true;
+						PauseLayer::onNormalMode(sender);
+						m_fields->hasConfirmPopup = false;
+					}
+				}
+			);
+
+			popupConfirm->m_button2->updateBGImage("GJ_button_06.png");
+			return;
+		}
+
+		PauseLayer::onNormalMode(sender);
+	}
+
+	void onRestart(cocos2d::CCObject* sender)
+	{
+		if (m_fields->hasConfirmPopup)
+		{
+			PauseLayer::onRestart(sender);
+			return;
+		}
+
+		if (Mod::get()->getSettingValue<bool>("confirm-restart-level")) {
+			geode::createQuickPopup(
+				"Restart Level",
+				"Are you sure you want to <cr>restart</c>?",
+				"Cancel", "Restart",
+				[this, sender](FLAlertLayer* fla, bool btn2) {
+
+					if (btn2) {
+						m_fields->hasConfirmPopup = true;
+						PauseLayer::onRestart(sender);
+						m_fields->hasConfirmPopup = false;
+					}
+				}
+			);
+
+			return;
+		}
+
+		PauseLayer::onRestart(sender);
+	}
+
+	void onRestartFull(cocos2d::CCObject* sender)
+	{
+		if (m_fields->hasConfirmPopup)
+		{
+			PauseLayer::onRestartFull(sender);
+			return;
+		}
+
+		if (Mod::get()->getSettingValue<bool>("confirm-restart-full-level")) {
+			geode::createQuickPopup(
+				"Restart Full Level",
+				"Are you sure you want to <cr>restart</c>?",
+				"Cancel", "Restart",
+				[this, sender](FLAlertLayer* fla, bool btn2) {
+
+					if (btn2) {
+						m_fields->hasConfirmPopup = true;
+						PauseLayer::onRestartFull(sender);
+						m_fields->hasConfirmPopup = false;
+					}
+				}
+			);
+			return;
+		}
+
+		PauseLayer::onRestartFull(sender);
+	}
+
+	void onEdit(cocos2d::CCObject* sender)
+	{
+		if (m_fields->hasConfirmPopup)
+		{
+			PauseLayer::onEdit(sender);
+			return;
+		}
+
+		if (Mod::get()->getSettingValue<bool>("confirm-edit-level")) {
+			geode::createQuickPopup(
+				"Edit Level",
+				"Are you sure you want to <cr>edit</c>?",
+				"Cancel", "Edit",
+				[this, sender](FLAlertLayer* fla, bool btn2) {
+
+					if (btn2) {
+						m_fields->hasConfirmPopup = true;
+						PauseLayer::onEdit(sender);
+						m_fields->hasConfirmPopup = false;
+					}
+				}
+			);
+			return;
+		}
+
+		PauseLayer::onEdit(sender);
+	}
+
+	void keyDown(cocos2d::enumKeyCodes p0) {
+		if (Mod::get()->getSettingValue<bool>("remove-exit-hotkey")) {
+			m_fields->hasPosibleExitHotKey = true;
+		}
+
+		PauseLayer::keyDown(p0);
+
+		m_fields->hasPosibleExitHotKey = false;
+	}
+
+	void tryQuit(cocos2d::CCObject* sender) {
+		if (m_fields->hasPosibleExitHotKey) {
+			return;
+		}
+
+		PauseLayer::tryQuit(sender);
+	}
+
 };
 
 class $modify(PlayLayer) {
@@ -144,6 +334,34 @@ class $modify(PlayLayer) {
 
 	}
 
+	void showNewBest(bool p0, int p1, int p2, bool p3, bool p4, bool p5) {
+
+		if (this->m_isTestMode && this->m_level->m_levelType != GJLevelType::Editor) {
+			return;
+		}
+
+		PlayLayer::showNewBest(p0, p1, p2, p3, p4, p5);
+	}
+
+	TodoReturn levelComplete()
+	{
+		if (this->m_isTestMode && this->m_level->m_levelType != GJLevelType::Editor)
+		{
+			if (m_isPracticeMode)
+			{
+				this->showCompleteText();
+			}
+			else
+			{
+				showCompleteEffect();
+			}
+
+			return;
+		}
+
+		PlayLayer::levelComplete();
+	}
+
 };
 
 class $modify(GJBaseGameLayer) {
@@ -162,7 +380,7 @@ class $modify(GJBaseGameLayer) {
 				label->setScale(0.4f);
 			}
 
-			
+
 			std::stringstream ss;
 			for (size_t i = 0; i < numIterations; i++) {
 				if (i > 0) {
@@ -170,7 +388,7 @@ class $modify(GJBaseGameLayer) {
 				}
 				ss << "Valor " << i + 1 << ": " << std::floor(Utils::from<int>(Utils::getplayLayerA(), offset + (i * sizeof(int)))) << std::endl;
 			}
-		
+
 
 			std::stringstream ss;
 			ss << "Intentos " << Utils::getplayLayerA()->getCurrentPercent() << std::endl;
@@ -235,7 +453,7 @@ class $modify(GJOptionsLayer) {
 
 		auto ret = GJOptionsLayer::init(idk);
 
-		
+
 
 		return ret;
 	}
@@ -251,14 +469,12 @@ class $modify(GJOptionsLayer) {
 		}
 	}
 
-	
-
 };
 
 class $modify(CustomSongWidget) {
 	void updateSongObject(SongInfoObject * obj) {
 		CustomSongWidget::updateSongObject(obj);
-		
+
 		if (Utils::getplayLayerA() && this->m_artistLabel && this->m_moreBtn) {
 			CCPoint labelPos = this->m_artistLabel->getPosition();
 			auto labelWidth = this->m_artistLabel->getContentSize().width * this->m_artistLabel->getScale();
@@ -266,7 +482,7 @@ class $modify(CustomSongWidget) {
 			auto menuItemX = labelPos.x + labelWidth - (Utils::WinSize().width / 2) + 30.f;
 
 			this->m_moreBtn->setPositionX(menuItemX);
-		}	
+		}
 	}
 
 	void updateSongInfo() {
@@ -294,7 +510,7 @@ class $modify(CCScrollLayerExt) {
 		}
 	}
 
-	void ccTouchEnded(CCTouch* pTouch, CCEvent* pEvent) {
+	void ccTouchEnded(CCTouch * pTouch, CCEvent * pEvent) {
 		CCScrollLayerExt::ccTouchEnded(pTouch, pEvent);
 		if (Utils::hasParentWithID(this, "better-pause-node")) {
 			auto betterPause = typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"));
@@ -303,7 +519,7 @@ class $modify(CCScrollLayerExt) {
 		}
 	}
 
-	void ccTouchCancelled(CCTouch* pTouch, CCEvent* pEvent) {
+	void ccTouchCancelled(CCTouch * pTouch, CCEvent * pEvent) {
 		CCScrollLayerExt::ccTouchCancelled(pTouch, pEvent);
 		if (Utils::hasParentWithID(this, "better-pause-node")) {
 			auto betterPause = typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"));
@@ -332,4 +548,17 @@ class $modify(InfoLayer) {
 		}
 	}
 
+};
+
+class $modify(GJGameLevel) {
+	void savePercentage(int p0, bool p1, int p2, int p3, bool p4) {
+
+		if (PlayLayer::get()) {
+			if (PlayLayer::get()->m_isTestMode && this->m_levelType != GJLevelType::Editor) {
+				return;
+			}
+		}
+
+		GJGameLevel::savePercentage(p0, p1, p2, p3, p4);
+	}
 };

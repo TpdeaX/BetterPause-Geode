@@ -122,4 +122,5 @@ public:
         cocos2d::CCMenu* menu, std::string caption, cocos2d::CCPoint pos, int tag, std::string id = "not-a-string");
     void setEnabledForButtons(bool enabled);
     void onInfoLevelOpen(cocos2d::CCObject* sender);
+    void setVisibleNodesSimplePause(bool isVisible);
 };

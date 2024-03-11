@@ -2,10 +2,9 @@
   "geode": "2.0.0",
   "gd": {
     "win": "2.204",
-    "android": "2.205",
-    "mac": "2.200"
+    "android": "2.205"
   },
-  "version": "v1.6.6",
+  "version": "v1.6.8",
   "id": "tpdea.betterpause-Better",
   "name": "BetterPause",
   "developer": "Tpdea",
@@ -114,6 +113,48 @@
     "disable-icon-rating-plus-label": {
       "name": "Disable Icon Rating Label",
       "description": "Disable Icon Rating Label In Creator Label.",
+      "type": "bool",
+      "default": false
+    },
+    "remove-exit-hotkey": {
+      "name": "Remove Exit Hotkey",
+      "description": "Remove Exit Hotkey.",
+      "type": "bool",
+      "default": false
+    },
+    "confirm-resume-level": {
+      "name": "Confirm Resume Level",
+      "description": "Confirm Resume Level.",
+      "type": "bool",
+      "default": false
+    },
+    "confirm-practice-level": {
+      "name": "Confirm Practice Level",
+      "description": "Confirm Practice Level.",
+      "type": "bool",
+      "default": false
+    },
+    "confirm-normal-level": {
+      "name": "Confirm Normal Level",
+      "description": "Confirm Normal Level.",
+      "type": "bool",
+      "default": false
+    },
+    "confirm-restart-level": {
+      "name": "Confirm Restart Level",
+      "description": "Confirm Restart Level.",
+      "type": "bool",
+      "default": false
+    },
+    "confirm-restart-full-level": {
+      "name": "Confirm Restart Full Level",
+      "description": "Confirm Restart Full Level.",
+      "type": "bool",
+      "default": false
+    },
+    "confirm-edit-level": {
+      "name": "Confirm Edit Level",
+      "description": "Confirm Edit Level.",
       "type": "bool",
       "default": false
     }

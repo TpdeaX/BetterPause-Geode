@@ -96,18 +96,7 @@ void BetterPause::createSimplePause() {
 	auto pointsLabel = dynamic_cast<cocos2d::CCLabelBMFont*>(pauseLayer->getChildByID("points-label"));
 	auto timeLabel = dynamic_cast<cocos2d::CCLabelBMFont*>(pauseLayer->getChildByID("play-time"));
 
-	bgPause->setVisible(true);
-	titleLevel->setVisible(true);
-
-	if (barNormal)barNormal->setVisible(true);
-	if (barPractice)barPractice->setVisible(true);
-	if (perNormal)perNormal->setVisible(true);
-	if (perPractice)perPractice->setVisible(true);
-
-	if (pointsLabel)pointsLabel->setVisible(true);
-	if (timeLabel)timeLabel->setVisible(true);
-
-	buttonsMenu->setVisible(true);
+	this->setVisibleNodesSimplePause(true);
 
 	bgPause->setContentSize({ bgPause->getContentSize().width, 70.f });
 	bgPause->setPositionY(Utils::WinSize().height - 52.f);
@@ -156,11 +145,8 @@ void BetterPause::createSimplePause() {
 	buttonsMenu->setPosition({ posX, posY });
 	buttonsMenu->setScale(0.5f);
 
-
-
-
 	secondaryMenuButtons = cocos2d::CCMenu::create();
-	secondaryMenuButtons->setPosition({ 40.f, Utils::WinSize().height - 50.f });
+	secondaryMenuButtons->setPosition({ 40.f, Utils::WinSize().height - 70.f });
 	secondaryMenuButtons->setID("secondary-menu-buttons");
 	this->addChild(secondaryMenuButtons);
 
@@ -169,6 +155,19 @@ void BetterPause::createSimplePause() {
 	auto settingsButton = CCMenuItemSpriteExtra::create(settingsButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onOptionsLayer);
 	secondaryMenuButtons->addChild(settingsButton);
 
+	auto visibleButtonImage = cocos2d::CCSprite::create("BE_eye-on-btn.png"_spr);
+
+	if (!visibleButtonImage)
+	{
+		visibleButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_reportBtn_001.png");
+		this->areTexturesLoaded = false;
+	}
+	visibleButtonImage->setScale(0.6f);
+	this->visibleButton = CCMenuItemSpriteExtra::create(visibleButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onHide);
+	secondaryMenuButtons->addChild(this->visibleButton, -5);
+
+	auto firstButtonRect = visibleButton->boundingBox();
+	settingsButton->setPositionY(firstButtonRect.getMaxY() + 22.f);
 
 }
 
@@ -203,8 +202,20 @@ void BetterPause::createClassicPause() {
 	auto settingsButton = CCMenuItemSpriteExtra::create(settingsButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onOptionsLayer);
 	settingsButton->setID("better-pause-button");
 
+	auto visibleButtonImage = cocos2d::CCSprite::create("BE_eye-on-btn.png"_spr);
+
+	if (!visibleButtonImage)
+	{
+		visibleButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_reportBtn_001.png");
+		this->areTexturesLoaded = false;
+	}
+	visibleButtonImage->setScale(0.6f);
+	this->visibleButton = CCMenuItemSpriteExtra::create(visibleButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onHide);
+
 	if (auto menu = pauseLayer->getChildByID("right-button-menu")) {
+		secondaryMenuButtons = typeinfo_cast<CCMenu*>(pauseLayer->getChildByID("right-button-menu"));
 		menu->addChild(settingsButton);
+		menu->addChild(this->visibleButton);
 		menu->updateLayout();
 	}
 
@@ -410,6 +421,7 @@ void BetterPause::createQuestMenu() {
 void BetterPause::createMainButtonsMenu() {
 	cocos2d::CCSize LAYER_SIZE = { 50.f, 180.f };
 	float totalHeight = 0.0f;
+	CCMenuItemSpriteExtra* lastbuttonNow = nullptr;
 
 	layerMenuScrollButtons = cocos2d::CCLayerColor::create({ 0, 0, 0 });
 	layerMenuScrollButtons->setPosition({ 0.f, 0.f });
@@ -437,7 +449,7 @@ void BetterPause::createMainButtonsMenu() {
 		button->setPosition(20.f, 20.f);
 		ccnode->setAnchorPoint({ 0.f, 0.5f });
 		ccnode->setContentSize(button->getContentSize());
-
+		lastbuttonNow = button;
 		};
 
 	auto resumeButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_playBtn2_001.png");
@@ -507,24 +519,52 @@ void BetterPause::createMainButtonsMenu() {
 										"play-button", "exit-button", "retry-button", "options-button" };
 	this->findButtonsRecursively(this->pauseLayer, buttonIds, menuButtonsDetected);
 
+	auto lastButtonBefore = lastbuttonNow;
+
 	for (int i = 0; i < menuButtonsDetected.size(); ++i) {
 		auto buttonExt = menuButtonsDetected[i];
 
 		if (buttonExt) {
-			typeinfo_cast<CCSprite*>(buttonExt->getNormalImage())->setScale(0.6f);
-			float mult = 1.f;
-			if (buttonExt->getID() == "info-button") {
-				mult = 2.f;
+
+			auto normalImage = dynamic_cast<CCSprite*>(buttonExt->getNormalImage());
+			auto lastNormalImage = dynamic_cast<CCSprite*>(lastButtonBefore->getNormalImage());
+
+			auto baseCollisionBox = lastNormalImage->boundingBox();
+			auto currentCollisionBox = normalImage->boundingBox();
+
+			float baseWidth = baseCollisionBox.getMaxX() - baseCollisionBox.getMinX();
+			float baseHeight = baseCollisionBox.getMaxY() - baseCollisionBox.getMinY();
+
+			float currentWidth = currentCollisionBox.getMaxX() - currentCollisionBox.getMinX();
+			float currentHeight = currentCollisionBox.getMaxY() - currentCollisionBox.getMinY();
+
+			float scaleX = baseWidth / currentWidth;
+			float scaleY = baseHeight / currentHeight;
+
+			buttonExt->setScale(1.f);
+			buttonExt->setContentSize(lastButtonBefore->getContentSize());
+
+
+			if (normalImage && lastNormalImage) {
+				//undefined06855 arregla tu wea oe
+				float mult = 0.9f;
+				if (buttonExt->getID() == "undefined0.autocheckpoint/settings-button") {
+					mult = 0.3f;
+				}
+
+				normalImage->setScaleX(scaleX * mult);
+				normalImage->setScaleY(scaleY * mult);
+
+				if (lastNormalImage) {
+					normalImage->setPosition(lastNormalImage->getPosition());
+				}
 			}
-			if (i == 0) {
-				totalHeight += ((buttonExt->getContentSize().height + menuButtonsDetected[i - 0]->getContentSize().height) / 2.f - 23.f) * mult;
-			}
-			else {
-				totalHeight += ((buttonExt->getContentSize().height + menuButtonsDetected[i - 1]->getContentSize().height) / 2.f - 10.f) * mult;
-			}
+
+			totalHeight += menuButtonsDetected[i]->getContentSize().height + 10.f;
 
 			createButtonMenu(buttonExt);
 		}
+
 	}
 
 
@@ -904,7 +944,16 @@ void BetterPause::onHide(cocos2d::CCObject* pSender) {
 	for (size_t i = 0; i < pauseLayer->getChildrenCount(); i++)
 	{
 		auto node = reinterpret_cast<cocos2d::CCNode*>(pauseLayer->getChildren()->objectAtIndex(i));
-		node->setVisible(false);
+		if (typeMenuCreate == 2) {
+			node->setVisible(!this->isHidden);
+		}
+		else {
+			node->setVisible(false);
+		}
+	}
+
+	if (typeMenuCreate == 3) {
+		this->setVisibleNodesSimplePause(!this->isHidden);
 	}
 
 	if (!this->isHidden)
@@ -1331,4 +1380,29 @@ void BetterPause::setEnabledForButtons(bool enabled) {
 			}
 		}
 	}
+}
+
+void BetterPause::setVisibleNodesSimplePause(bool isVisible) {
+	auto bgPause = dynamic_cast<cocos2d::extension::CCScale9Sprite*>(pauseLayer->getChildByID("background"));
+	auto titleLevel = dynamic_cast<cocos2d::CCLabelBMFont*>(pauseLayer->getChildByID("level-name"));
+	auto barNormal = dynamic_cast<cocos2d::CCSprite*>(pauseLayer->getChildByID("normal-progress-bar"));
+	auto barPractice = dynamic_cast<cocos2d::CCSprite*>(pauseLayer->getChildByID("practice-progress-bar"));
+	auto perNormal = dynamic_cast<cocos2d::CCLabelBMFont*>(pauseLayer->getChildByID("normal-progress-label"));
+	auto perPractice = dynamic_cast<cocos2d::CCLabelBMFont*>(pauseLayer->getChildByID("practice-progress-label"));
+	auto buttonsMenu = dynamic_cast<cocos2d::CCMenu*>(pauseLayer->getChildByID("center-button-menu"));
+	auto pointsLabel = dynamic_cast<cocos2d::CCLabelBMFont*>(pauseLayer->getChildByID("points-label"));
+	auto timeLabel = dynamic_cast<cocos2d::CCLabelBMFont*>(pauseLayer->getChildByID("play-time"));
+
+	bgPause->setVisible(isVisible);
+	titleLevel->setVisible(isVisible);
+
+	if (barNormal)barNormal->setVisible(isVisible);
+	if (barPractice)barPractice->setVisible(isVisible);
+	if (perNormal)perNormal->setVisible(isVisible);
+	if (perPractice)perPractice->setVisible(isVisible);
+
+	if (pointsLabel)pointsLabel->setVisible(isVisible);
+	if (timeLabel)timeLabel->setVisible(isVisible);
+
+	buttonsMenu->setVisible(isVisible);
 }
