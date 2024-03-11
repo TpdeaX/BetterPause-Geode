@@ -294,10 +294,14 @@ class $modify(PlayLayer) {
 #ifdef GEODE_IS_WINDOWS
 		offsetTypeObject = 0x31c;
 		offsetPointsXObj = 0x5f8;
-#elif GEODE_IS_ANDROID64
+#endif
+
+#ifdef GEODE_IS_ANDROID64
 		offsetTypeObject = 0x388;
 		offsetPointsXObj = 0x690;
-#elif GEODE_IS_ANDROID32
+#endif
+
+#ifdef GEODE_IS_ANDROID32
 		offsetTypeObject = 0x308;
 		offsetPointsXObj = 0x5e4;
 #endif

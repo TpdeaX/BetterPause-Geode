@@ -166,9 +166,13 @@ namespace Utils
 	double getTotalSecondsPlayLayer() {
 #ifdef GEODE_IS_WINDOWS
 		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x320));
-#elif GEODE_IS_ANDROID64
+#endif
+
+#ifdef GEODE_IS_ANDROID64
 		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x3b0));
-#elif GEODE_IS_ANDROID32
+#endif
+
+#ifdef GEODE_IS_ANDROID32
 		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x318));
 #endif
 
@@ -180,9 +184,13 @@ namespace Utils
 	int getTotalAttemptsPlayLayer() {
 #ifdef GEODE_IS_WINDOWS
 		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x29ac));
-#elif GEODE_IS_ANDROID64
+#endif
+
+#ifdef GEODE_IS_ANDROID64
 		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x30ac));
-#elif GEODE_IS_ANDROID32
+#endif
+
+#ifdef GEODE_IS_ANDROID32
 		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x29cc));
 #endif
 
