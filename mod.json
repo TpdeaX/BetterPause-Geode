@@ -122,6 +122,12 @@
       "type": "bool",
       "default": false
     },
+    "remove-exit-back-button": {
+      "name": "Remove Exit Back Button (Android)",
+      "description": "Remove Exit Back Button (Android)",
+      "type": "bool",
+      "default": false
+    },
     "confirm-resume-level": {
       "name": "Confirm Resume Level",
       "description": "Confirm Resume Level.",

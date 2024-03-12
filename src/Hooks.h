@@ -62,11 +62,21 @@ class $modify(PauseLayer) {
 	}
 
 	void onResume(cocos2d::CCObject * sender) {
-		if (m_fields->hasConfirmPopup) {
-			PauseLayer::onResume(sender);
+		if (Mod::get()->getSettingValue<bool>("confirm-resume-level") && !m_fields->hasConfirmPopup) {
+			geode::createQuickPopup(
+				"Resume Level",
+				std::string("Are you sure you want to <cr>resume</c>?"),
+				"Cancel", "Resume",
+				[this, sender](FLAlertLayer* fla, bool btn2) {
+					if (btn2) {
+						m_fields->hasConfirmPopup = true;
+						PauseLayer::onResume(sender);
+						m_fields->hasConfirmPopup = false;
+					}
+				}
+			);
 			return;
 		}
-
 
 		auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 
@@ -85,33 +95,14 @@ class $modify(PauseLayer) {
 
 			popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 		}
-
-		if (Mod::get()->getSettingValue<bool>("confirm-resume-level")) {
-			geode::createQuickPopup(
-				"Resume Level",
-				std::string("Are you sure you want to <cr>resume</c>?"),
-				"Cancel", "Resume",
-				[this, sender](FLAlertLayer* fla, bool btn2) {
-					if (btn2) {
-						m_fields->hasConfirmPopup = true;
-						PauseLayer::onResume(sender);
-						m_fields->hasConfirmPopup = false;
-					}
-				}
-			);
-			return;
-		}
+		
 
 		PauseLayer::onResume(sender);
 	}
 
 	void onPracticeMode(cocos2d::CCObject* sender) {
-		if (m_fields->hasConfirmPopup) {
-			PauseLayer::onPracticeMode(sender);
-			return;
-		}
 
-		if (Mod::get()->getSettingValue<bool>("confirm-practice-level")) {
+		if (Mod::get()->getSettingValue<bool>("confirm-practice-level") && !m_fields->hasConfirmPopup) {
 			auto popupConfirm = geode::createQuickPopup(
 				"Practice Level",
 				std::string("Do you want to <cg>Enter</c> the practice mode?"),
@@ -134,12 +125,7 @@ class $modify(PauseLayer) {
 	}
 
 	void onNormalMode(cocos2d::CCObject* sender) {
-		if (m_fields->hasConfirmPopup) {
-			PauseLayer::onNormalMode(sender);
-			return;
-		}
-
-		if (Mod::get()->getSettingValue<bool>("confirm-normal-level")) {
+		if (Mod::get()->getSettingValue<bool>("confirm-normal-level") && !m_fields->hasConfirmPopup) {
 			auto popupConfirm = geode::createQuickPopup(
 				"Normal Level",
 				std::string("Do you want to <cr>Exit</c> the practice mode?"),
@@ -163,13 +149,7 @@ class $modify(PauseLayer) {
 
 	void onRestart(cocos2d::CCObject* sender)
 	{
-		if (m_fields->hasConfirmPopup)
-		{
-			PauseLayer::onRestart(sender);
-			return;
-		}
-
-		if (Mod::get()->getSettingValue<bool>("confirm-restart-level")) {
+		if (Mod::get()->getSettingValue<bool>("confirm-restart-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Restart Level",
 				"Are you sure you want to <cr>restart</c>?",
@@ -192,13 +172,7 @@ class $modify(PauseLayer) {
 
 	void onRestartFull(cocos2d::CCObject* sender)
 	{
-		if (m_fields->hasConfirmPopup)
-		{
-			PauseLayer::onRestartFull(sender);
-			return;
-		}
-
-		if (Mod::get()->getSettingValue<bool>("confirm-restart-full-level")) {
+		if (Mod::get()->getSettingValue<bool>("confirm-restart-full-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Restart Full Level",
 				"Are you sure you want to <cr>restart</c>?",
@@ -220,13 +194,7 @@ class $modify(PauseLayer) {
 
 	void onEdit(cocos2d::CCObject* sender)
 	{
-		if (m_fields->hasConfirmPopup)
-		{
-			PauseLayer::onEdit(sender);
-			return;
-		}
-
-		if (Mod::get()->getSettingValue<bool>("confirm-edit-level")) {
+		if (Mod::get()->getSettingValue<bool>("confirm-edit-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Edit Level",
 				"Are you sure you want to <cr>edit</c>?",
@@ -256,6 +224,26 @@ class $modify(PauseLayer) {
 		m_fields->hasPosibleExitHotKey = false;
 	}
 
+	void keyBackClicked() {
+		if (Mod::get()->getSettingValue<bool>("remove-exit-back-button")) {
+			m_fields->hasPosibleExitHotKey = true;
+		}
+
+		PauseLayer::keyBackClicked();
+
+		m_fields->hasPosibleExitHotKey = false;
+	}
+
+#ifdef GEODE_IS_MACOS
+	void onQuit(cocos2d::CCObject* sender) {
+		if (m_fields->hasPosibleExitHotKey) {
+			return;
+		}
+
+		PauseLayer::onQuit(sender);
+	}
+
+#else
 	void tryQuit(cocos2d::CCObject* sender) {
 		if (m_fields->hasPosibleExitHotKey) {
 			return;
@@ -264,6 +252,7 @@ class $modify(PauseLayer) {
 		PauseLayer::tryQuit(sender);
 	}
 
+#endif
 };
 
 class $modify(PlayLayer) {
