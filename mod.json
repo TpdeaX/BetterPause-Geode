@@ -123,8 +123,8 @@
       "default": false
     },
     "remove-exit-back-button": {
-      "name": "Remove Exit Back Button (Android)",
-      "description": "Remove Exit Back Button (Android)",
+      "name": "Remove Exit Back Button",
+      "description": "Remove Exit Back Button",
       "type": "bool",
       "default": false
     },
