@@ -224,16 +224,6 @@ class $modify(PauseLayer) {
 		m_fields->hasPosibleExitHotKey = false;
 	}
 
-	void keyBackClicked() {
-		if (Mod::get()->getSettingValue<bool>("remove-exit-back-button")) {
-			m_fields->hasPosibleExitHotKey = true;
-		}
-
-		PauseLayer::keyBackClicked();
-
-		m_fields->hasPosibleExitHotKey = false;
-	}
-
 #ifdef GEODE_IS_MACOS
 	void onQuit(cocos2d::CCObject* sender) {
 		if (m_fields->hasPosibleExitHotKey) {
