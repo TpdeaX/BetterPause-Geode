@@ -11,6 +11,7 @@ class PauseZoomManager {
 private:
     static PauseZoomManager* s_instance;
     bool m_isPaused = false;
+    bool m_autoHiddenByZoom = false;
     float m_zoom = 1.0f;
     CCPoint m_pan = {0.f, 0.f};
     CCPoint m_lastMousePos = {0.f, 0.f};
@@ -25,6 +26,7 @@ public:
 
     bool isPaused() const { return m_isPaused; }
     float getZoom() const { return m_zoom; }
+    CCPoint getPan() const { return m_pan; }
 
     void onPause(PauseLayer* pauseLayer);
     void onResume();
@@ -34,6 +36,8 @@ public:
     void update(float dt);
     void zoom(float delta, CCPoint pivot);
     void pan(CCPoint delta);
+    void clampPan();
+    void autoHideMenu();
     void updateBadge();
 };
 
@@ -41,10 +45,13 @@ class PauseZoomBadge : public CCNode {
 private:
     CCLabelBMFont* m_label = nullptr;
     CCMenuItemSpriteExtra* m_button = nullptr;
+    CCDrawNode* m_minimap = nullptr;
 
 public:
     static PauseZoomBadge* create();
     bool init() override;
+    void updateBadge(float zoom, CCPoint pan);
     void updateZoom(float zoom);
     void onReset(CCObject* sender);
+    void setVisible(bool visible) override;
 };

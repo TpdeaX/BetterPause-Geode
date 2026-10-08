@@ -29,6 +29,7 @@ PauseZoomManager* PauseZoomManager::get() {
 void PauseZoomManager::onPause(PauseLayer* pauseLayer) {
     m_isPaused = true;
     m_isDragging = false;
+    m_autoHiddenByZoom = false;
     m_pressedKeys.clear();
     m_lastMousePos = getMousePos();
 
@@ -41,8 +42,8 @@ void PauseZoomManager::onPause(PauseLayer* pauseLayer) {
         }
         m_badge = PauseZoomBadge::create();
         if (m_badge) {
-            m_badge->updateZoom(m_zoom);
-            pauseLayer->addChild(m_badge, 999);
+            m_badge->updateBadge(m_zoom, m_pan);
+            pauseLayer->addChild(m_badge, 9999);
         }
     }
 #endif
@@ -51,6 +52,7 @@ void PauseZoomManager::onPause(PauseLayer* pauseLayer) {
 void PauseZoomManager::onResume() {
     m_isPaused = false;
     m_isDragging = false;
+    m_autoHiddenByZoom = false;
     m_pressedKeys.clear();
     m_badge = nullptr;
 
@@ -69,7 +71,57 @@ void PauseZoomManager::resetZoom() {
         pl->setScale(1.0f);
         pl->setPosition(ccp(0.f, 0.f));
     }
+
+    if (m_autoHiddenByZoom) {
+        if (auto scene = CCScene::get()) {
+            if (auto pauseLayer = scene->getChildByID("PauseLayer")) {
+                if (auto bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"))) {
+                    if (bp->isHidden) {
+                        bp->onHide(nullptr);
+                    }
+                }
+            }
+        }
+        m_autoHiddenByZoom = false;
+    }
+
     updateBadge();
+}
+
+void PauseZoomManager::autoHideMenu() {
+    if (!m_isPaused) return;
+    auto scene = CCScene::get();
+    if (!scene) return;
+    auto pauseLayer = scene->getChildByID("PauseLayer");
+    if (!pauseLayer) return;
+    auto bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"));
+    if (!bp) return;
+
+    if (!bp->isHidden) {
+        m_autoHiddenByZoom = true;
+        bp->onHide(nullptr);
+    }
+}
+
+void PauseZoomManager::clampPan() {
+    auto playLayer = PlayLayer::get();
+    if (!playLayer) return;
+
+    auto winSize = CCDirector::sharedDirector()->getWinSize();
+    if (winSize.width <= 0.0f || winSize.height <= 0.0f) return;
+
+    float marginX = winSize.width * 0.20f;
+    float marginY = winSize.height * 0.20f;
+
+    float minX = std::min(winSize.width * (1.0f - m_zoom), 0.0f) - marginX;
+    float maxX = std::max(winSize.width * (1.0f - m_zoom), 0.0f) + marginX;
+    float minY = std::min(winSize.height * (1.0f - m_zoom), 0.0f) - marginY;
+    float maxY = std::max(winSize.height * (1.0f - m_zoom), 0.0f) + marginY;
+
+    m_pan.x = std::clamp(m_pan.x, minX, maxX);
+    m_pan.y = std::clamp(m_pan.y, minY, maxY);
+
+    playLayer->setPosition(m_pan);
 }
 
 void PauseZoomManager::zoom(float delta, CCPoint pivot) {
@@ -96,9 +148,10 @@ void PauseZoomManager::zoom(float delta, CCPoint pivot) {
 
     m_zoom = newScale;
     playLayer->setScale(newScale);
-    playLayer->setPosition(newPos);
     m_pan = newPos;
+    clampPan();
 
+    autoHideMenu();
     updateBadge();
 }
 
@@ -106,9 +159,11 @@ void PauseZoomManager::pan(CCPoint delta) {
     auto playLayer = PlayLayer::get();
     if (!playLayer) return;
 
-    CCPoint pos = playLayer->getPosition();
-    playLayer->setPosition(pos + delta);
-    m_pan = playLayer->getPosition();
+    m_pan = m_pan + delta;
+    clampPan();
+
+    autoHideMenu();
+    updateBadge();
 }
 
 bool PauseZoomManager::onScroll(float y, float x) {
@@ -225,7 +280,7 @@ void PauseZoomManager::update(float dt) {
 
 void PauseZoomManager::updateBadge() {
     if (m_badge) {
-        m_badge->updateZoom(m_zoom);
+        m_badge->updateBadge(m_zoom, m_pan);
     }
 }
 
@@ -256,6 +311,7 @@ bool PauseZoomBadge::init() {
 
     auto menu = CCMenu::create();
     menu->setPosition({ 0.f, 0.f });
+    menu->setTouchPriority(-500);
 
     m_button = CCMenuItemSpriteExtra::create(
         bg,
@@ -266,24 +322,105 @@ bool PauseZoomBadge::init() {
     menu->addChild(m_button);
     this->addChild(menu);
 
+    // Create minimap / radar box
+    m_minimap = CCDrawNode::create();
+    const float MW = 76.0f;
+    const float MH = 42.0f;
+    m_minimap->setPosition({ -MW / 2.0f, -13.0f - 4.0f - MH });
+    this->addChild(m_minimap);
+
     this->setPosition({ winSize.width - 55.f, winSize.height - 18.f });
     this->setID("pause-zoom-badge");
 
     return true;
 }
 
-void PauseZoomBadge::updateZoom(float zoom) {
-    if (!m_label) return;
-    m_label->setString(fmt::format("Zoom: x{:.2f}", zoom).c_str());
-    if (std::abs(zoom - 1.0f) > 0.01f) {
-        m_label->setColor({ 255, 230, 100 });
-    } else {
-        m_label->setColor({ 255, 255, 255 });
+void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
+    if (m_label) {
+        m_label->setString(fmt::format("Zoom: x{:.2f}", zoom).c_str());
+        if (std::abs(zoom - 1.0f) > 0.01f || pan.getLength() > 1.0f) {
+            m_label->setColor({ 255, 230, 100 });
+        } else {
+            m_label->setColor({ 255, 255, 255 });
+        }
     }
+
+    if (!m_minimap) return;
+
+    m_minimap->clear();
+
+    const float MW = 76.0f;
+    const float MH = 42.0f;
+
+    // Outer radar frame
+    CCPoint outerPts[4] = {
+        ccp(0.0f, 0.0f),
+        ccp(MW, 0.0f),
+        ccp(MW, MH),
+        ccp(0.0f, MH)
+    };
+    m_minimap->drawPolygon(
+        outerPts,
+        4,
+        ccc4f(0.06f, 0.06f, 0.08f, 0.70f),
+        1.0f,
+        ccc4f(0.55f, 0.55f, 0.60f, 0.85f)
+    );
+
+    auto winSize = CCDirector::sharedDirector()->getWinSize();
+    if (winSize.width <= 0.0f || winSize.height <= 0.0f || zoom <= 0.0f) return;
+
+    // Viewport calculation within PlayLayer
+    float normX = -pan.x / (winSize.width * zoom);
+    float normY = -pan.y / (winSize.height * zoom);
+    float normW = 1.0f / zoom;
+    float normH = 1.0f / zoom;
+
+    float x1 = normX * MW;
+    float x2 = (normX + normW) * MW;
+    float y1 = normY * MH;
+    float y2 = (normY + normH) * MH;
+
+    x1 = std::clamp(x1, 0.0f, MW);
+    x2 = std::clamp(x2, 0.0f, MW);
+    y1 = std::clamp(y1, 0.0f, MH);
+    y2 = std::clamp(y2, 0.0f, MH);
+
+    if (x2 - x1 < 3.0f) {
+        if (x1 + 3.0f <= MW) x2 = x1 + 3.0f;
+        else x1 = std::max(0.0f, x2 - 3.0f);
+    }
+    if (y2 - y1 < 3.0f) {
+        if (y1 + 3.0f <= MH) y2 = y1 + 3.0f;
+        else y1 = std::max(0.0f, y2 - 3.0f);
+    }
+
+    CCPoint innerPts[4] = {
+        ccp(x1, y1),
+        ccp(x2, y1),
+        ccp(x2, y2),
+        ccp(x1, y2)
+    };
+
+    m_minimap->drawPolygon(
+        innerPts,
+        4,
+        ccc4f(1.0f, 0.10f, 0.10f, 0.22f),
+        1.5f,
+        ccc4f(1.0f, 0.20f, 0.20f, 0.95f)
+    );
+}
+
+void PauseZoomBadge::updateZoom(float zoom) {
+    updateBadge(zoom, PauseZoomManager::get()->getPan());
 }
 
 void PauseZoomBadge::onReset(CCObject* sender) {
     PauseZoomManager::get()->resetZoom();
+}
+
+void PauseZoomBadge::setVisible(bool visible) {
+    CCNode::setVisible(true);
 }
 
 // Global Hooks for input dispatching
