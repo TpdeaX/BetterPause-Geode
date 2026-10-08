@@ -38,6 +38,8 @@ public:
     void pan(CCPoint delta);
     void clampPan();
     void autoHideMenu();
+    void autoRestoreMenu();
+    void updateBlur(bool showBlur);
     void updateBadge();
 };
 
@@ -53,5 +55,4 @@ public:
     void updateBadge(float zoom, CCPoint pan);
     void updateZoom(float zoom);
     void onReset(CCObject* sender);
-    void setVisible(bool visible) override;
 };

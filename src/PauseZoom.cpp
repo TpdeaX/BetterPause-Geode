@@ -30,8 +30,12 @@ void PauseZoomManager::onPause(PauseLayer* pauseLayer) {
     m_isPaused = true;
     m_isDragging = false;
     m_autoHiddenByZoom = false;
+    m_zoom = 1.0f;
+    m_pan = ccp(0.f, 0.f);
     m_pressedKeys.clear();
     m_lastMousePos = getMousePos();
+
+    updateBlur(true);
 
     if (!Mod::get()->getSettingValue<bool>("enable-pause-zoom")) return;
 
@@ -42,7 +46,7 @@ void PauseZoomManager::onPause(PauseLayer* pauseLayer) {
         }
         m_badge = PauseZoomBadge::create();
         if (m_badge) {
-            m_badge->updateBadge(m_zoom, m_pan);
+            m_badge->setVisible(false);
             pauseLayer->addChild(m_badge, 9999);
         }
     }
@@ -55,6 +59,8 @@ void PauseZoomManager::onResume() {
     m_autoHiddenByZoom = false;
     m_pressedKeys.clear();
     m_badge = nullptr;
+
+    updateBlur(true);
 
     if (auto pl = PlayLayer::get()) {
         pl->setScale(1.0f);
@@ -72,19 +78,8 @@ void PauseZoomManager::resetZoom() {
         pl->setPosition(ccp(0.f, 0.f));
     }
 
-    if (m_autoHiddenByZoom) {
-        if (auto scene = CCScene::get()) {
-            if (auto pauseLayer = scene->getChildByID("PauseLayer")) {
-                if (auto bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"))) {
-                    if (bp->isHidden) {
-                        bp->onHide(nullptr);
-                    }
-                }
-            }
-        }
-        m_autoHiddenByZoom = false;
-    }
-
+    autoRestoreMenu();
+    updateBlur(true);
     updateBadge();
 }
 
@@ -103,9 +98,64 @@ void PauseZoomManager::autoHideMenu() {
     }
 }
 
+void PauseZoomManager::autoRestoreMenu() {
+    if (!m_isPaused) return;
+    if (!m_autoHiddenByZoom) return;
+
+    auto scene = CCScene::get();
+    if (!scene) return;
+    auto pauseLayer = scene->getChildByID("PauseLayer");
+    if (!pauseLayer) return;
+    auto bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"));
+    if (!bp) return;
+
+    if (bp->isHidden) {
+        bp->onHide(nullptr);
+    }
+    m_autoHiddenByZoom = false;
+}
+
+void PauseZoomManager::updateBlur(bool showBlur) {
+    auto scene = CCScene::get();
+    if (!scene) return;
+    auto pauseLayer = scene->getChildByID("PauseLayer");
+    if (!pauseLayer) return;
+
+    auto adjustNodes = [showBlur](CCNode* parent) {
+        if (!parent || !parent->getChildren()) return;
+        for (auto child : CCArrayExt<CCNode*>(parent->getChildren())) {
+            bool isBlur = false;
+            std::string id = child->getID();
+            if (id.find("blur") != std::string::npos || id.find("Blur") != std::string::npos) {
+                isBlur = true;
+            }
+            if (child->getUserObject("thesillydoggo.blur-api/blur-options") != nullptr) {
+                isBlur = true;
+            }
+            const char* typeName = typeid(*child).name();
+            if (std::string(typeName).find("Blur") != std::string::npos) {
+                isBlur = true;
+            }
+            if (isBlur) {
+                child->setZOrder(-999);
+                child->setVisible(showBlur);
+            }
+        }
+    };
+
+    adjustNodes(pauseLayer);
+    adjustNodes(scene);
+}
+
 void PauseZoomManager::clampPan() {
     auto playLayer = PlayLayer::get();
     if (!playLayer) return;
+
+    if (m_zoom <= 1.001f) {
+        m_pan = ccp(0.f, 0.f);
+        playLayer->setPosition(m_pan);
+        return;
+    }
 
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     if (winSize.width <= 0.0f || winSize.height <= 0.0f) return;
@@ -129,33 +179,53 @@ void PauseZoomManager::zoom(float delta, CCPoint pivot) {
     if (!playLayer) return;
 
     float sensitivity = static_cast<float>(Mod::get()->getSettingValue<double>("pause-zoom-sensitivity"));
-    float zoomStep = 1.0f + (0.15f * sensitivity);
+    // Smooth step (4% per tick instead of 15%)
+    float zoomStep = 1.0f + (0.04f * sensitivity);
     float oldScale = playLayer->getScale();
     float newScale = oldScale;
 
-    if (delta > 0) {
+    // Invert zoom direction as requested:
+    // Scroll up (delta < 0 in Cocos CCMouseDispatcher) -> zoom in
+    // Scroll down -> zoom out
+    if (delta < 0) {
         newScale = oldScale * zoomStep;
-    } else if (delta < 0) {
+    } else if (delta > 0) {
         newScale = oldScale / zoomStep;
     }
 
-    newScale = std::clamp(newScale, 0.25f, 15.0f);
+    // Minimum scale strictly 1.0f (no antizoom)
+    newScale = std::clamp(newScale, 1.0f, 15.0f);
+    if (newScale < 1.005f) {
+        newScale = 1.0f;
+    }
 
-    if (std::abs(newScale - oldScale) < 0.0001f) return;
+    if (std::abs(newScale - oldScale) < 0.0001f && newScale != 1.0f) return;
 
     CCPoint oldPos = playLayer->getPosition();
-    CCPoint newPos = pivot - (pivot - oldPos) * (newScale / oldScale);
+    CCPoint newPos = {0.f, 0.f};
+    if (newScale > 1.0f) {
+        newPos = pivot - (pivot - oldPos) * (newScale / oldScale);
+    }
 
     m_zoom = newScale;
     playLayer->setScale(newScale);
     m_pan = newPos;
     clampPan();
 
-    autoHideMenu();
+    if (m_zoom > 1.001f) {
+        autoHideMenu();
+        updateBlur(false);
+    } else {
+        autoRestoreMenu();
+        updateBlur(true);
+    }
+
     updateBadge();
 }
 
 void PauseZoomManager::pan(CCPoint delta) {
+    if (m_zoom <= 1.001f) return;
+
     auto playLayer = PlayLayer::get();
     if (!playLayer) return;
 
@@ -163,6 +233,7 @@ void PauseZoomManager::pan(CCPoint delta) {
     clampPan();
 
     autoHideMenu();
+    updateBlur(false);
     updateBadge();
 }
 
@@ -280,7 +351,11 @@ void PauseZoomManager::update(float dt) {
 
 void PauseZoomManager::updateBadge() {
     if (m_badge) {
-        m_badge->updateBadge(m_zoom, m_pan);
+        bool showZoomUI = (m_zoom > 1.001f);
+        m_badge->setVisible(showZoomUI);
+        if (showZoomUI) {
+            m_badge->updateBadge(m_zoom, m_pan);
+        }
     }
 }
 
@@ -417,10 +492,6 @@ void PauseZoomBadge::updateZoom(float zoom) {
 
 void PauseZoomBadge::onReset(CCObject* sender) {
     PauseZoomManager::get()->resetZoom();
-}
-
-void PauseZoomBadge::setVisible(bool visible) {
-    CCNode::setVisible(true);
 }
 
 // Global Hooks for input dispatching
