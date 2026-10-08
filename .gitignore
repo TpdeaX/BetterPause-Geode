@@ -55,3 +55,6 @@
 # Graphify
 graphify-out/
 .graphify*
+
+# Geode binaries
+*.geode

@@ -197,11 +197,7 @@
     ]
   },
   "tags": [ "Customization", "Interface", "Enhancement" ],
-  "dependencies": [
-    {
-      "id": "geode.node-ids",
-      "version": ">=1.13.0",
-      "importance": "required"
-    }
-  ]
+  "dependencies": {
+    "geode.node-ids": ">=1.13.0"
+  }
 }
