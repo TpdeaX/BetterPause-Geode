@@ -3,15 +3,14 @@
 MoreOptionsPauseLayer* MoreOptionsPauseLayer::create(CCNode* ref)
 {
 	auto node = new MoreOptionsPauseLayer();
-	if (node && node->init(250.f, 200.f, ref))
+	if (node && node->init(250.f, 200.f, "GJ_square01.png"))
 	{
+		node->setup(ref);
 		node->autorelease();
+		return node;
 	}
-	else
-	{
-		CC_SAFE_DELETE(node);
-	}
-	return node;
+	CC_SAFE_DELETE(node);
+	return nullptr;
 }
 
 bool MoreOptionsPauseLayer::setup(CCNode* ref)

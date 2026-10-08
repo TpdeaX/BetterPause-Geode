@@ -2,16 +2,17 @@
 #include <Geode/Geode.hpp>
 #include <Geode/Bindings.hpp>
 #include <Geode/ui/GeodeUI.hpp>
+#include <Geode/ui/Popup.hpp>
 #include "Utils.hpp"
 #include "BetterPause.hpp"
 
 using namespace geode::prelude;
 
-class MoreOptionsPauseLayer : public Popup<CCNode*>, public cocos2d::CCTextFieldDelegate
+class MoreOptionsPauseLayer : public geode::Popup, public cocos2d::CCTextFieldDelegate
 {
 public:
 	static MoreOptionsPauseLayer* create(CCNode* ref);
-	bool setup(CCNode* ref) override;
+	bool setup(CCNode* ref);
 	void onClose(CCObject* pSender);
 	void onOptionsGame(CCObject* pSender);
 	void onOptionsPause(CCObject* pSender);

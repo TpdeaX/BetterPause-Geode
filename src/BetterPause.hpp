@@ -109,7 +109,7 @@ public:
     void onLevelInfoLayer(cocos2d::CCObject* sender);
     void onRedirectionToggle(cocos2d::CCObject* sender);
     void onEditorHack(cocos2d::CCObject* sender);
-    virtual void scrollWheel(float x, float y);
+    virtual void scrollWheel(float y, float x) override;
     void onPracticeMusicSyncRedirection(cocos2d::CCObject* sender);
     void findButtonsRecursively(CCNode* node, std::vector<std::string>& buttonIds, std::vector<CCMenuItemSpriteExtra*>& externalButtons);
     void onScrollUpButton(cocos2d::CCObject* sender);

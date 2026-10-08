@@ -292,7 +292,7 @@ void BetterPause::createCustomSongWidget() {
 		songInfoObject = SongInfoObject::create(levelSongID);
 	}
 
-	this->customSongWidget = CustomSongWidget::create(songInfoObject, 0, 0, 0, 1, levelSongID == 0, 0, 0);
+	this->customSongWidget = CustomSongWidget::create(songInfoObject, 0, 0, 0, 1, levelSongID == 0, 0, 0, 0);
 	this->customSongWidget->setPosition(172.f, 50.f);
 	this->customSongWidget->setScale(0.6f);
 	this->customSongWidget->setID("custom-song-widget");
@@ -572,11 +572,10 @@ void BetterPause::createMainButtonsMenu() {
 	}
 
 
-	auto allChildrens = buttonsList->m_contentLayer->getChildren();
-	CCObject* node;
-	CCARRAY_FOREACH(allChildrens, node) {
-		auto child = dynamic_cast<CCNode*>(node);
-		child->setPositionY(child->getPositionY() + totalHeight + 25.f);
+	if (buttonsList->m_contentLayer->getChildren()) {
+		for (auto child : CCArrayExt<CCNode*>(buttonsList->m_contentLayer->getChildren())) {
+			child->setPositionY(child->getPositionY() + totalHeight + 25.f);
+		}
 	}
 
 	if (totalHeight < LAYER_SIZE.height) {
@@ -805,7 +804,7 @@ void BetterPause::createExtras() {
 	}
 
 	if (Mod::get()->getSettingValue<bool>("enabled-coins-viewer")) {
-		coinViewer = CoinsViewerSprites::create(PlayLayer::get()->m_level->m_levelType == GJLevelType::Local);
+		coinViewer = CoinsViewerSprites::create(PlayLayer::get()->m_level->m_levelType == GJLevelType::Editor);
 		coinViewer->setScale(0.3f);
 		coinViewer->setPosition({ 257.f, Utils::WinSize().height - 20.f });
 		this->addChild(coinViewer);
@@ -992,13 +991,13 @@ void BetterPause::onEditorHack(cocos2d::CCObject* pSender) {
 	}
 }
 
-void BetterPause::scrollWheel(float x, float y) {
-	CCLayer::scrollWheel(x, y);
+void BetterPause::scrollWheel(float y, float x) {
+	CCLayer::scrollWheel(y, x);
 
 	if (Mod::get()->getSettingValue<int64_t>("type-pause") != 1) {
 		return;
 	}
-	buttonsList->scrollWheel(x, y);
+	buttonsList->scrollWheel(y, x);
 
 	this->updateButtons();
 

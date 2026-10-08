@@ -3,15 +3,14 @@
 SetVolumenPopup* SetVolumenPopup::create(Slider* m_pSliderRef)
 {
 	auto node = new SetVolumenPopup();
-	if (node && node->init(200.f, 100.f, m_pSliderRef))
+	if (node && node->init(200.f, 100.f, "GJ_square02.png"))
 	{
+		node->setup(m_pSliderRef);
 		node->autorelease();
+		return node;
 	}
-	else
-	{
-		CC_SAFE_DELETE(node);
-	}
-	return node;
+	CC_SAFE_DELETE(node);
+	return nullptr;
 }
 
 void SetVolumenPopup::onSet(cocos2d::CCObject* pSender)

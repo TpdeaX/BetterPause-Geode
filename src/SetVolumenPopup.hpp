@@ -6,11 +6,10 @@
 
 using namespace geode::prelude;
 
-class SetVolumenPopup : public Popup<Slider*>, public TextInputDelegate
+class SetVolumenPopup : public geode::Popup, public TextInputDelegate
 {
 public:
-
-	bool setup(Slider* ref) override;
+	bool setup(Slider* ref);
 
 	CCMenuItemSpriteExtra* m_pSetValueBtn = nullptr;
 	cocos2d::extension::CCScale9Sprite* m_pBGInputTextValue = nullptr;

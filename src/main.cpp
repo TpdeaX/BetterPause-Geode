@@ -1,21 +1,24 @@
 #include <Geode/Geode.hpp>
+#include <Geode/loader/SettingV3.hpp>
 #include "Hooks.h"
+#include "SelectQuickSettings.h"
 
 using namespace geode::prelude;
 
-
 $on_mod(Loaded) {
-#ifdef GEODE_IS_WINDOWS
-	//matdash::create_console();
-#endif
 	BetterPauseManager::sharedState()->loadState();
-	Mod::get()->addCustomSetting<SettingQuickSettingsValue>("Quick-Settings-Select", "none");
-	//std::cout << "0x" << std::hex << offsetof(AttemptAtReversingDialogObject, m_content) << std::endl;
+}
+
+$execute {
+	new EventListener<EventFilter<ButtonSettingPressedEventV3>>(
+		+[](ButtonSettingPressedEventV3* event) {
+			SelectQuickSettings::create()->show();
+			return ListenerResult::Propagate;
+		},
+		ButtonSettingPressedEventV3(Mod::get(), "Quick-Settings-Select")
+	);
 }
 
 $on_mod(DataSaved) {
 	BetterPauseManager::sharedState()->saveState();
 }
-
-
-

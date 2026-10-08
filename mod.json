@@ -91,8 +91,8 @@
     },
     "Quick-Settings-Select": {
       "name": "Quick Settings Select",
-      "description": "NONE",
-      "type": "custom"
+      "description": "Select which quick settings are available in the pause menu.",
+      "type": "button"
     },
     "disable-arrow-buttons": {
       "name": "Disable Arrow Buttons",

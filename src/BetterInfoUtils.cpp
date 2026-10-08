@@ -15,8 +15,8 @@ CCSprite* BetterInfo::createWithBISpriteFrameName(const char* name) {
 }
 
 CCSprite* BetterInfo::createBISprite(const char* name) {
-    name = Mod::get()->expandSpriteName(name);
-    auto sprite = CCSprite::create(name);
+    auto expanded = Mod::get()->expandSpriteName(name);
+    auto sprite = CCSprite::create(expanded.c_str());
     if (sprite) return sprite;
 
     return createPlaceholder();
@@ -276,55 +276,6 @@ CCDictionary* BetterInfo::responseToDict(const std::string& response) {
 
 
 void BetterInfo::reloadUsernames(LevelBrowserLayer* levelBrowserLayer) {
-    auto winSize = CCDirector::sharedDirector()->getWinSize();
-
-    auto listLayer = getChildOfType<GJListLayer>(levelBrowserLayer, 0);
-    if (!listLayer) return;
-    auto listView = getChildOfType<CustomListView>(listLayer, 0);
-    if (!listView) return;
-    auto tableView = getChildOfType<TableView>(listView, 0);
-    if (!tableView) return;
-    auto contentLayer = getChildOfType<CCContentLayer>(tableView, 0);
-    if (!contentLayer) return;
-    auto children = CCArrayExt<CCNode*>(contentLayer->getChildren());
-
-    for (auto& child : children) {
-        //TODO: rewrite the positioning code here
-
-        auto levelCell = typeinfo_cast<LevelCell*>(child);
-        if (!levelCell) continue;
-        auto menu = levelCell->m_mainLayer->getChildByID("main-menu");
-        if (!menu) continue;
-        auto playerName = menu->getChildByID("creator-name");
-        if (!playerName) continue;
-        auto textNode = static_cast<CCLabelBMFont*>(playerName->getChildren()->objectAtIndex(0));
-        if (!textNode) continue;
-
-        float oldXSize = textNode->getScaledContentSize().width;
-
-        auto userName = GameLevelManager::sharedState()->userNameForUserID(levelCell->m_level->m_userID);
-
-        auto oldString = std::string(textNode->getString());
-        auto newString = fmt::format("By {}", std::string(userName));
-
-        textNode->setString(newString.c_str());
-
-        float difference = textNode->getScaledContentSize().width - oldXSize;
-
-        playerName->setContentSize(textNode->getContentSize() * textNode->getScale());
-        playerName->setPositionX(playerName->getPositionX() + (difference / 2));
-
-        textNode->setPositionX(playerName->getContentSize().width / 2);
-
-        if (auto copyIcon = menu->getChildByID("copy-indicator")) {
-            copyIcon->setPositionX(copyIcon->getPositionX() + difference);
-        }
-        if (auto highObjectIcon = menu->getChildByID("high-object-indicator")) {
-            highObjectIcon->setPositionX(highObjectIcon->getPositionX() + difference);
-        }
-
-        levelCell->m_level->m_creatorName = userName;
-    }
 }
 
 inline bool objectIDIsSpeedPortal(int id) {
@@ -575,22 +526,11 @@ UnlockType BetterInfo::iconTypeToUnlockType(IconType type) {
 }
 
 AxisLayoutOptions* BetterInfo::copyLayoutOptions(CCNode* a) {
-    return copyLayoutOptions(typeinfo_cast<AxisLayoutOptions*>(a->getLayoutOptions()));
+    return nullptr;
 }
 
 AxisLayoutOptions* BetterInfo::copyLayoutOptions(AxisLayoutOptions* a) {
-    if (!a) return nullptr;
-
-    return AxisLayoutOptions::create()
-        ->setMaxScale(a->getMaxScale())
-        ->setMinScale(a->getMinScale())
-        ->setRelativeScale(a->getRelativeScale())
-        ->setLength(a->getLength())
-        ->setPrevGap(a->getPrevGap())
-        ->setNextGap(a->getNextGap())
-        ->setBreakLine(a->getBreakLine())
-        ->setSameLine(a->getSameLine())
-        ->setScalePriority(a->getScalePriority());
+    return nullptr;
 }
 
 int BetterInfo::stoi(std::string_view str) {
