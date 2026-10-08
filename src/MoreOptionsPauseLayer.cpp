@@ -23,7 +23,6 @@ bool MoreOptionsPauseLayer::setup(CCNode* ref)
 
 	m_mainLayer->setPosition({ Utils::WinSize().width * -1.f,  Utils::WinSize().height / 2.f});
 
-	this->m_bgSprite->initWithFile("GJ_square01.png");
 	this->m_bgSprite->setPosition({ 0.f, 0.f });
 	this->m_bgSprite->setContentSize({ 250.f, 200.f });
 
@@ -116,7 +115,7 @@ void MoreOptionsPauseLayer::onClose(cocos2d::CCObject* pSender)
 	//Utils::shareDirectorA()->getRunningScene()->addChild(PauseLayer::create(Utils::getplayLayerA()->m_level->m_levelType == GJLevelType::Editor));
 }
 
-void MoreOptionsPauseLayer::keyDown(cocos2d::enumKeyCodes key)
+void MoreOptionsPauseLayer::keyDown(cocos2d::enumKeyCodes key, double p1)
 {
 	switch (key)
 	{
@@ -132,7 +131,7 @@ void MoreOptionsPauseLayer::keyDown(cocos2d::enumKeyCodes key)
 	case cocos2d::enumKeyCodes::CONTROLLER_Right:
 		break;
 	default:
-		CCLayer::keyDown(key);
+		Popup::keyDown(key, p1);
 	}
 }
 

@@ -1137,51 +1137,49 @@ void BetterPause::adjustLayerForAspectRatio() {
 
 	if (aspectRatio > (570.f / 320.f)) {
 		float displacementX = (size.width / 2) - (570.f / 2);
-		auto allChildrens = this->getChildren();
-		CCObject* node;
-		CCARRAY_FOREACH(allChildrens, node) {
-			auto child = dynamic_cast<CCNode*>(node);
-			if (auto child2 = dynamic_cast<ChallengesPage*>(node); child2) {
-				child = child2->m_mainLayer;
+		if (this->getChildren()) {
+			for (auto child : CCArrayExt<CCNode*>(this->getChildren())) {
+				if (auto child2 = dynamic_cast<ChallengesPage*>(child); child2) {
+					auto mainLayer = child2->m_mainLayer;
+					float originalX = mainLayer->getPositionX();
+					float newX = originalX - displacementX;
+					mainLayer->setPositionX(newX);
+					continue;
+				}
 				float originalX = child->getPositionX();
-				float newX = originalX - displacementX;
+				float newX = originalX + displacementX;
+				if (originalX > size.width / 2) {
+					newX = originalX - displacementX;
+				}
 				child->setPositionX(newX);
-				continue;
 			}
-			float originalX = child->getPositionX();
-			float newX = originalX + displacementX;
-			if (originalX > size.width / 2) {
-				newX = originalX - displacementX;
-			}
-			child->setPositionX(newX);
 		}
 	}
 	else if (aspectRatio < (570.f / 320.f)) {
 		float displacementY = (size.height / 2) - (320.f / 2);
-		auto allChildrens = this->getChildren();
-		CCObject* node;
-		CCARRAY_FOREACH(allChildrens, node) {
-			auto child = dynamic_cast<CCNode*>(node);
-			if (auto child2 = dynamic_cast<ChallengesPage*>(node); child2) {
-				child = child2->m_mainLayer;
-				float originalY = child->getPositionY();
-				float newY = originalY + (displacementY / 2);
-				child->setPositionY(newY);
-				continue;
-			}
-			if (layerMenuScrollButtons == child) {
-				child = buttonsList;
+		if (this->getChildren()) {
+			for (auto child : CCArrayExt<CCNode*>(this->getChildren())) {
+				if (auto child2 = dynamic_cast<ChallengesPage*>(child); child2) {
+					auto mainLayer = child2->m_mainLayer;
+					float originalY = mainLayer->getPositionY();
+					float newY = originalY + (displacementY / 2);
+					mainLayer->setPositionY(newY);
+					continue;
+				}
+				if (layerMenuScrollButtons == child) {
+					child = buttonsList;
+					float originalY = child->getPositionY();
+					float newY = originalY + displacementY;
+					child->setPositionY(newY);
+					continue;
+				}
 				float originalY = child->getPositionY();
 				float newY = originalY + displacementY;
+				if (originalY > size.height / 2) {
+					newY = originalY - displacementY;
+				}
 				child->setPositionY(newY);
-				continue;
 			}
-			float originalY = child->getPositionY();
-			float newY = originalY + displacementY;
-			if (originalY > size.height / 2) {
-				newY = originalY - displacementY;
-			}
-			child->setPositionY(newY);
 		}
 	}
 
@@ -1288,32 +1286,30 @@ void BetterPause::updateButtons() {
 	}
 
 
-	auto allChildrens = buttonsList->m_contentLayer->getChildren();
-	CCObject* node;
-	CCARRAY_FOREACH(allChildrens, node) {
-		auto child = dynamic_cast<CCNode*>(node);
+	if (buttonsList->m_contentLayer->getChildren()) {
+		for (auto child : CCArrayExt<CCNode*>(buttonsList->m_contentLayer->getChildren())) {
+			CCPoint nodeWorldPos = buttonsList->m_contentLayer->convertToWorldSpace(child->getPosition());
 
-		CCPoint nodeWorldPos = buttonsList->m_contentLayer->convertToWorldSpace(child->getPosition());
+			float disappearY = buttonsList->getPositionY() + buttonsList->getContentSize().height;
+			float disappearY2 = buttonsList->getPositionY() - buttonsList->getContentSize().height;
 
-		float disappearY = buttonsList->getPositionY() + buttonsList->getContentSize().height;
-		float disappearY2 = buttonsList->getPositionY() - buttonsList->getContentSize().height;
+			if (nodeWorldPos.y > disappearY + child->getContentSize().height / 2) {
+				child->setVisible(false);
+			}
 
-		if (nodeWorldPos.y > disappearY + child->getContentSize().height / 2) {
-			child->setVisible(false);
-		}
+			if (nodeWorldPos.y < disappearY2 - child->getContentSize().height / 2) {
+				child->setVisible(false);
+			}
 
-		if (nodeWorldPos.y < disappearY2 - child->getContentSize().height / 2) {
-			child->setVisible(false);
-		}
+			float topCutOff = buttonsList->getPositionY() + buttonsList->getContentSize().height - (15.f * static_cast<float>(Mod::get()->getSettingValue<double>("tolerance-in-buttons-list")));
+			float bottomCutOff = buttonsList->getPositionY() + (15.f * static_cast<float>(Mod::get()->getSettingValue<double>("tolerance-in-buttons-list")));
 
-		float topCutOff = buttonsList->getPositionY() + buttonsList->getContentSize().height - (15.f * static_cast<float>(Mod::get()->getSettingValue<double>("tolerance-in-buttons-list")));
-		float bottomCutOff = buttonsList->getPositionY() + (15.f * static_cast<float>(Mod::get()->getSettingValue<double>("tolerance-in-buttons-list")));
-
-		if (nodeWorldPos.y > topCutOff || nodeWorldPos.y < bottomCutOff) {
-			typeinfo_cast<cocos2d::CCMenu*>(child->getChildren()->objectAtIndex(0))->setEnabled(false);
-		}
-		else {
-			typeinfo_cast<cocos2d::CCMenu*>(child->getChildren()->objectAtIndex(0))->setEnabled(true);
+			if (nodeWorldPos.y > topCutOff || nodeWorldPos.y < bottomCutOff) {
+				typeinfo_cast<cocos2d::CCMenu*>(child->getChildren()->objectAtIndex(0))->setEnabled(false);
+			}
+			else {
+				typeinfo_cast<cocos2d::CCMenu*>(child->getChildren()->objectAtIndex(0))->setEnabled(true);
+			}
 		}
 	}
 
@@ -1346,23 +1342,22 @@ void BetterPause::setEnabledForButtons(bool enabled) {
 		return;
 	}
 
-	auto allChildrens = buttonsList->m_contentLayer->getChildren();
-	CCObject* node;
-	CCARRAY_FOREACH(allChildrens, node) {
-		CCNode* child = dynamic_cast<CCNode*>(node);
-		if (child) {
-			CCArray* children = child->getChildren();
-			if (children && children->count() > 0) {
-				CCNode* innerChild = dynamic_cast<CCNode*>(children->objectAtIndex(0));
-				if (innerChild) {
-					CCMenu* ccmenu = dynamic_cast<CCMenu*>(innerChild);
-					if (ccmenu) {
-						CCArray* menuItems = ccmenu->getChildren();
-						if (menuItems && menuItems->count() > 0) {
-							CCMenuItemSpriteExtra* btn = dynamic_cast<CCMenuItemSpriteExtra*>(menuItems->objectAtIndex(0));
-							if (btn) {
-								btn->unselected();
-								btn->setEnabled(enabled);
+	if (buttonsList->m_contentLayer->getChildren()) {
+		for (auto child : CCArrayExt<CCNode*>(buttonsList->m_contentLayer->getChildren())) {
+			if (child) {
+				CCArray* children = child->getChildren();
+				if (children && children->count() > 0) {
+					CCNode* innerChild = dynamic_cast<CCNode*>(children->objectAtIndex(0));
+					if (innerChild) {
+						CCMenu* ccmenu = dynamic_cast<CCMenu*>(innerChild);
+						if (ccmenu) {
+							CCArray* menuItems = ccmenu->getChildren();
+							if (menuItems && menuItems->count() > 0) {
+								CCMenuItemSpriteExtra* btn = dynamic_cast<CCMenuItemSpriteExtra*>(menuItems->objectAtIndex(0));
+								if (btn) {
+									btn->unselected();
+									btn->setEnabled(enabled);
+								}
 							}
 						}
 					}

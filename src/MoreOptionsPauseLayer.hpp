@@ -16,7 +16,7 @@ public:
 	void onClose(CCObject* pSender);
 	void onOptionsGame(CCObject* pSender);
 	void onOptionsPause(CCObject* pSender);
-	void keyDown(cocos2d::enumKeyCodes key);
+	void keyDown(cocos2d::enumKeyCodes key, double p1) override;
 	void onSettingsMod(CCObject* pSender);
 	
 	CCNode* betterPauseRef = nullptr;

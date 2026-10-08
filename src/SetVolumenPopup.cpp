@@ -43,7 +43,6 @@ bool SetVolumenPopup::setup(Slider* m_pSliderRef)
 {
 	this->m_pSliderRef = m_pSliderRef;
 
-	m_bgSprite->initWithFile("GJ_square02.png");
 	m_bgSprite->setContentSize({ 200.f, 100.f });
 
 	m_buttonMenu->setPosition({ Utils::WinSize().width / 2.f - 98.f, Utils::WinSize().height / 2.f + 50.f });
@@ -96,7 +95,7 @@ bool SetVolumenPopup::setup(Slider* m_pSliderRef)
 	return true;
 }
 
-void SetVolumenPopup::keyDown(cocos2d::enumKeyCodes key)
+void SetVolumenPopup::keyDown(cocos2d::enumKeyCodes key, double p1)
 {
 	switch (key)
 	{
@@ -113,6 +112,6 @@ void SetVolumenPopup::keyDown(cocos2d::enumKeyCodes key)
 	case cocos2d::enumKeyCodes::CONTROLLER_Right:
 		break;
 	default:
-		CCLayer::keyDown(key);
+		Popup::keyDown(key, p1);
 	}
 }
