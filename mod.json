@@ -60,6 +60,60 @@
         "slider": true
       }
     },
+    "enable-player-theme": {
+      "name": "Player Theme Colors",
+      "description": "Sync pause menu progress bar and minimap border with your player icon colors.",
+      "type": "bool",
+      "default": true
+    },
+    "enable-pause-animations": {
+      "name": "Smooth Pause Animations",
+      "description": "Enable smooth pop-in, ambient idle breathing, and exit animations for pause menu elements.",
+      "type": "bool",
+      "default": true
+    },
+    "pause-music-track": {
+      "name": "Pause Music Track",
+      "description": "Select the background music to play while paused:\n0: Disabled\n1: Stay Inside Me (Iconic Chill)\n2: The Vault (secretLoop)\n3: Chamber of Time (secretLoop02)\n4: The Shop (shop)\n5: Secret Shop (secretShop)",
+      "type": "int",
+      "default": 1,
+      "min": 0,
+      "max": 5,
+      "control": {
+        "arrows": true,
+        "slider": true
+      }
+    },
+    "pause-music-volume": {
+      "name": "Pause Music Volume",
+      "description": "Volume level for the pause background music.",
+      "type": "float",
+      "default": 0.5,
+      "min": 0.0,
+      "max": 1.0,
+      "control": {
+        "arrows": true,
+        "slider": true
+      }
+    },
+    "enable-unpause-countdown": {
+      "name": "Unpause Countdown",
+      "description": "Shows a 3.. 2.. 1.. GO countdown when resuming to prepare your reaction before physics resume. Press Space or Esc to skip instantly.",
+      "type": "bool",
+      "default": false
+    },
+    "enable-progress-milestones": {
+      "name": "Progress Bar Milestones",
+      "description": "Shows markers on the progress bar for your Session Best and coin locations.",
+      "type": "bool",
+      "default": true
+    },
+    "enable-death-marker": {
+      "name": "Last Death Marker",
+      "description": "Shows where you died on your last attempt on the progress bar and in the level while paused.",
+      "type": "bool",
+      "default": true
+    },
     "level-editor-hack": {
       "name": "Level Editor Hack",
       "description": "I couldn't adapt the level edit recognition of the mods menus, sorry :(",

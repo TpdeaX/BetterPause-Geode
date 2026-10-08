@@ -19,4 +19,5 @@ public:
 	static BarBetterShow* create(cocos2d::ccColor3B color, bool enabledSecondBar, bool showCurrentPer, float perCurrent, float bestCurrent);
 	bool init(cocos2d::ccColor3B color, bool enabledSecondBar, bool showCurrentPer, float perCurrent, float bestCurrent);
 	void updateBar(cocos2d::CCSprite* m_pBar, float per);
+	void addMilestones(float sessionBest, float lastDeathPercent, const std::vector<GameObject*>& coins);
 };

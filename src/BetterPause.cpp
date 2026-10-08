@@ -1,4 +1,5 @@
 #include "BetterPause.hpp"
+#include "BetterPauseEnhancements.hpp"
 #include <optional>
 
 std::vector<std::string> BetterPause::quickSettingsNames = {};
@@ -52,10 +53,10 @@ bool BetterPause::init(PauseLayer* pauLa)
 	}
 	}
 
-
-	//this->setMouseEnabled(true);
-	//this->setTouchEnabled(true);
-	//this->registerScriptTouchHandler(0);
+	if (Mod::get()->getSettingValue<bool>("enable-pause-animations")) {
+		this->applyEntranceAnimations();
+		this->applyIdleAnimations();
+	}
 
 	return true;
 }
@@ -775,8 +776,15 @@ void BetterPause::createLabels() {
 }
 
 void BetterPause::createBars() {
-	createAndSetupBar(normalBarPercentage, { 0, 255, 0 }, !Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_normalPercent, { 86.f, Utils::WinSize().height - 90.f }, "normal-bar");
-	createAndSetupBar(practiceBarPercentage, { 0, 255, 255 }, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_practicePercent, { 86.f, Utils::WinSize().height - 125.f }, "practice-bar");
+	auto col1 = BetterPauseTheme::getPlayerCol1();
+	auto col2 = BetterPauseTheme::getPlayerCol2();
+	createAndSetupBar(normalBarPercentage, col1, !Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_normalPercent, { 86.f, Utils::WinSize().height - 90.f }, "normal-bar");
+	createAndSetupBar(practiceBarPercentage, col2, Utils::getplayLayerA()->m_isPracticeMode, Utils::getPercentageNowFix(), Utils::getplayLayerA()->m_level->m_practicePercent, { 86.f, Utils::WinSize().height - 125.f }, "practice-bar");
+
+	if (normalBarPercentage) {
+		auto stats = SessionStatsManager::get();
+		normalBarPercentage->addMilestones(stats->m_sessionBest, stats->m_lastDeathPercent, CoinsViewerSprites::coinsInVector);
+	}
 }
 
 void BetterPause::createAndSetupBar(BarBetterShow*& bar, const cocos2d::ccColor3B& color, bool isVisible, float currentPercentage, float targetPercentage, const cocos2d::CCPoint& position, std::string id) {
@@ -1390,4 +1398,73 @@ void BetterPause::setVisibleNodesSimplePause(bool isVisible) {
 	if (timeLabel)timeLabel->setVisible(isVisible);
 
 	buttonsMenu->setVisible(isVisible);
+}
+
+void BetterPause::applyEntranceAnimations() {
+	if (mainMenuButtons) {
+		float origScale = mainMenuButtons->getScale();
+		mainMenuButtons->setScale(origScale * 0.4f);
+		mainMenuButtons->runAction(CCEaseBackOut::create(CCScaleTo::create(0.28f, origScale)));
+	}
+
+	if (layerMenuScrollButtons) {
+		float origX = layerMenuScrollButtons->getPositionX();
+		layerMenuScrollButtons->setPositionX(origX - 35.0f);
+		layerMenuScrollButtons->runAction(CCEaseSineOut::create(CCMoveTo::create(0.26f, ccp(origX, layerMenuScrollButtons->getPositionY()))));
+	}
+
+	if (normalBarPercentage) {
+		float origY = normalBarPercentage->getPositionY();
+		normalBarPercentage->setPositionY(origY + 15.0f);
+		normalBarPercentage->runAction(CCEaseSineOut::create(CCMoveTo::create(0.24f, ccp(normalBarPercentage->getPositionX(), origY))));
+	}
+
+	if (practiceBarPercentage) {
+		float origY = practiceBarPercentage->getPositionY();
+		practiceBarPercentage->setPositionY(origY + 15.0f);
+		practiceBarPercentage->runAction(CCEaseSineOut::create(CCMoveTo::create(0.24f, ccp(practiceBarPercentage->getPositionX(), origY))));
+	}
+
+	if (levelNameLabel) {
+		float origY = levelNameLabel->getPositionY();
+		levelNameLabel->setPositionY(origY + 12.0f);
+		levelNameLabel->runAction(CCEaseSineOut::create(CCMoveTo::create(0.22f, ccp(levelNameLabel->getPositionX(), origY))));
+	}
+}
+
+void BetterPause::applyIdleAnimations() {
+	if (visibleButton) {
+		float origScale = visibleButton->getScale();
+		auto pulse = CCRepeatForever::create(CCSequence::create(
+			CCEaseSineInOut::create(CCScaleTo::create(1.6f, origScale * 1.06f)),
+			CCEaseSineInOut::create(CCScaleTo::create(1.6f, origScale * 0.96f)),
+			nullptr
+		));
+		visibleButton->runAction(pulse);
+	}
+
+	if (levelNameLabel) {
+		auto wave = CCRepeatForever::create(CCSequence::create(
+			CCEaseSineInOut::create(CCMoveBy::create(2.0f, ccp(0.f, 2.0f))),
+			CCEaseSineInOut::create(CCMoveBy::create(2.0f, ccp(0.f, -2.0f))),
+			nullptr
+		));
+		levelNameLabel->runAction(wave);
+	}
+}
+
+void BetterPause::applyExitAnimations(std::function<void()> onComplete) {
+	float duration = 0.18f;
+	if (mainMenuButtons) {
+		mainMenuButtons->runAction(CCEaseBackIn::create(CCScaleTo::create(duration, 0.0f)));
+	}
+	if (layerMenuScrollButtons) {
+		layerMenuScrollButtons->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(-45.f, 0.f))));
+	}
+	if (normalBarPercentage) {
+		normalBarPercentage->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(0.f, 25.f))));
+	}
+	if (practiceBarPercentage) {
+		practiceBarPercentage->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(0.f, 25.f))));
+	}
 }

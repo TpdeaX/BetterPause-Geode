@@ -123,4 +123,7 @@ public:
     void setEnabledForButtons(bool enabled);
     void onInfoLevelOpen(cocos2d::CCObject* sender);
     void setVisibleNodesSimplePause(bool isVisible);
+    void applyEntranceAnimations();
+    void applyIdleAnimations();
+    void applyExitAnimations(std::function<void()> onComplete);
 };

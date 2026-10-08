@@ -143,3 +143,72 @@ void BarBetterShow::updateBar(cocos2d::CCSprite* m_pBar, float per)
 	width = width * static_cast<float>(per) / 100.0f;
 	m_pBar->setTextureRect(cocos2d::CCRect(0.0f, 0.0f, width, m_pBarBase->getTextureRect().size.height));
 }
+
+void BarBetterShow::addMilestones(float sessionBest, float lastDeathPercent, const std::vector<GameObject*>& coins) {
+	if (!m_pBarBase) return;
+	float barWidth = m_pBarBase->getContentSize().width;
+	if (barWidth <= 0.0f) return;
+
+	// 1. Session Best Marker (on top of the bar)
+	if (Mod::get()->getSettingValue<bool>("enable-progress-milestones") && sessionBest > 0.0f && sessionBest <= 100.0f) {
+		auto marker = cocos2d::CCSprite::createWithSpriteFrameName("checkpoint_01_001.png");
+		if (marker) {
+			marker->setScale(0.42f);
+			float markerX = (sessionBest / 100.0f) * barWidth;
+			marker->setPosition({ markerX, 13.0f });
+			marker->setColor({ 255, 220, 90 });
+			marker->setOpacity(230);
+
+			auto floatAction = cocos2d::CCRepeatForever::create(cocos2d::CCSequence::create(
+				cocos2d::CCEaseSineInOut::create(cocos2d::CCMoveBy::create(1.2f, cocos2d::ccp(0.f, 2.0f))),
+				cocos2d::CCEaseSineInOut::create(cocos2d::CCMoveBy::create(1.2f, cocos2d::ccp(0.f, -2.0f))),
+				nullptr
+			));
+			marker->runAction(floatAction);
+			this->addChild(marker, 10);
+		}
+	}
+
+	// 2. Coin Locations on the bar
+	if (Mod::get()->getSettingValue<bool>("enable-progress-milestones") && PlayLayer::get()) {
+		float levelLength = PlayLayer::get()->m_levelLength;
+		if (levelLength > 0.0f) {
+			for (auto coin : coins) {
+				if (!coin) continue;
+				float coinPct = std::clamp((coin->getPositionX() / levelLength) * 100.0f, 0.0f, 100.0f);
+				auto coinSpr = cocos2d::CCSprite::createWithSpriteFrameName("secretCoin_01_001.png");
+				if (!coinSpr) {
+					coinSpr = cocos2d::CCSprite::createWithSpriteFrameName("secretCoin_2_01_001.png");
+				}
+				if (coinSpr) {
+					coinSpr->setScale(0.32f);
+					coinSpr->setPosition({ (coinPct / 100.0f) * barWidth, 12.0f });
+					coinSpr->setOpacity(210);
+					this->addChild(coinSpr, 9);
+				}
+			}
+		}
+	}
+
+	// 3. Last Death Marker (below the bar)
+	if (Mod::get()->getSettingValue<bool>("enable-death-marker") && lastDeathPercent > 0.0f && lastDeathPercent <= 100.0f) {
+		auto deathSpr = cocos2d::CCSprite::createWithSpriteFrameName("d_skull_01_001.png");
+		if (!deathSpr) {
+			deathSpr = cocos2d::CCSprite::createWithSpriteFrameName("edit_downBtn2_001.png");
+		}
+		if (deathSpr) {
+			deathSpr->setScale(0.38f);
+			deathSpr->setPosition({ (lastDeathPercent / 100.0f) * barWidth, -13.0f });
+			deathSpr->setColor({ 255, 90, 90 });
+			deathSpr->setOpacity(220);
+
+			auto pulseAction = cocos2d::CCRepeatForever::create(cocos2d::CCSequence::create(
+				cocos2d::CCEaseSineInOut::create(cocos2d::CCScaleTo::create(0.8f, 0.44f)),
+				cocos2d::CCEaseSineInOut::create(cocos2d::CCScaleTo::create(0.8f, 0.35f)),
+				nullptr
+			));
+			deathSpr->runAction(pulseAction);
+			this->addChild(deathSpr, 10);
+		}
+	}
+}

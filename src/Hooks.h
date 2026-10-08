@@ -21,6 +21,7 @@
 #include <Geode/modify/CCScrollLayerExt.hpp>
 #include "CoinsViewerSprites.hpp"
 #include "PauseZoom.hpp"
+#include "BetterPauseEnhancements.hpp"
 
 using namespace geode::prelude;
 
@@ -37,10 +38,17 @@ class $modify(PauseLayer) {
 	struct Fields {
 		bool hasPosibleExitHotKey = false;
 		bool hasConfirmPopup = false;
+		bool isCountingDown = false;
 	};
 
 	static void onModify(auto & self) {
 		self.setHookPriority("PauseLayer::customSetup", -99);
+	}
+
+	void cleanUpEnhancements() {
+		PauseMusicManager::get()->onResume();
+		LastDeathGhostNode::removeFromPlayLayer(PlayLayer::get());
+		PauseZoomManager::get()->onResume();
 	}
 
 	void customSetup() {
@@ -60,6 +68,15 @@ class $modify(PauseLayer) {
 			this->addChild(betterPauseMenu, 100);
 		}
 
+		if (Mod::get()->getSettingValue<bool>("enable-pause-animations")) {
+			if (auto bg = this->getChildByID("background")) {
+				bg->setOpacity(0);
+				bg->runAction(cocos2d::CCFadeTo::create(0.20f, 100));
+			}
+		}
+
+		PauseMusicManager::get()->onPause();
+		LastDeathGhostNode::showInPlayLayer(PlayLayer::get());
 		PauseZoomManager::get()->onPause(this);
 	}
 
@@ -72,11 +89,25 @@ class $modify(PauseLayer) {
 				[this, sender](FLAlertLayer* fla, bool btn2) {
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						PauseLayer::onResume(sender);
+						this->onResume(sender);
 						m_fields->hasConfirmPopup = false;
 					}
 				}
 			);
+			return;
+		}
+
+		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown") && !m_fields->isCountingDown) {
+			m_fields->isCountingDown = true;
+			if (auto bp = typeinfo_cast<BetterPause*>(this->getChildByID("better-pause-node"))) {
+				bp->applyExitAnimations(nullptr);
+			}
+			auto cd = UnpauseCountdownNode::create([this, sender]() {
+				m_fields->isCountingDown = false;
+				this->cleanUpEnhancements();
+				PauseLayer::onResume(sender);
+			});
+			this->addChild(cd, 99999);
 			return;
 		}
 
@@ -99,7 +130,7 @@ class $modify(PauseLayer) {
 		}
 		
 
-		PauseZoomManager::get()->onResume();
+		this->cleanUpEnhancements();
 		PauseLayer::onResume(sender);
 	}
 
@@ -114,7 +145,7 @@ class $modify(PauseLayer) {
 				[this, sender](FLAlertLayer* fla, bool btn2) {
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						PauseZoomManager::get()->onResume();
+						this->cleanUpEnhancements();
 						PauseLayer::onPracticeMode(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -125,7 +156,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
-		PauseZoomManager::get()->onResume();
+		this->cleanUpEnhancements();
 		PauseLayer::onPracticeMode(sender);
 	}
 
@@ -139,7 +170,7 @@ class $modify(PauseLayer) {
 				[this, sender](FLAlertLayer* fla, bool btn2) {
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						PauseZoomManager::get()->onResume();
+						this->cleanUpEnhancements();
 						PauseLayer::onNormalMode(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -150,7 +181,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
-		PauseZoomManager::get()->onResume();
+		this->cleanUpEnhancements();
 		PauseLayer::onNormalMode(sender);
 	}
 
@@ -165,7 +196,7 @@ class $modify(PauseLayer) {
 
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						PauseZoomManager::get()->onResume();
+						this->cleanUpEnhancements();
 						PauseLayer::onRestart(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -175,7 +206,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
-		PauseZoomManager::get()->onResume();
+		this->cleanUpEnhancements();
 		PauseLayer::onRestart(sender);
 	}
 
@@ -190,7 +221,7 @@ class $modify(PauseLayer) {
 
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						PauseZoomManager::get()->onResume();
+						this->cleanUpEnhancements();
 						PauseLayer::onRestartFull(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -199,7 +230,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
-		PauseZoomManager::get()->onResume();
+		this->cleanUpEnhancements();
 		PauseLayer::onRestartFull(sender);
 	}
 
@@ -214,7 +245,7 @@ class $modify(PauseLayer) {
 
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						PauseZoomManager::get()->onResume();
+						this->cleanUpEnhancements();
 						PauseLayer::onEdit(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -223,7 +254,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
-		PauseZoomManager::get()->onResume();
+		this->cleanUpEnhancements();
 		PauseLayer::onEdit(sender);
 	}
 
@@ -243,7 +274,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
-		PauseZoomManager::get()->onResume();
+		this->cleanUpEnhancements();
 		PauseLayer::onQuit(sender);
 	}
 
@@ -253,7 +284,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
-		PauseZoomManager::get()->onResume();
+		this->cleanUpEnhancements();
 		PauseLayer::tryQuit(sender);
 	}
 
@@ -263,6 +294,9 @@ class $modify(PauseLayer) {
 class $modify(PlayLayer) {
 	bool init(GJGameLevel * p0, bool p1, bool p2) {
 		PauseZoomManager::get()->onResume();
+		PauseMusicManager::get()->onResume();
+		LastDeathGhostNode::removeFromPlayLayer(this);
+		SessionStatsManager::get()->onLevelInit(p0);
 		BetterPause::totalLevelTimeBackup = 0.f;
 		ProgressPlataformerBetter::m_totalPoints = 0;
 		CoinsViewerSprites::coinsInVector.clear();
@@ -276,6 +310,13 @@ class $modify(PlayLayer) {
 		}
 
 		return true;
+	}
+
+	void destroyPlayer(PlayerObject* p0, GameObject* p1) {
+		PlayLayer::destroyPlayer(p0, p1);
+		if (p0 == this->m_player1 && !this->m_isPracticeMode) {
+			SessionStatsManager::get()->onPlayerDeath(this->getCurrentPercent(), p0->getPosition());
+		}
 	}
 
 	void addObject(GameObject * p0) {

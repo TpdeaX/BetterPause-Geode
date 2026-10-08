@@ -1,5 +1,6 @@
 #include "PauseZoom.hpp"
 #include "BetterPause.hpp"
+#include "BetterPauseEnhancements.hpp"
 #include "BetterInfoUtils.hpp"
 #include <Geode/modify/CCScheduler.hpp>
 #ifdef GEODE_IS_DESKTOP
@@ -398,7 +399,7 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
         4,
         ccc4f(0.04f, 0.04f, 0.05f, 0.65f),
         1.0f,
-        ccc4f(0.85f, 0.85f, 0.90f, 0.90f)
+        BetterPauseTheme::getPlayerCol1F(0.90f)
     );
 
     auto winSize = CCDirector::sharedDirector()->getWinSize();
