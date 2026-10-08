@@ -123,9 +123,11 @@ void PauseZoomManager::clampPan() {
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     if (winSize.width <= 0.0f || winSize.height <= 0.0f) return;
 
-    // Symmetrical PlayLayer clamping around screen center
-    float maxPanX = (winSize.width * 0.5f) * (m_zoom - 1.0f);
-    float maxPanY = (winSize.height * 0.5f) * (m_zoom - 1.0f);
+    // Symmetrical PlayLayer clamping around screen center, with a slight margin in all directions
+    float marginX = winSize.width * 0.12f;
+    float marginY = winSize.height * 0.12f;
+    float maxPanX = (winSize.width * 0.5f) * (m_zoom - 1.0f) + marginX;
+    float maxPanY = (winSize.height * 0.5f) * (m_zoom - 1.0f) + marginY;
 
     m_pan.x = std::clamp(m_pan.x, -maxPanX, maxPanX);
     m_pan.y = std::clamp(m_pan.y, -maxPanY, maxPanY);
@@ -408,19 +410,13 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     float normW = 1.0f / zoom;
     float normH = 1.0f / zoom;
 
-    float x1 = std::clamp(normX * MW, 0.0f, MW);
-    float x2 = std::clamp((normX + normW) * MW, 0.0f, MW);
-    float y1 = std::clamp(normY * MH, 0.0f, MH);
-    float y2 = std::clamp((normY + normH) * MH, 0.0f, MH);
+    float boxW = std::clamp(normW * MW, 3.0f, MW);
+    float boxH = std::clamp(normH * MH, 3.0f, MH);
 
-    if (x2 - x1 < 3.0f) {
-        if (x1 + 3.0f <= MW) x2 = x1 + 3.0f;
-        else x1 = std::max(0.0f, x2 - 3.0f);
-    }
-    if (y2 - y1 < 3.0f) {
-        if (y1 + 3.0f <= MH) y2 = y1 + 3.0f;
-        else y1 = std::max(0.0f, y2 - 3.0f);
-    }
+    float x1 = std::clamp(normX * MW, 0.0f, std::max(0.0f, MW - boxW));
+    float x2 = std::min(MW, x1 + boxW);
+    float y1 = std::clamp(normY * MH, 0.0f, std::max(0.0f, MH - boxH));
+    float y2 = std::min(MH, y1 + boxH);
 
     CCPoint innerPts[4] = {
         ccp(x1, y1),
@@ -429,11 +425,11 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
         ccp(x1, y2)
     };
 
-    // Inner viewport indicator: transparent fill + sleek distinct bright red border
+    // Inner viewport indicator: very transparent soft red fill + sleek distinct bright red border
     m_minimap->drawPolygon(
         innerPts,
         4,
-        ccc4f(0.0f, 0.0f, 0.0f, 0.0f),
+        ccc4f(1.0f, 0.12f, 0.12f, 0.18f),
         1.0f,
         ccc4f(1.0f, 0.15f, 0.15f, 1.0f)
     );
