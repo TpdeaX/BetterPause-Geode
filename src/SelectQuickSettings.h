@@ -7,19 +7,17 @@
 
 using namespace geode::prelude;
 
-class SelectQuickSettings : public Popup<bool>
+class SelectQuickSettings : public geode::Popup
 {
-protected:
-
 public:
 	bool m_isInGame;
-	bool setup(bool mod) override;
+	bool setup(bool inGame);
 
 	static bool GameOptionsLayer_getSettings;
-	static SelectQuickSettings* create(bool);
-	virtual void keyBackClicked();
-	virtual void onClose(CCObject* pSender);
-	void keyDown(cocos2d::enumKeyCodes key);
+	static SelectQuickSettings* create(bool inGame);
+	void keyBackClicked() override;
+	void onClose(CCObject* pSender) override;
+	void keyDown(cocos2d::enumKeyCodes key, double p1) override;
 	void onToggleWithGameVariable(CCObject* pSender);
 	void handleOptionsLayers();
 

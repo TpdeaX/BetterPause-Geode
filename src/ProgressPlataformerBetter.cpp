@@ -1,4 +1,5 @@
 #include "ProgressPlataformerBetter.hpp"
+#include "BetterPause.hpp"
 
 int ProgressPlataformerBetter::m_totalPoints = 0;
 float ProgressPlataformerBetter::timeForLevelStringPlataformerSafe = 0.f;
@@ -47,7 +48,7 @@ bool ProgressPlataformerBetter::init() {
 
     double currentTime = 0.0;
     if (auto pl = Utils::getplayLayerA()) {
-        currentTime = pl->m_time;
+        currentTime = (pl->m_attemptTime > 0.0) ? pl->m_attemptTime : static_cast<double>(BetterPause::totalLevelTimeBackup);
     }
     
     m_timeLabelLevel = TextArea::create(

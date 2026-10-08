@@ -100,7 +100,7 @@ namespace Utils
 
 	std::string getFormattedCreatorName(const std::string& creatorName, GJLevelType levelType) {
 		if (creatorName.empty()) {
-			if (levelType == GJLevelType::Local)
+			if (levelType == GJLevelType::Main)
 				return "By RobTop";
 			else
 				return "By -";
@@ -123,7 +123,7 @@ namespace Utils
 		switch (type) {
 		case GJLevelType::Editor:
 			return "Editor Level";
-		case GJLevelType::Local:
+		case GJLevelType::Main:
 			return "Official Level";
 		case GJLevelType::Saved:
 			return "Online Level";
@@ -135,7 +135,7 @@ namespace Utils
 
 	double getTotalSecondsPlayLayer() {
 		if (auto pl = Utils::getplayLayerA()) {
-			return std::floor(pl->m_time);
+			return std::floor(pl->m_attemptTime);
 		}
 		return 0.0;
 	}

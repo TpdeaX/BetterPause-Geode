@@ -56,18 +56,18 @@ void PauseZoomManager::onResume() {
 
     if (auto pl = PlayLayer::get()) {
         pl->setScale(1.0f);
-        pl->setPosition({0.f, 0.f});
+        pl->setPosition(ccp(0.f, 0.f));
     }
     m_zoom = 1.0f;
-    m_pan = {0.f, 0.f};
+    m_pan = ccp(0.f, 0.f);
 }
 
 void PauseZoomManager::resetZoom() {
     m_zoom = 1.0f;
-    m_pan = {0.f, 0.f};
+    m_pan = ccp(0.f, 0.f);
     if (auto pl = PlayLayer::get()) {
         pl->setScale(1.0f);
-        pl->setPosition({0.f, 0.f});
+        pl->setPosition(ccp(0.f, 0.f));
     }
     updateBadge();
 }

@@ -4,7 +4,8 @@ bool SelectQuickSettings::GameOptionsLayer_getSettings = false;
 
 SelectQuickSettings* SelectQuickSettings::create(bool inGame) {
 	auto ret = new SelectQuickSettings();
-	if (ret && ret->init(440.f, 290.f, inGame)) {
+	if (ret && ret->init(440.f, 290.f, "GJ_square01.png")) {
+		ret->setup(inGame);
 		ret->autorelease();
 		return ret;
 	}
@@ -46,7 +47,6 @@ bool SelectQuickSettings::setup(bool inGame)
 	m_noElasticity = true;
 	m_isInGame = inGame;
 
-	this->m_bgSprite->initWithFile("GJ_square01.png");
 	this->m_bgSprite->setContentSize({ 440.f, 290.f });
 	this->m_bgSprite->setPosition({ Utils::WinSize().width / 2.f, Utils::WinSize().height / 2.f });
 
@@ -306,7 +306,7 @@ void SelectQuickSettings::onClose(cocos2d::CCObject* pSender)
 	Popup::onClose(pSender);
 }
 
-void SelectQuickSettings::keyDown(cocos2d::enumKeyCodes key)
+void SelectQuickSettings::keyDown(cocos2d::enumKeyCodes key, double p1)
 {
 	switch (key)
 	{
@@ -322,6 +322,6 @@ void SelectQuickSettings::keyDown(cocos2d::enumKeyCodes key)
 	case cocos2d::enumKeyCodes::CONTROLLER_Right:
 		break;
 	default:
-		CCLayer::keyDown(key);
+		Popup::keyDown(key, p1);
 	}
 }

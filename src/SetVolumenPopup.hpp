@@ -17,7 +17,7 @@ public:
 	Slider* m_pSliderRef = nullptr;
 
 	static SetVolumenPopup* create(Slider* ref);
-	virtual void keyBackClicked();
+	void keyBackClicked() override;
 	void keyDown(cocos2d::enumKeyCodes key, double p1) override;
 	void onSet(cocos2d::CCObject* pSender);
 };

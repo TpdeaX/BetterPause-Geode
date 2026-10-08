@@ -13,7 +13,7 @@ class MoreOptionsPauseLayer : public geode::Popup, public cocos2d::CCTextFieldDe
 public:
 	static MoreOptionsPauseLayer* create(CCNode* ref);
 	bool setup(CCNode* ref);
-	void onClose(CCObject* pSender);
+	void onClose(CCObject* pSender) override;
 	void onOptionsGame(CCObject* pSender);
 	void onOptionsPause(CCObject* pSender);
 	void keyDown(cocos2d::enumKeyCodes key, double p1) override;
