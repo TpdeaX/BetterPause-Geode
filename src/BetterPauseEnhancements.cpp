@@ -24,7 +24,7 @@ void SessionStatsManager::onLevelInit(GJGameLevel* level) {
     if (newID != m_currentLevelID || (newID == 0 && newName != m_currentLevelName)) {
         m_sessionBest = 0.0f;
         m_lastDeathPercent = 0.0f;
-        m_lastDeathPos = {0.f, 0.f};
+        m_lastDeathPos = ccp(0.f, 0.f);
         m_hasLastDeath = false;
         m_sessionAttempts = 0;
         m_currentLevelID = newID;
@@ -45,7 +45,7 @@ void SessionStatsManager::onPlayerDeath(float percent, CCPoint pos) {
 void SessionStatsManager::reset() {
     m_sessionBest = 0.0f;
     m_lastDeathPercent = 0.0f;
-    m_lastDeathPos = {0.f, 0.f};
+    m_lastDeathPos = ccp(0.f, 0.f);
     m_hasLastDeath = false;
     m_sessionAttempts = 0;
     m_currentLevelID = -1;
@@ -89,7 +89,7 @@ void PauseMusicManager::onPause() {
     if (!fmod) return;
 
     fmod->playMusic(track, true, 0.35f, m_musicChannel);
-    fmod->setChannelVolume(m_musicChannel, AudioTargetType::Music, vol);
+    fmod->setChannelVolume(m_musicChannel, AudioTargetType::MusicChannel, vol);
     m_isPlaying = true;
 }
 

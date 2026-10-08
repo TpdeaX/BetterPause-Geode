@@ -160,8 +160,8 @@ void BarBetterShow::addMilestones(float sessionBest, float lastDeathPercent, con
 			marker->setOpacity(230);
 
 			auto floatAction = cocos2d::CCRepeatForever::create(cocos2d::CCSequence::create(
-				cocos2d::CCEaseSineInOut::create(cocos2d::CCMoveBy::create(1.2f, cocos2d::ccp(0.f, 2.0f))),
-				cocos2d::CCEaseSineInOut::create(cocos2d::CCMoveBy::create(1.2f, cocos2d::ccp(0.f, -2.0f))),
+				cocos2d::CCEaseSineInOut::create(cocos2d::CCMoveBy::create(1.2f, ccp(0.f, 2.0f))),
+				cocos2d::CCEaseSineInOut::create(cocos2d::CCMoveBy::create(1.2f, ccp(0.f, -2.0f))),
 				nullptr
 			));
 			marker->runAction(floatAction);
