@@ -34,34 +34,33 @@ class ButtonsClass : public FLAlertLayerProtocol {
 };
 
 class $modify(PauseLayer) {
-
-	bool hasPosibleExitHotKey = false;
-	bool hasConfirmPopup = false;
+	struct Fields {
+		bool hasPosibleExitHotKey = false;
+		bool hasConfirmPopup = false;
+	};
 
 	static void onModify(auto & self) {
-		self.setHookPriority("PauseLayer::create", -99);
+		self.setHookPriority("PauseLayer::customSetup", -99);
 	}
 
-	static PauseLayer* create(bool isEditor) {
-		auto ret = PauseLayer::create(isEditor);
+	void customSetup() {
+		PauseLayer::customSetup();
 
 		if (Mod::get()->getSettingValue<int64_t>("type-pause")) {
-			for (size_t i = 1; i < ret->getChildrenCount(); i++)
+			for (size_t i = 1; i < this->getChildrenCount(); i++)
 			{
-				auto node = dynamic_cast<cocos2d::CCNode*>(ret->getChildren()->objectAtIndex(i));
+				auto node = dynamic_cast<cocos2d::CCNode*>(this->getChildren()->objectAtIndex(i));
 				if (node)
 				{
 					node->setVisible(false);
 				}
 			}
 
-			auto betterPauseMenu = BetterPause::create(ret);
-			ret->addChild(betterPauseMenu, 100);
+			auto betterPauseMenu = BetterPause::create(this);
+			this->addChild(betterPauseMenu, 100);
 		}
 
-		PauseZoomManager::get()->onPause(ret);
-
-		return ret;
+		PauseZoomManager::get()->onPause(this);
 	}
 
 	void onResume(cocos2d::CCObject * sender) {
@@ -228,12 +227,12 @@ class $modify(PauseLayer) {
 		PauseLayer::onEdit(sender);
 	}
 
-	void keyDown(cocos2d::enumKeyCodes p0) {
+	void keyDown(cocos2d::enumKeyCodes p0, double p1) {
 		if (Mod::get()->getSettingValue<bool>("remove-exit-hotkey")) {
 			m_fields->hasPosibleExitHotKey = true;
 		}
 
-		PauseLayer::keyDown(p0);
+		PauseLayer::keyDown(p0, p1);
 
 		m_fields->hasPosibleExitHotKey = false;
 	}
@@ -307,7 +306,7 @@ class $modify(PlayLayer) {
 		PlayLayer::showNewBest(p0, p1, p2, p3, p4, p5);
 	}
 
-	TodoReturn levelComplete()
+	void levelComplete()
 	{
 		if (this->m_isTestMode && this->m_level->m_levelType != GJLevelType::Editor)
 		{
@@ -379,10 +378,7 @@ class $modify(MoreOptionsLayer) {
 
 
 class $modify(GameOptionsLayer) {
-
-
-	static GameOptionsLayer* create(GJBaseGameLayer * layer) {
-
+	void setupOptions() {
 		BetterPause::quickSettingsNamesG.clear();
 		BetterPause::quickSettingsNumbersG.clear();
 		BetterPause::quickSettingsEnabledG.clear();
@@ -391,13 +387,10 @@ class $modify(GameOptionsLayer) {
 			SelectQuickSettings::GameOptionsLayer_getSettings = true;
 		}
 
-		auto ret = GameOptionsLayer::create(layer);
+		GameOptionsLayer::setupOptions();
 
 		SelectQuickSettings::GameOptionsLayer_getSettings = false;
-
-		return ret;
 	}
-
 };
 
 
@@ -436,6 +429,7 @@ class $modify(GJOptionsLayer) {
 };
 
 class $modify(CustomSongWidget) {
+#ifndef GEODE_IS_WINDOWS
 	void updateSongObject(SongInfoObject * obj) {
 		CustomSongWidget::updateSongObject(obj);
 
@@ -448,6 +442,7 @@ class $modify(CustomSongWidget) {
 			this->m_moreBtn->setPositionX(menuItemX);
 		}
 	}
+#endif
 
 	void updateSongInfo() {
 		CustomSongWidget::updateSongInfo();

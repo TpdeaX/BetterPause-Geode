@@ -226,7 +226,7 @@ void SelectQuickSettings::onToggleWithGameVariable(CCObject* pSender)
 		auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
 
 		auto arr = CCArray::create();
-		arr->addObject(AttemptAtReversingDialogObject::create(gd::string("Scratch"), gd::string("What's the <cl>point</c> of adding it if you don't have it <cr>unlocked?</c>"), 13, 1, false, { 255,255,255 }));
+		arr->addObject(DialogObject::create("Scratch", "What's the <cl>point</c> of adding it if you don't have it <cr>unlocked?</c>", 13, 1.0f, false, { 255, 255, 255 }));
 		auto dl = DialogLayer::createDialogLayer(nullptr, arr, 2);
 		dl->animateInRandomSide();
 		CCScene::get()->addChild(dl, CCScene::get()->getHighestChildZ());

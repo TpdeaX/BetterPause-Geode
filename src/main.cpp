@@ -10,13 +10,9 @@ $on_mod(Loaded) {
 }
 
 $execute {
-	new EventListener<EventFilter<ButtonSettingPressedEventV3>>(
-		+[](ButtonSettingPressedEventV3* event) {
-			SelectQuickSettings::create()->show();
-			return ListenerResult::Propagate;
-		},
-		ButtonSettingPressedEventV3(Mod::get(), "Quick-Settings-Select")
-	);
+	(void)ButtonSettingPressedEventV3(Mod::get(), "Quick-Settings-Select").listen([](std::string_view) {
+		SelectQuickSettings::create(false)->show();
+	}).leak();
 }
 
 $on_mod(DataSaved) {
