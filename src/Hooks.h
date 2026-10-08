@@ -415,7 +415,7 @@ class $modify(GJOptionsLayer) {
 		return ret;
 	}
 
-	TodoReturn addToggleInternal(char const* p1, int p2, bool p3, char const* p4) {
+	void addToggleInternal(char const* p1, int p2, bool p3, char const* p4) {
 		GJOptionsLayer::addToggleInternal(p1, p2, p3, p4);
 		if (SelectQuickSettings::GameOptionsLayer_getSettings) {
 			if (p2 > 0 && p2 <= 10) {
@@ -487,12 +487,14 @@ class $modify(CCScrollLayerExt) {
 		}
 	}
 
-	TodoReturn scrollLayer(float p0) {
+#ifndef GEODE_IS_WINDOWS
+	void scrollLayer(float p0) {
 		CCScrollLayerExt::scrollLayer(p0);
 		if (Utils::hasParentWithID(this, "better-pause-node")) {
 			typeinfo_cast<BetterPause*>(Utils::getParentWithID(this, "better-pause-node"))->updateButtons();
 		}
 	}
+#endif
 };
 
 class $modify(InfoLayer) {
