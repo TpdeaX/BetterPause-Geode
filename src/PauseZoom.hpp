@@ -39,7 +39,6 @@ public:
     void clampPan();
     void autoHideMenu();
     void autoRestoreMenu();
-    void updateBlur(bool showBlur);
     void updateBadge();
 };
 

@@ -35,8 +35,6 @@ void PauseZoomManager::onPause(PauseLayer* pauseLayer) {
     m_pressedKeys.clear();
     m_lastMousePos = getMousePos();
 
-    updateBlur(true);
-
     if (!Mod::get()->getSettingValue<bool>("enable-pause-zoom")) return;
 
 #ifdef GEODE_IS_DESKTOP
@@ -60,8 +58,6 @@ void PauseZoomManager::onResume() {
     m_pressedKeys.clear();
     m_badge = nullptr;
 
-    updateBlur(true);
-
     if (auto pl = PlayLayer::get()) {
         pl->setScale(1.0f);
         pl->setPosition(ccp(0.f, 0.f));
@@ -79,7 +75,6 @@ void PauseZoomManager::resetZoom() {
     }
 
     autoRestoreMenu();
-    updateBlur(true);
     updateBadge();
 }
 
@@ -115,38 +110,6 @@ void PauseZoomManager::autoRestoreMenu() {
     m_autoHiddenByZoom = false;
 }
 
-void PauseZoomManager::updateBlur(bool showBlur) {
-    auto scene = CCScene::get();
-    if (!scene) return;
-    auto pauseLayer = scene->getChildByID("PauseLayer");
-    if (!pauseLayer) return;
-
-    auto adjustNodes = [showBlur](CCNode* parent) {
-        if (!parent || !parent->getChildren()) return;
-        for (auto child : CCArrayExt<CCNode*>(parent->getChildren())) {
-            bool isBlur = false;
-            std::string id = child->getID();
-            if (id.find("blur") != std::string::npos || id.find("Blur") != std::string::npos) {
-                isBlur = true;
-            }
-            if (child->getUserObject("thesillydoggo.blur-api/blur-options") != nullptr) {
-                isBlur = true;
-            }
-            const char* typeName = typeid(*child).name();
-            if (std::string(typeName).find("Blur") != std::string::npos) {
-                isBlur = true;
-            }
-            if (isBlur) {
-                child->setZOrder(-999);
-                child->setVisible(showBlur);
-            }
-        }
-    };
-
-    adjustNodes(pauseLayer);
-    adjustNodes(scene);
-}
-
 void PauseZoomManager::clampPan() {
     auto playLayer = PlayLayer::get();
     if (!playLayer) return;
@@ -160,13 +123,11 @@ void PauseZoomManager::clampPan() {
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     if (winSize.width <= 0.0f || winSize.height <= 0.0f) return;
 
-    float marginX = winSize.width * 0.20f;
-    float marginY = winSize.height * 0.20f;
-
-    float minX = std::min(winSize.width * (1.0f - m_zoom), 0.0f) - marginX;
-    float maxX = std::max(winSize.width * (1.0f - m_zoom), 0.0f) + marginX;
-    float minY = std::min(winSize.height * (1.0f - m_zoom), 0.0f) - marginY;
-    float maxY = std::max(winSize.height * (1.0f - m_zoom), 0.0f) + marginY;
+    // Fixed, exact PlayLayer limits (no asymmetric margins)
+    float minX = winSize.width * (1.0f - m_zoom);
+    float maxX = 0.0f;
+    float minY = winSize.height * (1.0f - m_zoom);
+    float maxY = 0.0f;
 
     m_pan.x = std::clamp(m_pan.x, minX, maxX);
     m_pan.y = std::clamp(m_pan.y, minY, maxY);
@@ -214,10 +175,8 @@ void PauseZoomManager::zoom(float delta, CCPoint pivot) {
 
     if (m_zoom > 1.001f) {
         autoHideMenu();
-        updateBlur(false);
     } else {
         autoRestoreMenu();
-        updateBlur(true);
     }
 
     updateBadge();
@@ -233,7 +192,6 @@ void PauseZoomManager::pan(CCPoint delta) {
     clampPan();
 
     autoHideMenu();
-    updateBlur(false);
     updateBadge();
 }
 
@@ -427,7 +385,7 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     const float MW = 76.0f;
     const float MH = 42.0f;
 
-    // Outer radar frame
+    // Outer radar frame: dark solid background + thick solid bright white/silver border
     CCPoint outerPts[4] = {
         ccp(0.0f, 0.0f),
         ccp(MW, 0.0f),
@@ -437,9 +395,9 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     m_minimap->drawPolygon(
         outerPts,
         4,
-        ccc4f(0.06f, 0.06f, 0.08f, 0.70f),
-        1.0f,
-        ccc4f(0.55f, 0.55f, 0.60f, 0.85f)
+        ccc4f(0.02f, 0.02f, 0.03f, 0.85f),
+        2.5f,
+        ccc4f(0.95f, 0.95f, 1.0f, 1.0f)
     );
 
     auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -451,15 +409,10 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     float normW = 1.0f / zoom;
     float normH = 1.0f / zoom;
 
-    float x1 = normX * MW;
-    float x2 = (normX + normW) * MW;
-    float y1 = normY * MH;
-    float y2 = (normY + normH) * MH;
-
-    x1 = std::clamp(x1, 0.0f, MW);
-    x2 = std::clamp(x2, 0.0f, MW);
-    y1 = std::clamp(y1, 0.0f, MH);
-    y2 = std::clamp(y2, 0.0f, MH);
+    float x1 = std::clamp(normX * MW, 0.0f, MW);
+    float x2 = std::clamp((normX + normW) * MW, 0.0f, MW);
+    float y1 = std::clamp(normY * MH, 0.0f, MH);
+    float y2 = std::clamp((normY + normH) * MH, 0.0f, MH);
 
     if (x2 - x1 < 3.0f) {
         if (x1 + 3.0f <= MW) x2 = x1 + 3.0f;
@@ -477,12 +430,13 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
         ccp(x1, y2)
     };
 
+    // Inner viewport indicator: faint translucent red fill + thick solid vibrant red border
     m_minimap->drawPolygon(
         innerPts,
         4,
-        ccc4f(1.0f, 0.10f, 0.10f, 0.22f),
-        1.5f,
-        ccc4f(1.0f, 0.20f, 0.20f, 0.95f)
+        ccc4f(1.0f, 0.0f, 0.0f, 0.12f),
+        2.5f,
+        ccc4f(1.0f, 0.05f, 0.05f, 1.0f)
     );
 }
 
