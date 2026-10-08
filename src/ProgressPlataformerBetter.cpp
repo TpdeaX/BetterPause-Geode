@@ -46,22 +46,9 @@ bool ProgressPlataformerBetter::init() {
         ProgressPlataformerBetter::timeForLevelStringPlataformerSafe;
 
     double currentTime = 0.0;
-
-#ifdef GEODE_IS_WINDOWS
-    currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x2c20);
-#endif
-
-#ifdef GEODE_IS_ANDROID64
-    currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x3480);
-#endif
-
-#ifdef GEODE_IS_ANDROID32
-    currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x2c18);
-#endif 
-
-#ifdef GEODE_IS_MACOS
-    currentTime = Utils::from<double>(Utils::getplayLayerA(), 0x32b0);
-#endif
+    if (auto pl = Utils::getplayLayerA()) {
+        currentTime = pl->m_time;
+    }
     
     m_timeLabelLevel = TextArea::create(
         gd::string(
@@ -85,22 +72,6 @@ bool ProgressPlataformerBetter::init() {
     //auto pointsCurrent = GameToolbox::poi
 
     int currentPoints = 0;
-
-#ifdef GEODE_IS_WINDOWS
-    currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x5d8);
-#endif
-
-#ifdef GEODE_IS_ANDROID64
-    currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x884);
-#endif
-
-#ifdef GEODE_IS_ANDROID32
-    currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x5ec);
-#endif
-
-#ifdef GEODE_IS_MACOS
-    currentPoints = Utils::from<int>(Utils::getplayLayerA(), 0x32bc);
-#endif
 
     m_pointsLabelLevel = TextArea::create(
         gd::string(

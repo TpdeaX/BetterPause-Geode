@@ -20,6 +20,7 @@
 #include "SelectQuickSettings.h"
 #include <Geode/modify/CCScrollLayerExt.hpp>
 #include "CoinsViewerSprites.hpp"
+#include "PauseZoom.hpp"
 
 using namespace geode::prelude;
 
@@ -57,6 +58,8 @@ class $modify(PauseLayer) {
 			auto betterPauseMenu = BetterPause::create(ret);
 			ret->addChild(betterPauseMenu, 100);
 		}
+
+		PauseZoomManager::get()->onPause(ret);
 
 		return ret;
 	}
@@ -97,6 +100,7 @@ class $modify(PauseLayer) {
 		}
 		
 
+		PauseZoomManager::get()->onResume();
 		PauseLayer::onResume(sender);
 	}
 
@@ -111,6 +115,7 @@ class $modify(PauseLayer) {
 				[this, sender](FLAlertLayer* fla, bool btn2) {
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
+						PauseZoomManager::get()->onResume();
 						PauseLayer::onPracticeMode(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -121,6 +126,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		PauseZoomManager::get()->onResume();
 		PauseLayer::onPracticeMode(sender);
 	}
 
@@ -134,6 +140,7 @@ class $modify(PauseLayer) {
 				[this, sender](FLAlertLayer* fla, bool btn2) {
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
+						PauseZoomManager::get()->onResume();
 						PauseLayer::onNormalMode(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -144,6 +151,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		PauseZoomManager::get()->onResume();
 		PauseLayer::onNormalMode(sender);
 	}
 
@@ -158,6 +166,7 @@ class $modify(PauseLayer) {
 
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
+						PauseZoomManager::get()->onResume();
 						PauseLayer::onRestart(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -167,6 +176,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		PauseZoomManager::get()->onResume();
 		PauseLayer::onRestart(sender);
 	}
 
@@ -181,6 +191,7 @@ class $modify(PauseLayer) {
 
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
+						PauseZoomManager::get()->onResume();
 						PauseLayer::onRestartFull(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -189,6 +200,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		PauseZoomManager::get()->onResume();
 		PauseLayer::onRestartFull(sender);
 	}
 
@@ -203,6 +215,7 @@ class $modify(PauseLayer) {
 
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
+						PauseZoomManager::get()->onResume();
 						PauseLayer::onEdit(sender);
 						m_fields->hasConfirmPopup = false;
 					}
@@ -211,6 +224,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		PauseZoomManager::get()->onResume();
 		PauseLayer::onEdit(sender);
 	}
 
@@ -230,6 +244,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		PauseZoomManager::get()->onResume();
 		PauseLayer::onQuit(sender);
 	}
 
@@ -239,6 +254,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		PauseZoomManager::get()->onResume();
 		PauseLayer::tryQuit(sender);
 	}
 
@@ -246,7 +262,13 @@ class $modify(PauseLayer) {
 };
 
 class $modify(PlayLayer) {
+	void startGame() {
+		PauseZoomManager::get()->onResume();
+		PlayLayer::startGame();
+	}
+
 	bool init(GJGameLevel * p0, bool p1, bool p2) {
+		PauseZoomManager::get()->onResume();
 		BetterPause::totalLevelTimeBackup = 0.f;
 		ProgressPlataformerBetter::m_totalPoints = 0;
 		CoinsViewerSprites::coinsInVector.clear();
@@ -265,43 +287,7 @@ class $modify(PlayLayer) {
 	void addObject(GameObject * p0) {
 		PlayLayer::addObject(p0);
 
-		auto effectGameObjectPtr = reinterpret_cast<EffectGameObject*>(p0);
-
-		intptr_t offsetTypeObject = 0;
-		intptr_t offsetPointsXObj = 0;
-
-#ifdef GEODE_IS_WINDOWS
-		offsetTypeObject = 0x31c;
-		offsetPointsXObj = 0x5f8;
-#endif
-
-#ifdef GEODE_IS_ANDROID64
-		offsetTypeObject = 0x388;
-		offsetPointsXObj = 0x690;
-#endif
-
-#ifdef GEODE_IS_ANDROID32
-		offsetTypeObject = 0x308;
-		offsetPointsXObj = 0x5e4;
-#endif
-
-#ifdef GEODE_IS_MACOS
-		offsetTypeObject = 0x398;
-		offsetPointsXObj = 0x6a0;
-#endif
-		if (effectGameObjectPtr) {
-			if (Utils::from<int>(effectGameObjectPtr, offsetTypeObject) == 0x1e) {
-				ProgressPlataformerBetter::m_totalPoints += Utils::from<int>(effectGameObjectPtr, offsetPointsXObj);
-			}
-		}
-
-		GameObjectType objTypeV = GameObjectType::Solid;
-
-#ifdef GEODE_IS_MACOS
-		objTypeV = Utils::from<GameObjectType>(p0, 0x398);
-#else
-		objTypeV = p0->m_objectType;
-#endif
+		GameObjectType objTypeV = p0->m_objectType;
 
 
 		bool isCoin = objTypeV == GameObjectType::SecretCoin || objTypeV == GameObjectType::UserCoin;

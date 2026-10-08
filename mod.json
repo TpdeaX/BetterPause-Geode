@@ -1,14 +1,16 @@
 {
-  "geode": "2.0.0",
+  "geode": "5.10.1",
   "gd": {
-    "win": "2.204",
-    "android": "2.205"
+    "win": "2.2081",
+    "android": "2.2081",
+    "mac": "2.2081",
+    "ios": "2.2081"
   },
-  "version": "v1.6.8",
+  "version": "v1.7.0",
   "id": "tpdea.betterpause-better",
   "name": "BetterPause",
   "developer": "Tpdea",
-  "description": "A mod inspired by the collar server, an improvement for the geometry dash pause menu.",
+  "description": "An overhaul and enhancement for the Geometry Dash pause menu, featuring custom pause styles and built-in Pause Zoom.",
   "repository": "https://github.com/TpdeaX/BetterPause-Geode",
   "issues": {
     "info": "Report any issues you have on GitHub issues.",
@@ -23,6 +25,36 @@
       "default": 1,
       "min": 0,
       "max": 3,
+      "control": {
+        "arrows": true,
+        "slider": true
+      }
+    },
+    "enable-pause-zoom": {
+      "name": "Enable Pause Zoom",
+      "description": "Allows you to zoom in/out with the mouse wheel and pan with WASD or mouse drag while in the pause menu.",
+      "type": "bool",
+      "default": true
+    },
+    "pause-zoom-sensitivity": {
+      "name": "Zoom Sensitivity",
+      "description": "Adjusts how quickly the camera zooms in and out with the mouse wheel.",
+      "type": "float",
+      "default": 1.0,
+      "min": 0.1,
+      "max": 5.0,
+      "control": {
+        "arrows": true,
+        "slider": true
+      }
+    },
+    "pause-zoom-pan-speed": {
+      "name": "Pan Speed",
+      "description": "Adjusts the panning speed with WASD and arrow keys. Hold Shift to move 2.5x faster.",
+      "type": "float",
+      "default": 1.0,
+      "min": 0.2,
+      "max": 5.0,
       "control": {
         "arrows": true,
         "slider": true
@@ -64,7 +96,7 @@
     },
     "disable-arrow-buttons": {
       "name": "Disable Arrow Buttons",
-      "description": "Disable Button List Arrow. (This will make the list look choppy, and also mods like Pause Zoom Menu that disable scrolling make it difficult to move the button list.)",
+      "description": "Disable Button List Arrow.",
       "type": "bool",
       "default": false
     },
@@ -168,7 +200,7 @@
   "dependencies": [
     {
       "id": "geode.node-ids",
-      "version": ">=v1.3.0",
+      "version": ">=1.13.0",
       "importance": "required"
     }
   ]

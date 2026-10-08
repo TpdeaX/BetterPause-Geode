@@ -22,40 +22,10 @@ namespace Utils
 
 	float getPercentagePerXpos()
 	{
-		auto playLayer = Utils::getplayLayerA();
-#ifdef GEODE_IS_ANDROID
-		return playLayer->getCurrentPercent();
-#endif
-
-#ifdef GEODE_IS_MACOS
-		return playLayer->getCurrentPercent();
-#endif
-
-		auto player = Utils::from<PlayerObject*>(playLayer, 0x878);
-		auto playerXPosition = player->getPositionX();
-		auto levelTotalLength = Utils::from<float>(playLayer, 0x2aa0);
-
-		auto gameLevel = Utils::from<GJGameLevel*>(playLayer, 0x5e0);
-		auto levelLengthInFrames = Utils::from<int>(gameLevel, 0x414);
-
-		if (0.f < levelLengthInFrames) {
-			playerXPosition = Utils::from<int>(playLayer, 0x340); //actual frame
-			levelTotalLength = levelLengthInFrames;
+		if (auto playLayer = Utils::getplayLayerA()) {
+			return playLayer->getCurrentPercent();
 		}
-
-		float currentPercentage = (playerXPosition / levelTotalLength) * 100.0;
-
-		if (currentPercentage > 100.0) {
-			currentPercentage = 100.f;
-		}
-		else if (currentPercentage < 0.0) {
-			currentPercentage = 0.0;
-		}
-
-		return currentPercentage;
-
-
-		//return 0;(getplayLayerA()->m_player1->getPositionX() / getplayLayerA()->m_levelLength * 100.f);
+		return 0.0f;
 	}
 
 	float getPercentageReversePerXpos()
@@ -164,39 +134,17 @@ namespace Utils
 
 
 	double getTotalSecondsPlayLayer() {
-#ifdef GEODE_IS_WINDOWS
-		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x320));
-#endif
-
-#ifdef GEODE_IS_ANDROID64
-		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x3b0));
-#endif
-
-#ifdef GEODE_IS_ANDROID32
-		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x318));
-#endif
-
-#ifdef GEODE_IS_MACOS
-		return std::floor(Utils::from<double>(Utils::getplayLayerA(), 0x3a0));
-#endif
+		if (auto pl = Utils::getplayLayerA()) {
+			return std::floor(pl->m_time);
+		}
+		return 0.0;
 	}
 
 	int getTotalAttemptsPlayLayer() {
-#ifdef GEODE_IS_WINDOWS
-		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x29ac));
-#endif
-
-#ifdef GEODE_IS_ANDROID64
-		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x30ac));
-#endif
-
-#ifdef GEODE_IS_ANDROID32
-		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x29cc));
-#endif
-
-#ifdef GEODE_IS_MACOS
-		return std::floor(Utils::from<int>(Utils::getplayLayerA(), 0x2f0c));
-#endif
+		if (auto pl = Utils::getplayLayerA()) {
+			return pl->m_attempts;
+		}
+		return 0;
 	}
 
 	bool hasParentWithID(cocos2d::CCNode* node, const std::string& parentID) {

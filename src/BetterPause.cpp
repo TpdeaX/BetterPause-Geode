@@ -753,8 +753,6 @@ void BetterPause::createLabels() {
 		timeLabelFormat = Utils::getplayLayerA()->m_level->isPlatformer() ? "Time Total: <cg>%02d:%02d</c>" : "Time: <cg>%02d:%02d</c>";
 	}
 
-	std::cout << Utils::getTotalAttemptsPlayLayer() << std::endl;
-
 	auto currentAttemptText = gd::string(cocos2d::CCString::createWithFormat("Attempt: %s%i</c>", attemptColor.c_str(), Utils::getTotalAttemptsPlayLayer())->getCString());
 	currentAttemptLabel = TextArea::create(currentAttemptText, "bigFont.fnt", 0.3f, Utils::WinSize().width / 2.f, {0.f, 1.f}, 0.f, false);
 	currentAttemptLabel->setPosition({ 86.f, Utils::WinSize().height - 60.f });
@@ -1016,13 +1014,7 @@ void BetterPause::onRedirectionToggle(cocos2d::CCObject* pSender) {
 	auto toggleButton = reinterpret_cast<CCMenuItemToggler*>(pSender);
 	auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
 
-#ifdef GEODE_IS_MACOS
-	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x508);
-	functionPointer();
-#else
 	gameOptionsLayer->show();
-#endif
-
 
 	auto toggleTag = toggleButton->getTag();
 
@@ -1030,12 +1022,7 @@ void BetterPause::onRedirectionToggle(cocos2d::CCObject* pSender) {
 		gameOptionsLayer->didToggle(-toggleTag - 1);
 	}
 
-#ifdef GEODE_IS_MACOS
-	auto functionPointer2 = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
-	functionPointer2(nullptr);
-#else
 	gameOptionsLayer->onClose(nullptr);
-#endif
 
 	this->clearQuickSettings();
 }

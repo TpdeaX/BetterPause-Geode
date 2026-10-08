@@ -129,23 +129,7 @@ protected:
 	char pad_0x92[0x04]; // 0x92
 	bool m_unknown_2; // 0x96
 
-public:
-	bool init(std::string title, std::string text, int type, float unknown, bool also_unknown, _ccColor3B textColor) {
-		return reinterpret_cast<bool(__thiscall*)(AttemptAtReversingDialogObject*, std::string, std::string, int, float, bool, _ccColor3B)>
-			(geode::base::get() + 0x9a6c0)(this, title, text, type, unknown, also_unknown, textColor);
-	}
-
-	static AttemptAtReversingDialogObject* create(std::string title, std::string text, int type, float text_scale, bool is_unskippable, _ccColor3B textColor) {
-#ifdef GEODE_IS_WINDOWS
-
-		AttemptAtReversingDialogObject* obj = new AttemptAtReversingDialogObject();
-
-		obj->init(title, text, type, text_scale, is_unskippable, textColor);
-		obj->autorelease();
-		return obj;
-#else
-		return reinterpret_cast<AttemptAtReversingDialogObject*>(DialogObject::create(title, text, type, text_scale, is_unskippable, textColor));
-#endif
-		
+	static DialogObject* create(gd::string title, gd::string text, int type, float text_scale, bool is_unskippable, _ccColor3B textColor) {
+		return DialogObject::create(title, text, type, text_scale, is_unskippable, textColor);
 	}
 };

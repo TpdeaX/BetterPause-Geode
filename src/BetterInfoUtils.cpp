@@ -466,62 +466,7 @@ bool BetterInfo::controllerConnected() {
 }
 
 void BetterInfo::loadImportantNotices(CCLayer* layer) {
-    static bool hasBeenCalled = false;
-    if (hasBeenCalled) return;
-    hasBeenCalled = true;
-
-    layer->retain();
-
-    web::AsyncWebRequest().fetch(fmt::format("https://geometrydash.eu/mods/betterinfo/_api/importantNotices/?platform={}&version={}", GEODE_PLATFORM_NAME, Mod::get()->getVersion().toString(true))).json().then([layer](const matjson::Value& info) {
-        auto notice = info.try_get("notice");
-        if (notice == std::nullopt) return;
-
-        if (info["notice"].is_string()) {
-            auto alert = FLAlertLayer::create("BetterInfo", info["notice"].as_string(), "OK");
-            alert->m_scene = layer;
-            alert->show();
-            layer->release();
-        }
-        }).expect([](const std::string& error) {
-            log::warn("Fetching important notices failed: {}", error);
-            });
-
-        /**
-         * Music Library
-        */
-#ifdef GEODE_IS_WINDOWS
-        auto libraryPath = dirs::getSaveDir() / "musiclibrary.dat";
-
-        if (ghc::filesystem::exists(libraryPath)) {
-
-            auto contentResult = file::readString(libraryPath);
-            if (contentResult.isOk()) {
-
-                web::AsyncWebRequest()
-                    .postRequest()
-                    .bodyRaw(fmt::format("content={}", contentResult.unwrap()))
-                    .fetch("https://geometrydash.eu/mods/betterinfo/_api/musicLibrary/")
-                    .text()
-                    .then([layer](const std::string& info) {
-                    log::info("Music Library response: {}", info);
-                        }).expect([](const std::string& error) {
-                            log::warn("Music Library error: {}", error);
-                            });
-
-            }
-
-        }
-#endif
-
-        /**
-         * fix Geode Loader's last-modified-auto-update-check
-        */
-        auto mod = Loader::get()->getLoadedMod("geode.loader");
-        auto value = mod->getSavedValue<std::string>("last-modified-auto-update-check");
-        if (value.ends_with('\r')) {
-            mod->setSavedValue("last-modified-auto-update-check", value.substr(0, value.size() - 1));
-        }
-
+    // Stubbed for Geode 5.10.1+ compatibility (not used in BetterPause)
 }
 
 //from coloride on geode sdk discord
