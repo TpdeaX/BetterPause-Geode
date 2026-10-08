@@ -123,14 +123,12 @@ void PauseZoomManager::clampPan() {
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     if (winSize.width <= 0.0f || winSize.height <= 0.0f) return;
 
-    // Fixed, exact PlayLayer limits (no asymmetric margins)
-    float minX = winSize.width * (1.0f - m_zoom);
-    float maxX = 0.0f;
-    float minY = winSize.height * (1.0f - m_zoom);
-    float maxY = 0.0f;
+    // Symmetrical PlayLayer clamping around screen center
+    float maxPanX = (winSize.width * 0.5f) * (m_zoom - 1.0f);
+    float maxPanY = (winSize.height * 0.5f) * (m_zoom - 1.0f);
 
-    m_pan.x = std::clamp(m_pan.x, minX, maxX);
-    m_pan.y = std::clamp(m_pan.y, minY, maxY);
+    m_pan.x = std::clamp(m_pan.x, -maxPanX, maxPanX);
+    m_pan.y = std::clamp(m_pan.y, -maxPanY, maxPanY);
 
     playLayer->setPosition(m_pan);
 }
@@ -139,6 +137,7 @@ void PauseZoomManager::zoom(float delta, CCPoint pivot) {
     auto playLayer = PlayLayer::get();
     if (!playLayer) return;
 
+    auto winSize = CCDirector::sharedDirector()->getWinSize();
     float sensitivity = static_cast<float>(Mod::get()->getSettingValue<double>("pause-zoom-sensitivity"));
     // Smooth step (4% per tick instead of 15%)
     float zoomStep = 1.0f + (0.04f * sensitivity);
@@ -162,10 +161,10 @@ void PauseZoomManager::zoom(float delta, CCPoint pivot) {
 
     if (std::abs(newScale - oldScale) < 0.0001f && newScale != 1.0f) return;
 
-    CCPoint oldPos = playLayer->getPosition();
+    CCPoint center = ccp(winSize.width * 0.5f, winSize.height * 0.5f);
     CCPoint newPos = {0.f, 0.f};
-    if (newScale > 1.0f) {
-        newPos = pivot - (pivot - oldPos) * (newScale / oldScale);
+    if (newScale > 1.0f && oldScale > 0.0001f) {
+        newPos = (pivot - center) * (1.0f - (newScale / oldScale)) + m_pan * (newScale / oldScale);
     }
 
     m_zoom = newScale;
@@ -403,9 +402,9 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     if (winSize.width <= 0.0f || winSize.height <= 0.0f || zoom <= 0.0f) return;
 
-    // Viewport calculation within PlayLayer
-    float normX = -pan.x / (winSize.width * zoom);
-    float normY = -pan.y / (winSize.height * zoom);
+    // Viewport calculation within PlayLayer (centered anchor)
+    float normX = 0.5f - (0.5f + pan.x / winSize.width) / zoom;
+    float normY = 0.5f - (0.5f + pan.y / winSize.height) / zoom;
     float normW = 1.0f / zoom;
     float normH = 1.0f / zoom;
 
@@ -430,11 +429,11 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
         ccp(x1, y2)
     };
 
-    // Inner viewport indicator: very faint/soft red fill + sleek distinct bright red border
+    // Inner viewport indicator: transparent fill + sleek distinct bright red border
     m_minimap->drawPolygon(
         innerPts,
         4,
-        ccc4f(1.0f, 0.0f, 0.0f, 0.04f),
+        ccc4f(0.0f, 0.0f, 0.0f, 0.0f),
         1.0f,
         ccc4f(1.0f, 0.15f, 0.15f, 1.0f)
     );
