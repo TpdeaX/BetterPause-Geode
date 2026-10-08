@@ -2,8 +2,10 @@
 #include "BetterPause.hpp"
 #include "BetterInfoUtils.hpp"
 #include <Geode/modify/CCScheduler.hpp>
+#ifdef GEODE_IS_DESKTOP
 #include <Geode/modify/CCMouseDispatcher.hpp>
 #include <Geode/modify/CCKeyboardDispatcher.hpp>
+#endif
 #include <algorithm>
 #include <cmath>
 #include <fmt/format.h>
@@ -32,6 +34,7 @@ void PauseZoomManager::onPause(PauseLayer* pauseLayer) {
 
     if (!Mod::get()->getSettingValue<bool>("enable-pause-zoom")) return;
 
+#ifdef GEODE_IS_DESKTOP
     if (pauseLayer) {
         if (auto oldBadge = pauseLayer->getChildByID("pause-zoom-badge")) {
             oldBadge->removeFromParent();
@@ -42,6 +45,7 @@ void PauseZoomManager::onPause(PauseLayer* pauseLayer) {
             pauseLayer->addChild(m_badge, 999);
         }
     }
+#endif
 }
 
 void PauseZoomManager::onResume() {
@@ -113,7 +117,7 @@ bool PauseZoomManager::onScroll(float y, float x) {
 
     // Check if mouse is hovering over BetterPause's button list
     if (auto pauseLayer = CCScene::get()->getChildByID("PauseLayer")) {
-        if (auto betterPause = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"))) {
+        if (auto betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"))) {
             if (betterPause->buttonsList && BetterInfo::isHoveringNode(betterPause->buttonsList)) {
                 return false; // let buttonsList scroll
             }
@@ -149,6 +153,7 @@ void PauseZoomManager::update(float dt) {
 
     if (!Mod::get()->getSettingValue<bool>("enable-pause-zoom")) return;
 
+#ifdef GEODE_IS_DESKTOP
     // Pan speed
     float panSpeedSetting = static_cast<float>(Mod::get()->getSettingValue<double>("pause-zoom-pan-speed"));
     float speed = 350.0f * panSpeedSetting;
@@ -215,6 +220,7 @@ void PauseZoomManager::update(float dt) {
     }
 #endif
     m_lastMousePos = currentMouse;
+#endif // GEODE_IS_DESKTOP
 }
 
 void PauseZoomManager::updateBadge() {
@@ -281,6 +287,7 @@ void PauseZoomBadge::onReset(CCObject* sender) {
 }
 
 // Global Hooks for input dispatching
+#ifdef GEODE_IS_DESKTOP
 class $modify(PauseZoomMouse, cocos2d::CCMouseDispatcher) {
     bool dispatchScrollMSG(float y, float x) {
         if (PauseZoomManager::get()->isPaused()) {
@@ -293,13 +300,14 @@ class $modify(PauseZoomMouse, cocos2d::CCMouseDispatcher) {
 };
 
 class $modify(PauseZoomKeyboard, cocos2d::CCKeyboardDispatcher) {
-    bool dispatchKeyboardMSG(cocos2d::enumKeyCodes key, bool down, bool repeat) {
+    bool dispatchKeyboardMSG(cocos2d::enumKeyCodes key, bool isKeyDown, bool isKeyRepeat, double timestamp) {
         if (PauseZoomManager::get()->isPaused()) {
-            PauseZoomManager::get()->onKey(key, down);
+            PauseZoomManager::get()->onKey(key, isKeyDown);
         }
-        return CCKeyboardDispatcher::dispatchKeyboardMSG(key, down, repeat);
+        return CCKeyboardDispatcher::dispatchKeyboardMSG(key, isKeyDown, isKeyRepeat, timestamp);
     }
 };
+#endif // GEODE_IS_DESKTOP
 
 class $modify(PauseZoomScheduler, cocos2d::CCScheduler) {
     void update(float dt) {

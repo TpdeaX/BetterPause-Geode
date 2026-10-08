@@ -262,11 +262,6 @@ class $modify(PauseLayer) {
 };
 
 class $modify(PlayLayer) {
-	void startGame() {
-		PauseZoomManager::get()->onResume();
-		PlayLayer::startGame();
-	}
-
 	bool init(GJGameLevel * p0, bool p1, bool p2) {
 		PauseZoomManager::get()->onResume();
 		BetterPause::totalLevelTimeBackup = 0.f;
