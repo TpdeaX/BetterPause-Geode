@@ -385,7 +385,7 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     const float MW = 76.0f;
     const float MH = 42.0f;
 
-    // Outer radar frame: dark solid background + thick solid bright white/silver border
+    // Outer radar frame: sleek thin border + soft dark background
     CCPoint outerPts[4] = {
         ccp(0.0f, 0.0f),
         ccp(MW, 0.0f),
@@ -395,9 +395,9 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     m_minimap->drawPolygon(
         outerPts,
         4,
-        ccc4f(0.02f, 0.02f, 0.03f, 0.85f),
-        2.5f,
-        ccc4f(0.95f, 0.95f, 1.0f, 1.0f)
+        ccc4f(0.04f, 0.04f, 0.05f, 0.65f),
+        1.0f,
+        ccc4f(0.85f, 0.85f, 0.90f, 0.90f)
     );
 
     auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -430,13 +430,13 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
         ccp(x1, y2)
     };
 
-    // Inner viewport indicator: faint translucent red fill + thick solid vibrant red border
+    // Inner viewport indicator: very faint/soft red fill + sleek distinct bright red border
     m_minimap->drawPolygon(
         innerPts,
         4,
-        ccc4f(1.0f, 0.0f, 0.0f, 0.12f),
-        2.5f,
-        ccc4f(1.0f, 0.05f, 0.05f, 1.0f)
+        ccc4f(1.0f, 0.0f, 0.0f, 0.04f),
+        1.0f,
+        ccc4f(1.0f, 0.15f, 0.15f, 1.0f)
     );
 }
 
