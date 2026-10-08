@@ -69,9 +69,11 @@ class $modify(PauseLayer) {
 		}
 
 		if (Mod::get()->getSettingValue<bool>("enable-pause-animations")) {
-			if (auto bg = this->getChildByID("background")) {
-				bg->setOpacity(0);
-				bg->runAction(cocos2d::CCFadeTo::create(0.20f, 100));
+			if (auto bgRgba = typeinfo_cast<CCRGBAProtocol*>(this->getChildByID("background"))) {
+				bgRgba->setOpacity(0);
+			}
+			if (auto bgNode = this->getChildByID("background")) {
+				bgNode->runAction(cocos2d::CCFadeTo::create(0.20f, 100));
 			}
 		}
 
