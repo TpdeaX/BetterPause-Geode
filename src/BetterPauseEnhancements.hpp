@@ -63,6 +63,7 @@ public:
 
     static UnpauseCountdownNode* create(std::function<void()> onResumeCallback);
     bool init(std::function<void()> onResumeCallback);
+    virtual ~UnpauseCountdownNode();
 
     virtual void registerWithTouchDispatcher() override;
     virtual bool ccTouchBegan(CCTouch* pTouch, CCEvent* pEvent) override;

@@ -39,6 +39,7 @@ class $modify(PauseLayer) {
 		bool hasPosibleExitHotKey = false;
 		bool hasConfirmPopup = false;
 		bool isCountingDown = false;
+		bool skipCountdown = false;
 		~Fields() {
 			PauseMusicManager::get()->onResume();
 			LastDeathGhostNode::removeFromPlayLayer(PlayLayer::get());
@@ -92,7 +93,7 @@ class $modify(PauseLayer) {
 			return;
 		}
 
-		if (Mod::get()->getSettingValue<bool>("confirm-resume-level") && !m_fields->hasConfirmPopup) {
+		if (!m_fields->skipCountdown && Mod::get()->getSettingValue<bool>("confirm-resume-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Resume Level",
 				std::string("Are you sure you want to <cr>resume</c>?"),
@@ -115,7 +116,7 @@ class $modify(PauseLayer) {
 			return nullptr;
 		};
 
-		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown") && !m_fields->isCountingDown) {
+		if (!m_fields->skipCountdown && Mod::get()->getSettingValue<bool>("enable-unpause-countdown")) {
 			m_fields->isCountingDown = true;
 
 			if (auto bp = getBP()) {
@@ -133,13 +134,15 @@ class $modify(PauseLayer) {
 
 			auto cd = UnpauseCountdownNode::create([this, sender]() {
 				m_fields->isCountingDown = false;
-				this->cleanUpEnhancements();
-				PauseLayer::onResume(sender);
+				m_fields->skipCountdown = true;
+				this->onResume(sender);
 			});
 			cd->setID("unpause-countdown-node");
 			this->addChild(cd, 99999);
 			return;
 		}
+
+		m_fields->skipCountdown = false;
 
 		auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 

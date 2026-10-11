@@ -202,6 +202,14 @@ void LastDeathGhostNode::removeFromPlayLayer(PlayLayer* pl) {
 // ==========================================
 // UnpauseCountdownNode
 // ==========================================
+static CCSprite* safeCreateFrame(const char* frameName) {
+    if (!frameName || !*frameName) return nullptr;
+    if (CCSpriteFrameCache::sharedSpriteFrameCache()->spriteFrameByName(frameName)) {
+        return CCSprite::createWithSpriteFrameName(frameName);
+    }
+    return nullptr;
+}
+
 UnpauseCountdownNode* UnpauseCountdownNode::create(std::function<void()> onResumeCallback) {
     auto ret = new UnpauseCountdownNode();
     if (ret && ret->init(onResumeCallback)) {
@@ -212,8 +220,16 @@ UnpauseCountdownNode* UnpauseCountdownNode::create(std::function<void()> onResum
     return nullptr;
 }
 
+UnpauseCountdownNode::~UnpauseCountdownNode() {
+    CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
+}
+
 bool UnpauseCountdownNode::init(std::function<void()> onResumeCallback) {
     if (!CCLayer::init()) return false;
+
+    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("GJ_GameSheet.plist");
+    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("GJ_GameSheet02.plist");
+    CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("GJ_GameSheet03.plist");
 
     m_onResumeCallback = onResumeCallback;
     m_currentCount = 3;
@@ -270,9 +286,12 @@ bool UnpauseCountdownNode::init(std::function<void()> onResumeCallback) {
         }
 
         if (m_animStyle == 3) {
-            m_orbitRing = CCSprite::createWithSpriteFrameName("GJ_selectRing_001.png");
+            m_orbitRing = safeCreateFrame("d_flashRing_01_001.png");
             if (!m_orbitRing) {
-                m_orbitRing = CCSprite::createWithSpriteFrameName("GJ_compactCoin_001.png");
+                m_orbitRing = safeCreateFrame("d_scaleFadeRing_01_001.png");
+            }
+            if (!m_orbitRing) {
+                m_orbitRing = safeCreateFrame("d_circle_01_001.png");
             }
             if (m_orbitRing) {
                 m_orbitRing->setPosition(center);
@@ -320,20 +339,23 @@ void UnpauseCountdownNode::createShockwaveRipple(const cocos2d::ccColor3B& color
     auto winSize = CCDirector::sharedDirector()->getWinSize();
     CCPoint center = ccp(winSize.width * 0.5f, winSize.height * 0.5f);
 
-    auto ripple = CCSprite::createWithSpriteFrameName("GJ_selectRing_001.png");
+    auto ripple = safeCreateFrame("d_flashRing_01_001.png");
     if (!ripple) {
-        ripple = CCSprite::createWithSpriteFrameName("GJ_compactCoin_001.png");
+        ripple = safeCreateFrame("d_scaleFadeRing_01_001.png");
+    }
+    if (!ripple) {
+        ripple = safeCreateFrame("d_circle_01_001.png");
     }
     if (ripple) {
         ripple->setPosition(center);
         ripple->setColor(color);
-        ripple->setScale(0.7f);
+        ripple->setScale(0.65f);
         ripple->setOpacity(230);
         this->addChild(ripple, 2);
 
         ripple->runAction(CCSequence::create(
             CCSpawn::create(
-                CCEaseSineOut::create(CCScaleTo::create(0.48f, 2.5f)),
+                CCEaseSineOut::create(CCScaleTo::create(0.48f, 2.2f)),
                 CCFadeOut::create(0.48f),
                 nullptr
             ),
@@ -354,9 +376,15 @@ void UnpauseCountdownNode::spawnStarBurst(int count, float radius) {
         float destX = std::cos(angle) * radius;
         float destY = std::sin(angle) * radius;
 
-        auto star = CCSprite::createWithSpriteFrameName("star_small01_001.png");
+        auto star = safeCreateFrame("starAnim_001.png");
         if (!star) {
-            star = CCSprite::createWithSpriteFrameName("GJ_starsIcon_001.png");
+            star = safeCreateFrame("star_small01_001.png");
+        }
+        if (!star) {
+            star = safeCreateFrame("GJ_starsIcon_001.png");
+        }
+        if (!star) {
+            star = safeCreateFrame("d_circle_01_001.png");
         }
         if (star) {
             star->setPosition(center);
@@ -638,6 +666,7 @@ void UnpauseCountdownNode::stepCountdown() {
 void UnpauseCountdownNode::finish() {
     if (m_finished) return;
     m_finished = true;
+    this->retain();
     CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
     this->stopAllActions();
 
@@ -648,6 +677,7 @@ void UnpauseCountdownNode::finish() {
     if (cb) {
         cb();
     }
+    this->release();
 }
 
 // ==========================================
