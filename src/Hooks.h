@@ -39,6 +39,11 @@ class $modify(PauseLayer) {
 		bool hasPosibleExitHotKey = false;
 		bool hasConfirmPopup = false;
 		bool isCountingDown = false;
+		~Fields() {
+			PauseMusicManager::get()->onResume();
+			LastDeathGhostNode::removeFromPlayLayer(PlayLayer::get());
+			PauseZoomManager::get()->onResume();
+		}
 	};
 
 	static void onModify(auto & self) {
@@ -83,6 +88,10 @@ class $modify(PauseLayer) {
 	}
 
 	void onResume(cocos2d::CCObject * sender) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
 		if (Mod::get()->getSettingValue<bool>("confirm-resume-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Resume Level",
@@ -99,23 +108,42 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		auto getBP = [this]() -> BetterPause* {
+			if (auto bp = typeinfo_cast<BetterPause*>(this->getChildByID("better-pause-node"))) return bp;
+			if (auto bp = typeinfo_cast<BetterPause*>(this->getChildByID("simple-pause-node"))) return bp;
+			if (auto bp = typeinfo_cast<BetterPause*>(this->getChildByID("classic-pause-node"))) return bp;
+			return nullptr;
+		};
+
 		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown") && !m_fields->isCountingDown) {
 			m_fields->isCountingDown = true;
-			if (auto bp = typeinfo_cast<BetterPause*>(this->getChildByID("better-pause-node"))) {
-				bp->applyExitAnimations(nullptr);
+
+			if (auto bp = getBP()) {
+				bp->setVisible(false);
 			}
+
+			for (size_t i = 0; i < this->getChildrenCount(); i++) {
+				if (auto child = dynamic_cast<CCNode*>(this->getChildren()->objectAtIndex(i))) {
+					if (auto menu = dynamic_cast<CCMenu*>(child)) {
+						menu->setVisible(false);
+						menu->setEnabled(false);
+					}
+				}
+			}
+
 			auto cd = UnpauseCountdownNode::create([this, sender]() {
 				m_fields->isCountingDown = false;
 				this->cleanUpEnhancements();
 				PauseLayer::onResume(sender);
 			});
+			cd->setID("unpause-countdown-node");
 			this->addChild(cd, 99999);
 			return;
 		}
 
 		auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 
-		auto betterPause = typeinfo_cast<BetterPause*>(this->getChildByID("better-pause-node"));
+		auto betterPause = getBP();
 
 		if (betterPause) {
 			if (betterPause->questMenu) {
@@ -124,19 +152,20 @@ class $modify(PauseLayer) {
 			betterPause->unregisterScriptTouchHandler();
 		}
 
-
 		while (popuBetterPause) {
 			typeinfo_cast<FLAlertLayer*>(popuBetterPause)->keyBackClicked();
 
 			popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
 		}
-		
 
 		this->cleanUpEnhancements();
 		PauseLayer::onResume(sender);
 	}
 
 	void onPracticeMode(cocos2d::CCObject* sender) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
 
 		if (Mod::get()->getSettingValue<bool>("confirm-practice-level") && !m_fields->hasConfirmPopup) {
 			auto popupConfirm = geode::createQuickPopup(
@@ -163,6 +192,10 @@ class $modify(PauseLayer) {
 	}
 
 	void onNormalMode(cocos2d::CCObject* sender) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
 		if (Mod::get()->getSettingValue<bool>("confirm-normal-level") && !m_fields->hasConfirmPopup) {
 			auto popupConfirm = geode::createQuickPopup(
 				"Normal Level",
@@ -189,6 +222,10 @@ class $modify(PauseLayer) {
 
 	void onRestart(cocos2d::CCObject* sender)
 	{
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
 		if (Mod::get()->getSettingValue<bool>("confirm-restart-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Restart Level",
@@ -214,6 +251,10 @@ class $modify(PauseLayer) {
 
 	void onRestartFull(cocos2d::CCObject* sender)
 	{
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
 		if (Mod::get()->getSettingValue<bool>("confirm-restart-full-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Restart Full Level",
@@ -238,6 +279,10 @@ class $modify(PauseLayer) {
 
 	void onEdit(cocos2d::CCObject* sender)
 	{
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
 		if (Mod::get()->getSettingValue<bool>("confirm-edit-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Edit Level",
@@ -261,6 +306,10 @@ class $modify(PauseLayer) {
 	}
 
 	void keyDown(cocos2d::enumKeyCodes p0, double p1) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
 		if (Mod::get()->getSettingValue<bool>("remove-exit-hotkey")) {
 			m_fields->hasPosibleExitHotKey = true;
 		}
@@ -270,9 +319,16 @@ class $modify(PauseLayer) {
 		m_fields->hasPosibleExitHotKey = false;
 	}
 
+	void keyBackClicked() {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+		PauseLayer::keyBackClicked();
+	}
+
 #ifdef GEODE_IS_MACOS
 	void onQuit(cocos2d::CCObject* sender) {
-		if (m_fields->hasPosibleExitHotKey) {
+		if (m_fields->isCountingDown || m_fields->hasPosibleExitHotKey) {
 			return;
 		}
 
@@ -282,7 +338,7 @@ class $modify(PauseLayer) {
 
 #else
 	void tryQuit(cocos2d::CCObject* sender) {
-		if (m_fields->hasPosibleExitHotKey) {
+		if (m_fields->isCountingDown || m_fields->hasPosibleExitHotKey) {
 			return;
 		}
 

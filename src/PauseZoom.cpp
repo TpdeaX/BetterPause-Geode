@@ -86,6 +86,8 @@ void PauseZoomManager::autoHideMenu() {
     auto pauseLayer = scene->getChildByID("PauseLayer");
     if (!pauseLayer) return;
     auto bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"));
+    if (!bp) bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("simple-pause-node"));
+    if (!bp) bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("classic-pause-node"));
     if (!bp) return;
 
     if (!bp->isHidden) {
@@ -103,6 +105,8 @@ void PauseZoomManager::autoRestoreMenu() {
     auto pauseLayer = scene->getChildByID("PauseLayer");
     if (!pauseLayer) return;
     auto bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"));
+    if (!bp) bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("simple-pause-node"));
+    if (!bp) bp = typeinfo_cast<BetterPause*>(pauseLayer->getChildByID("classic-pause-node"));
     if (!bp) return;
 
     if (bp->isHidden) {
@@ -203,7 +207,13 @@ bool PauseZoomManager::onScroll(float y, float x) {
 
     // Check if mouse is hovering over BetterPause's button list
     if (auto pauseLayer = CCScene::get()->getChildByID("PauseLayer")) {
-        if (auto betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"))) {
+        if (pauseLayer->getChildByID("unpause-countdown-node")) {
+            return false;
+        }
+        auto betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"));
+        if (!betterPause) betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("simple-pause-node"));
+        if (!betterPause) betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("classic-pause-node"));
+        if (betterPause) {
             if (betterPause->buttonsList && BetterInfo::isHoveringNode(betterPause->buttonsList)) {
                 return false; // let buttonsList scroll
             }
@@ -216,6 +226,15 @@ bool PauseZoomManager::onScroll(float y, float x) {
 }
 
 void PauseZoomManager::onKey(cocos2d::enumKeyCodes key, bool down) {
+    if (auto scene = CCScene::get()) {
+        if (auto pauseLayer = scene->getChildByID("PauseLayer")) {
+            if (pauseLayer->getChildByID("unpause-countdown-node")) {
+                m_pressedKeys.clear();
+                return;
+            }
+        }
+    }
+
     if (down) {
         m_pressedKeys.insert(static_cast<int>(key));
         if (key == cocos2d::enumKeyCodes::KEY_R || key == 'r' || key == 'R') {
@@ -232,8 +251,14 @@ void PauseZoomManager::update(float dt) {
     auto playLayer = PlayLayer::get();
     if (!playLayer) return;
 
-    if (!CCScene::get()->getChildByID("PauseLayer")) {
+    auto pauseLayer = CCScene::get()->getChildByID("PauseLayer");
+    if (!pauseLayer) {
         onResume();
+        return;
+    }
+
+    if (pauseLayer->getChildByID("unpause-countdown-node")) {
+        m_pressedKeys.clear();
         return;
     }
 

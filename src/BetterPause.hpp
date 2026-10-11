@@ -73,7 +73,12 @@ public:
     //Classic Pause
     cocos2d::CCMenu* menuToggles = nullptr;
 
+    std::vector<CCMenuItemSpriteExtra*> m_extraButtons;
+    cocos2d::CCNode* difficultyFaceNode = nullptr;
+    cocos2d::CCNode* achievementsPanel = nullptr;
+
     static BetterPause* create(PauseLayer*);
+    virtual ~BetterPause();
     static void clearQuickSettings();
     bool init(PauseLayer*);
     void createQuestMenu();
@@ -96,6 +101,10 @@ public:
     void createBetterPause();
     void createClassicPause();
     void createSimplePause();
+    void createAchievementsPause();
+
+    cocos2d::CCNode* createDifficultyFace(GJGameLevel* level, float scale = 0.55f);
+    cocos2d::CCNode* createAchievementCard(const std::string& title, const std::string& desc, float percent, bool isPractice, bool isCoins = false, int coinsCurrent = 0, int coinsTotal = 0);
 
     void handleOptionsLayers();
     void onOptionsLayer(cocos2d::CCObject* sender);

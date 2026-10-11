@@ -22,12 +22,18 @@ public:
     void reset();
 };
 
+namespace FMOD {
+    class Channel;
+    class Sound;
+}
+
 class PauseMusicManager {
 public:
     static PauseMusicManager* get();
 
     bool m_isPlaying = false;
-    int m_musicChannel = 1;
+    FMOD::Channel* m_channel = nullptr;
+    FMOD::Sound* m_sound = nullptr;
 
     void onPause();
     void onResume();
@@ -47,16 +53,30 @@ class UnpauseCountdownNode : public CCLayer {
 public:
     std::function<void()> m_onResumeCallback;
     CCLabelBMFont* m_label = nullptr;
+    cocos2d::extension::CCScale9Sprite* m_backdrop = nullptr;
+    cocos2d::extension::CCScale9Sprite* m_progressBarTrack = nullptr;
+    cocos2d::extension::CCScale9Sprite* m_progressBarFill = nullptr;
+    cocos2d::CCSprite* m_orbitRing = nullptr;
     int m_currentCount = 3;
     bool m_finished = false;
+    int m_animStyle = 0;
 
     static UnpauseCountdownNode* create(std::function<void()> onResumeCallback);
     bool init(std::function<void()> onResumeCallback);
 
+    virtual void registerWithTouchDispatcher() override;
     virtual bool ccTouchBegan(CCTouch* pTouch, CCEvent* pEvent) override;
+    virtual void ccTouchMoved(CCTouch* pTouch, CCEvent* pEvent) override;
+    virtual void ccTouchEnded(CCTouch* pTouch, CCEvent* pEvent) override;
+    virtual void ccTouchCancelled(CCTouch* pTouch, CCEvent* pEvent) override;
     virtual void keyBackClicked() override;
+    virtual void onExit() override;
 
     void stepCountdown();
+    void playStyleTickAnimation();
+    void playStyleGoAnimation();
+    void createShockwaveRipple(const cocos2d::ccColor3B& color);
+    void spawnStarBurst(int count, float radius);
     void finish();
 };
 

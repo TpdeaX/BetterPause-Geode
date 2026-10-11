@@ -25,6 +25,13 @@ BetterPause* BetterPause::create(PauseLayer* pauLa)
 	return nullptr;
 }
 
+BetterPause::~BetterPause() {
+	for (auto btn : this->m_extraButtons) {
+		CC_SAFE_RELEASE(btn);
+	}
+	this->m_extraButtons.clear();
+}
+
 bool BetterPause::init(PauseLayer* pauLa)
 {
 	if (!cocos2d::CCLayer::init())
@@ -44,6 +51,11 @@ bool BetterPause::init(PauseLayer* pauLa)
 	case 3: {
 		this->createSimplePause();
 		this->setID("simple-pause-node");
+		break;
+	}
+	case 4: {
+		this->createAchievementsPause();
+		this->setID("better-pause-node");
 		break;
 	}
 	default: {
@@ -101,9 +113,16 @@ void BetterPause::createSimplePause() {
 
 	bgPause->setContentSize({ bgPause->getContentSize().width, 70.f });
 	bgPause->setPositionY(Utils::WinSize().height - 52.f);
+
+	auto diffNode = this->createDifficultyFace(Utils::getplayLayerA()->m_level, 0.5f);
+	if (diffNode) {
+		diffNode->setPosition({ 42.f, Utils::WinSize().height - 52.f });
+		this->addChild(diffNode);
+	}
+
 	titleLevel->setAnchorPoint({ 0.f, 0.5f });
-	titleLevel->setPosition({ 68.f, Utils::WinSize().height - 52.f });
-	titleLevel->limitLabelWidth(250.f, 1.f, 0.1f);
+	titleLevel->setPosition({ 76.f, Utils::WinSize().height - 52.f });
+	titleLevel->limitLabelWidth(240.f, 1.f, 0.1f);
 	if (barNormal)barNormal->setPosition({ 115.5f, Utils::WinSize().height - 100.f });
 	if (barNormal)barNormal->setScale(0.6f);
 	if (barPractice)barPractice->setPosition({ 323.5f, Utils::WinSize().height - 100.f });
@@ -180,6 +199,12 @@ void BetterPause::createClassicPause() {
 		{
 			node->setVisible(true);
 		}
+	}
+
+	auto diffNode = this->createDifficultyFace(Utils::getplayLayerA()->m_level, 0.6f);
+	if (diffNode) {
+		diffNode->setPosition({ Utils::WinSize().width / 2.f - 110.f, Utils::WinSize().height - 35.f });
+		this->addChild(diffNode);
 	}
 
 	menuToggles = cocos2d::CCMenu::create();
@@ -524,54 +549,19 @@ void BetterPause::createMainButtonsMenu() {
 										"play-button", "exit-button", "retry-button", "options-button" };
 	this->findButtonsRecursively(this->pauseLayer, buttonIds, menuButtonsDetected);
 
-	auto lastButtonBefore = lastbuttonNow;
+	for (auto btn : this->m_extraButtons) {
+		CC_SAFE_RELEASE(btn);
+	}
+	this->m_extraButtons.clear();
 
 	for (int i = 0; i < menuButtonsDetected.size(); ++i) {
 		auto buttonExt = menuButtonsDetected[i];
-
 		if (buttonExt) {
-
-			auto normalImage = dynamic_cast<CCSprite*>(buttonExt->getNormalImage());
-			auto lastNormalImage = dynamic_cast<CCSprite*>(lastButtonBefore->getNormalImage());
-
-			auto baseCollisionBox = lastNormalImage->boundingBox();
-			auto currentCollisionBox = normalImage->boundingBox();
-
-			float baseWidth = baseCollisionBox.getMaxX() - baseCollisionBox.getMinX();
-			float baseHeight = baseCollisionBox.getMaxY() - baseCollisionBox.getMinY();
-
-			float currentWidth = currentCollisionBox.getMaxX() - currentCollisionBox.getMinX();
-			float currentHeight = currentCollisionBox.getMaxY() - currentCollisionBox.getMinY();
-
-			float scaleX = baseWidth / currentWidth;
-			float scaleY = baseHeight / currentHeight;
-
-			buttonExt->setScale(1.f);
-			buttonExt->setContentSize(lastButtonBefore->getContentSize());
-
-
-			if (normalImage && lastNormalImage) {
-				//undefined06855 arregla tu wea oe
-				float mult = 0.9f;
-				if (buttonExt->getID() == "undefined0.autocheckpoint/settings-button") {
-					mult = 0.3f;
-				}
-
-				normalImage->setScaleX(scaleX * mult);
-				normalImage->setScaleY(scaleY * mult);
-
-				if (lastNormalImage) {
-					normalImage->setPosition(lastNormalImage->getPosition());
-				}
-			}
-
-			totalHeight += menuButtonsDetected[i]->getContentSize().height + 10.f;
-
-			createButtonMenu(buttonExt);
+			buttonExt->removeFromParent();
+			buttonExt->retain();
+			this->m_extraButtons.push_back(buttonExt);
 		}
-
 	}
-
 
 	if (buttonsList->m_contentLayer->getChildren()) {
 		for (auto child : CCArrayExt<CCNode*>(buttonsList->m_contentLayer->getChildren())) {
@@ -614,25 +604,34 @@ void BetterPause::createSecondaryButtonsMenu() {
 	this->visibleButton = CCMenuItemSpriteExtra::create(visibleButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onHide);
 	secondaryMenuButtons->addChild(this->visibleButton, -5);
 
-	auto settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+	auto settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
+	if (!settingsButtonImage) {
+		settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+	}
 	settingsButtonImage->setScale(0.6f);
 	auto settingsButton = CCMenuItemSpriteExtra::create(settingsButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onOptionsLayer);
+	settingsButton->setID("better-pause-plus-button");
 	secondaryMenuButtons->addChild(settingsButton);
 
 	auto firstButtonRect = visibleButton->boundingBox();
 	settingsButton->setPositionY(firstButtonRect.getMaxY() + 22.f);
 
-
-	scrollUpButtonSprite = cocos2d::CCSprite::createWithSpriteFrameName("edit_upBtn_001.png");
-	scrollUpButtonSprite->setScaleX(2.f);
-	scrollUpButtonSprite->setScaleY(1.4f);
+	scrollUpButtonSprite = cocos2d::CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png");
+	if (!scrollUpButtonSprite) {
+		scrollUpButtonSprite = cocos2d::CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
+	}
+	scrollUpButtonSprite->setRotation(90.f);
+	scrollUpButtonSprite->setScale(0.7f);
 	scrollUpButton = CCMenuItemSpriteExtra::create(scrollUpButtonSprite, this, (cocos2d::SEL_MenuHandler)&BetterPause::onScrollUpButton);
 	scrollUpButton->setPosition({ 0.f, 263.f });
 	secondaryMenuButtons->addChild(scrollUpButton);
 
-	scrollDownButtonSprite = cocos2d::CCSprite::createWithSpriteFrameName("edit_downBtn_001.png");
-	scrollDownButtonSprite->setScaleX(2.f);
-	scrollDownButtonSprite->setScaleY(1.4f);
+	scrollDownButtonSprite = cocos2d::CCSprite::createWithSpriteFrameName("GJ_arrow_03_001.png");
+	if (!scrollDownButtonSprite) {
+		scrollDownButtonSprite = cocos2d::CCSprite::createWithSpriteFrameName("GJ_arrow_01_001.png");
+	}
+	scrollDownButtonSprite->setRotation(270.f);
+	scrollDownButtonSprite->setScale(0.7f);
 	scrollDownButton = CCMenuItemSpriteExtra::create(scrollDownButtonSprite, this, (cocos2d::SEL_MenuHandler)&BetterPause::onScrollDownButton);
 	scrollDownButton->setPosition({ 0.f, 65.f });
 	secondaryMenuButtons->addChild(scrollDownButton);
@@ -690,6 +689,12 @@ void BetterPause::createLabels() {
 	auto creatorName = Utils::getplayLayerA()->m_level->m_creatorName;
 	auto levelType = Utils::getplayLayerA()->m_level->m_levelType;
 	auto isPracticeMode = Utils::getplayLayerA()->m_isPracticeMode;
+
+	this->difficultyFaceNode = this->createDifficultyFace(theLevel, 0.55f);
+	if (this->difficultyFaceNode) {
+		this->difficultyFaceNode->setPosition({ 60.f, Utils::WinSize().height - 33.f });
+		this->addChild(this->difficultyFaceNode);
+	}
 
 	levelNameLabel = cocos2d::CCLabelBMFont::create(levelName.c_str(), "goldFont.fnt");
 	levelNameLabel->limitLabelWidth(150.f, 1.f, 0.1f);
@@ -1090,34 +1095,39 @@ void BetterPause::findButtonsRecursively(CCNode* node, std::vector<std::string>&
 
 
 void BetterPause::onScrollUpButton(cocos2d::CCObject* sender) {
-	float scrollAmount = buttonsList->m_contentLayer->getPositionY() - static_cast<float>(Mod::get()->getSettingValue<double>("amount-scroll-button"));
-	float newContentPosY = 0.f;
+	if (!buttonsList || !buttonsList->m_contentLayer) return;
 
-	if (scrollAmount < totalButtonsListHeight) {
-		newContentPosY = totalButtonsListHeight;
-	}
-	else {
-		newContentPosY = scrollAmount;
+	float pageStep = 140.0f;
+	float currentY = buttonsList->m_contentLayer->getPositionY();
+	float targetY = currentY - pageStep;
+	if (targetY < totalButtonsListHeight) {
+		targetY = totalButtonsListHeight;
 	}
 
-	buttonsList->m_contentLayer->setPositionY(newContentPosY);
-	this->updateButtons();
+	buttonsList->m_contentLayer->stopAllActions();
+	buttonsList->m_contentLayer->runAction(CCSequence::create(
+		CCEaseSineOut::create(CCMoveTo::create(0.12f, ccp(buttonsList->m_contentLayer->getPositionX(), targetY))),
+		CCCallFunc::create(this, callfunc_selector(BetterPause::updateButtons)),
+		nullptr
+	));
 }
 
 void BetterPause::onScrollDownButton(cocos2d::CCObject* sender) {
+	if (!buttonsList || !buttonsList->m_contentLayer) return;
 
-	float scrollAmount = buttonsList->m_contentLayer->getPositionY() + static_cast<float>(Mod::get()->getSettingValue<double>("amount-scroll-button"));
-	float newContentPosY = 0.f;
-
-	if (scrollAmount > 0.f) {
-		newContentPosY = 0.f;
-	}
-	else {
-		newContentPosY = scrollAmount;
+	float pageStep = 140.0f;
+	float currentY = buttonsList->m_contentLayer->getPositionY();
+	float targetY = currentY + pageStep;
+	if (targetY > 0.0f) {
+		targetY = 0.0f;
 	}
 
-	buttonsList->m_contentLayer->setPositionY(newContentPosY);
-	this->updateButtons();
+	buttonsList->m_contentLayer->stopAllActions();
+	buttonsList->m_contentLayer->runAction(CCSequence::create(
+		CCEaseSineOut::create(CCMoveTo::create(0.12f, ccp(buttonsList->m_contentLayer->getPositionX(), targetY))),
+		CCCallFunc::create(this, callfunc_selector(BetterPause::updateButtons)),
+		nullptr
+	));
 }
 
 void BetterPause::adjustLayerForAspectRatio() {
@@ -1266,24 +1276,23 @@ void BetterPause::adjustLayerForAspectRatio() {
 
 void BetterPause::updateButtons() {
 
-	if (typeMenuCreate != 1) {
+	if (typeMenuCreate != 1 && typeMenuCreate != 4) {
 		return;
 	}
 
 
-	if (!Mod::get()->getSettingValue<bool>("disable-arrow-buttons") && !this->isHidden) {
-		if (totalButtonsListHeight != 0.f) {
-			if (totalButtonsListHeight < buttonsList->m_contentLayer->getPositionY() &&
-				0.f > buttonsList->m_contentLayer->getPositionY()) {
-				this->scrollUpButton->setVisible(true);
+	if (!Mod::get()->getSettingValue<bool>("disable-arrow-buttons") && !this->isHidden && buttonsList && buttonsList->m_contentLayer) {
+		if (totalButtonsListHeight < -5.f) {
+			if (buttonsList->m_contentLayer->getPositionY() <= totalButtonsListHeight + 5.f) {
+				this->scrollUpButton->setVisible(false);
 				this->scrollDownButton->setVisible(true);
 			}
-			else if (buttonsList->m_contentLayer->getPositionY() >= 0.f) {
+			else if (buttonsList->m_contentLayer->getPositionY() >= -5.f) {
 				this->scrollUpButton->setVisible(true);
 				this->scrollDownButton->setVisible(false);
 			}
-			else if (buttonsList->m_contentLayer->getPositionY() <= totalButtonsListHeight) {
-				this->scrollUpButton->setVisible(false);
+			else {
+				this->scrollUpButton->setVisible(true);
 				this->scrollDownButton->setVisible(true);
 			}
 		}
@@ -1400,6 +1409,338 @@ void BetterPause::setVisibleNodesSimplePause(bool isVisible) {
 	buttonsMenu->setVisible(isVisible);
 }
 
+cocos2d::CCNode* BetterPause::createDifficultyFace(GJGameLevel* level, float scale) {
+	if (!level) return nullptr;
+
+	auto container = cocos2d::CCNode::create();
+	container->setID("difficulty-face-node");
+
+	std::string frameName = "difficulty_00_btn_001.png";
+
+	if (level->m_autoLevel) {
+		frameName = "difficulty_auto_btn_001.png";
+	}
+	else if (level->m_demon > 0) {
+		switch (level->m_demonDifficulty) {
+			case 1: frameName = "difficulty_07_btn2_001.png"; break;
+			case 2: frameName = "difficulty_08_btn2_001.png"; break;
+			case 4: frameName = "difficulty_09_btn2_001.png"; break;
+			case 5: frameName = "difficulty_10_btn2_001.png"; break;
+			case 3:
+			default: frameName = "difficulty_06_btn2_001.png"; break;
+		}
+	}
+	else {
+		int stars = 0;
+		if (level->m_stars) {
+			stars = level->m_stars.value();
+		}
+		if (stars == 1) {
+			frameName = "difficulty_auto_btn_001.png";
+		}
+		else if (stars == 2) {
+			frameName = "difficulty_01_btn_001.png";
+		}
+		else if (stars == 3) {
+			frameName = "difficulty_02_btn_001.png";
+		}
+		else if (stars == 4 || stars == 5) {
+			frameName = "difficulty_03_btn_001.png";
+		}
+		else if (stars == 6 || stars == 7) {
+			frameName = "difficulty_04_btn_001.png";
+		}
+		else if (stars == 8 || stars == 9) {
+			frameName = "difficulty_05_btn_001.png";
+		}
+		else {
+			int avg = level->getAverageDifficulty();
+			if (avg == 1) frameName = "difficulty_01_btn_001.png";
+			else if (avg == 2) frameName = "difficulty_02_btn_001.png";
+			else if (avg == 3) frameName = "difficulty_03_btn_001.png";
+			else if (avg == 4) frameName = "difficulty_04_btn_001.png";
+			else if (avg == 5) frameName = "difficulty_05_btn_001.png";
+			else frameName = "difficulty_00_btn_001.png";
+		}
+	}
+
+	auto faceSprite = cocos2d::CCSprite::createWithSpriteFrameName(frameName.c_str());
+	if (!faceSprite) {
+		if (frameName.find("btn2") != std::string::npos) {
+			std::string fallback = frameName;
+			auto pos = fallback.find("btn2");
+			fallback.replace(pos, 4, "btn");
+			faceSprite = cocos2d::CCSprite::createWithSpriteFrameName(fallback.c_str());
+		}
+		if (!faceSprite) {
+			faceSprite = cocos2d::CCSprite::createWithSpriteFrameName("difficulty_00_btn_001.png");
+		}
+	}
+
+	if (!faceSprite) {
+		return nullptr;
+	}
+
+	std::string featureFrame = "";
+	if (level->m_isEpic == 3) {
+		featureFrame = "GJ_epicCoin3_001.png";
+	}
+	else if (level->m_isEpic == 2) {
+		featureFrame = "GJ_epicCoin2_001.png";
+	}
+	else if (level->m_isEpic == 1) {
+		featureFrame = "GJ_epicCoin_001.png";
+	}
+	else if (level->m_featured > 0) {
+		featureFrame = "GJ_featuredCoin_001.png";
+	}
+
+	if (!featureFrame.empty()) {
+		auto featureSprite = cocos2d::CCSprite::createWithSpriteFrameName(featureFrame.c_str());
+		if (featureSprite) {
+			featureSprite->setPosition(cocos2d::CCPointZero);
+			featureSprite->setScale(1.05f);
+			container->addChild(featureSprite, -1);
+		}
+	}
+
+	faceSprite->setPosition(cocos2d::CCPointZero);
+	container->addChild(faceSprite, 0);
+	container->setContentSize(faceSprite->getContentSize());
+	container->setScale(scale);
+
+	return container;
+}
+
+cocos2d::CCNode* BetterPause::createAchievementCard(const std::string& title, const std::string& desc, float percent, bool isPractice, bool isCoins, int coinsCurrent, int coinsTotal) {
+	auto card = cocos2d::CCNode::create();
+	card->setContentSize({ 145.f, 48.f });
+
+	auto bg = cocos2d::extension::CCScale9Sprite::create("square02_small.png");
+	if (bg) {
+		bg->setContentSize({ 145.f, 48.f });
+		bg->setColor({ 20, 20, 20 });
+		bg->setOpacity(160);
+		bg->setPosition({ 72.5f, 24.f });
+		card->addChild(bg, -1);
+	}
+
+	std::string iconFrame = "GJ_lockGray_001.png";
+	if (isCoins) {
+		iconFrame = "secretCoinUI_001.png";
+	}
+	else if (percent >= 100.f) {
+		iconFrame = "GJ_completesIcon_001.png";
+	}
+	else if (isPractice) {
+		iconFrame = "checkpoint_01_001.png";
+	}
+	else {
+		iconFrame = "rewardBtn_001.png";
+	}
+
+	auto icon = cocos2d::CCSprite::createWithSpriteFrameName(iconFrame.c_str());
+	if (!icon) {
+		icon = cocos2d::CCSprite::createWithSpriteFrameName("GJ_starsIcon_001.png");
+	}
+	if (icon) {
+		icon->setScale(0.5f);
+		icon->setPosition({ 18.f, 24.f });
+		card->addChild(icon);
+	}
+
+	auto titleLabel = cocos2d::CCLabelBMFont::create(title.c_str(), "goldFont.fnt");
+	titleLabel->limitLabelWidth(75.f, 0.40f, 0.1f);
+	titleLabel->setAnchorPoint({ 0.f, 0.5f });
+	titleLabel->setPosition({ 35.f, 35.f });
+	card->addChild(titleLabel);
+
+	std::string numStr;
+	if (isCoins) {
+		numStr = fmt::format("{}/{}", coinsCurrent, coinsTotal);
+	}
+	else {
+		numStr = fmt::format("{}%", static_cast<int>(percent));
+	}
+	auto numLabel = cocos2d::CCLabelBMFont::create(numStr.c_str(), "bigFont.fnt");
+	numLabel->setScale(0.28f);
+	numLabel->setAnchorPoint({ 1.f, 0.5f });
+	numLabel->setPosition({ 138.f, 35.f });
+	if (isPractice) {
+		numLabel->setColor({ 0, 255, 255 });
+	}
+	else if (isCoins) {
+		numLabel->setColor({ 255, 215, 0 });
+	}
+	else {
+		numLabel->setColor({ 50, 230, 80 });
+	}
+	card->addChild(numLabel);
+
+	auto descLabel = cocos2d::CCLabelBMFont::create(desc.c_str(), "chatFont.fnt");
+	descLabel->limitLabelWidth(100.f, 0.38f, 0.1f);
+	descLabel->setAnchorPoint({ 0.f, 0.5f });
+	descLabel->setPosition({ 35.f, 22.f });
+	descLabel->setColor({ 175, 175, 175 });
+	card->addChild(descLabel);
+
+	auto trackBg = cocos2d::extension::CCScale9Sprite::create("square02_small.png");
+	if (trackBg) {
+		trackBg->setContentSize({ 103.f, 6.f });
+		trackBg->setColor({ 35, 35, 35 });
+		trackBg->setOpacity(200);
+		trackBg->setAnchorPoint({ 0.f, 0.5f });
+		trackBg->setPosition({ 35.f, 9.f });
+		card->addChild(trackBg);
+	}
+
+	float fillPct = std::clamp(percent / 100.0f, 0.0f, 1.0f);
+	if (fillPct > 0.01f) {
+		auto fill = cocos2d::extension::CCScale9Sprite::create("square02_small.png");
+		if (fill) {
+			fill->setContentSize({ 103.f * fillPct, 6.f });
+			if (isPractice) {
+				fill->setColor({ 0, 210, 255 });
+			}
+			else if (isCoins) {
+				fill->setColor({ 255, 205, 30 });
+			}
+			else {
+				fill->setColor({ 40, 220, 75 });
+			}
+			fill->setAnchorPoint({ 0.f, 0.5f });
+			fill->setPosition({ 35.f, 9.f });
+			card->addChild(fill);
+		}
+	}
+
+	return card;
+}
+
+void BetterPause::createAchievementsPause() {
+	this->clearQuickSettings();
+	this->createMainButtonsMenu();
+	this->createSecondaryButtonsMenu();
+	this->createLabels();
+	this->createExtras();
+
+	if (!Utils::getplayLayerA()->m_level->isPlatformer())
+	{
+		this->createBars();
+	}
+	else
+	{
+		this->createPlatformerTimes();
+	}
+
+	this->createQuickSettingsButtons();
+	this->createCustomSongWidget();
+	this->createAudioControls();
+
+	if (this->sliderPlusMusic) {
+		this->sliderPlusMusic->setScale(0.78f);
+		this->sliderPlusMusic->setPosition({ Utils::WinSize().width - 8.f, Utils::WinSize().height - 24.f });
+	}
+	if (this->sliderPlusSFX) {
+		this->sliderPlusSFX->setScale(0.78f);
+		this->sliderPlusSFX->setPosition({ Utils::WinSize().width - 8.f, Utils::WinSize().height - 50.f });
+	}
+
+	auto panel = cocos2d::CCNode::create();
+	panel->setID("achievements-panel");
+	panel->setContentSize({ 160.f, 185.f });
+
+	auto panelBg = cocos2d::extension::CCScale9Sprite::create("square02_small.png");
+	if (panelBg) {
+		panelBg->setContentSize({ 160.f, 185.f });
+		panelBg->setColor({ 0, 0, 0 });
+		panelBg->setOpacity(110);
+		panelBg->setPosition({ 80.f, 92.5f });
+		panel->addChild(panelBg, -1);
+	}
+
+	auto titleLabel = cocos2d::CCLabelBMFont::create("Achievements", "goldFont.fnt");
+	titleLabel->setScale(0.48f);
+	titleLabel->setPosition({ 80.f, 172.f });
+	panel->addChild(titleLabel);
+
+	auto theLevel = Utils::getplayLayerA()->m_level;
+
+	float normalPct = static_cast<float>(theLevel->m_normalPercent.value());
+	auto cardNormal = this->createAchievementCard(
+		"Normal Mode",
+		normalPct >= 100.f ? "Level completed!" : "Progress in Normal",
+		normalPct,
+		false,
+		false
+	);
+	if (cardNormal) {
+		cardNormal->setPosition({ 7.5f, 114.f });
+		panel->addChild(cardNormal);
+	}
+
+	float practicePct = static_cast<float>(theLevel->m_practicePercent.value());
+	auto cardPractice = this->createAchievementCard(
+		"Practice Mode",
+		practicePct >= 100.f ? "Practice finished!" : "Progress in Practice",
+		practicePct,
+		true,
+		false
+	);
+	if (cardPractice) {
+		cardPractice->setPosition({ 7.5f, 62.f });
+		panel->addChild(cardPractice);
+	}
+
+	int totalCoins = theLevel->m_coins;
+	int collectedCoins = 0;
+	if (theLevel->m_firstCoin > 0) collectedCoins++;
+	if (theLevel->m_secondCoin > 0) collectedCoins++;
+	if (theLevel->m_thirdCoin > 0) collectedCoins++;
+
+	cocos2d::CCNode* cardExtra = nullptr;
+	if (totalCoins > 0) {
+		float coinsPct = (float)collectedCoins / (float)totalCoins * 100.f;
+		cardExtra = this->createAchievementCard(
+			"Secret Coins",
+			collectedCoins == totalCoins ? "All coins found!" : "Find all coins",
+			coinsPct,
+			false,
+			true,
+			collectedCoins,
+			totalCoins
+		);
+	}
+	else {
+		int sessionBest = SessionStatsManager::get()->m_sessionBest;
+		cardExtra = this->createAchievementCard(
+			"Session Best",
+			"Best run this session",
+			static_cast<float>(sessionBest),
+			false,
+			false
+		);
+	}
+
+	if (cardExtra) {
+		cardExtra->setPosition({ 7.5f, 10.f });
+		panel->addChild(cardExtra);
+	}
+
+	auto watermark = cocos2d::CCLabelBMFont::create("Concept by Zidnes", "chatFont.fnt");
+	watermark->setScale(0.42f);
+	watermark->setColor({ 160, 160, 160 });
+	watermark->setOpacity(150);
+	watermark->setPosition({ 80.f, -7.f });
+	panel->addChild(watermark);
+
+	panel->setPosition({ Utils::WinSize().width - 172.f, Utils::WinSize().height / 2.f - 88.f });
+	this->achievementsPanel = panel;
+	this->addChild(this->achievementsPanel);
+
+	this->adjustLayerForAspectRatio();
+}
+
 void BetterPause::applyEntranceAnimations() {
 	if (mainMenuButtons) {
 		float origScale = mainMenuButtons->getScale();
@@ -1413,22 +1754,58 @@ void BetterPause::applyEntranceAnimations() {
 		layerMenuScrollButtons->runAction(CCEaseSineOut::create(CCMoveTo::create(0.26f, ccp(origX, layerMenuScrollButtons->getPositionY()))));
 	}
 
+	if (difficultyFaceNode) {
+		float origScale = difficultyFaceNode->getScale();
+		difficultyFaceNode->setScale(0.0f);
+		difficultyFaceNode->runAction(CCEaseBackOut::create(CCScaleTo::create(0.30f, origScale)));
+	}
+
+	if (levelNameLabel) {
+		float origY = levelNameLabel->getPositionY();
+		levelNameLabel->setPositionY(origY + 14.0f);
+		levelNameLabel->runAction(CCEaseSineOut::create(CCMoveTo::create(0.24f, ccp(levelNameLabel->getPositionX(), origY))));
+	}
+
+	if (creatorNameLabel) {
+		float origY = creatorNameLabel->getPositionY();
+		creatorNameLabel->setPositionY(origY + 12.0f);
+		creatorNameLabel->runAction(CCEaseSineOut::create(CCMoveTo::create(0.24f, ccp(creatorNameLabel->getPositionX(), origY))));
+	}
+
 	if (normalBarPercentage) {
 		float origY = normalBarPercentage->getPositionY();
 		normalBarPercentage->setPositionY(origY + 15.0f);
-		normalBarPercentage->runAction(CCEaseSineOut::create(CCMoveTo::create(0.24f, ccp(normalBarPercentage->getPositionX(), origY))));
+		normalBarPercentage->runAction(CCEaseSineOut::create(CCMoveTo::create(0.25f, ccp(normalBarPercentage->getPositionX(), origY))));
 	}
 
 	if (practiceBarPercentage) {
 		float origY = practiceBarPercentage->getPositionY();
 		practiceBarPercentage->setPositionY(origY + 15.0f);
-		practiceBarPercentage->runAction(CCEaseSineOut::create(CCMoveTo::create(0.24f, ccp(practiceBarPercentage->getPositionX(), origY))));
+		practiceBarPercentage->runAction(CCEaseSineOut::create(CCMoveTo::create(0.25f, ccp(practiceBarPercentage->getPositionX(), origY))));
 	}
 
-	if (levelNameLabel) {
-		float origY = levelNameLabel->getPositionY();
-		levelNameLabel->setPositionY(origY + 12.0f);
-		levelNameLabel->runAction(CCEaseSineOut::create(CCMoveTo::create(0.22f, ccp(levelNameLabel->getPositionX(), origY))));
+	if (quickSettingsMenu) {
+		float origY = quickSettingsMenu->getPositionY();
+		quickSettingsMenu->setPositionY(origY - 15.0f);
+		quickSettingsMenu->runAction(CCEaseSineOut::create(CCMoveTo::create(0.26f, ccp(quickSettingsMenu->getPositionX(), origY))));
+	}
+
+	if (achievementsPanel) {
+		float origX = achievementsPanel->getPositionX();
+		achievementsPanel->setPositionX(origX + 50.0f);
+		achievementsPanel->runAction(CCEaseBackOut::create(CCMoveTo::create(0.32f, ccp(origX, achievementsPanel->getPositionY()))));
+	}
+
+	if (sliderPlusMusic) {
+		float origX = sliderPlusMusic->getPositionX();
+		sliderPlusMusic->setPositionX(origX + 35.0f);
+		sliderPlusMusic->runAction(CCEaseSineOut::create(CCMoveTo::create(0.26f, ccp(origX, sliderPlusMusic->getPositionY()))));
+	}
+
+	if (sliderPlusSFX) {
+		float origX = sliderPlusSFX->getPositionX();
+		sliderPlusSFX->setPositionX(origX + 35.0f);
+		sliderPlusSFX->runAction(CCEaseSineOut::create(CCMoveTo::create(0.28f, ccp(origX, sliderPlusSFX->getPositionY()))));
 	}
 }
 
@@ -1451,6 +1828,15 @@ void BetterPause::applyIdleAnimations() {
 		));
 		levelNameLabel->runAction(wave);
 	}
+
+	if (difficultyFaceNode) {
+		auto bob = CCRepeatForever::create(CCSequence::create(
+			CCEaseSineInOut::create(CCMoveBy::create(2.2f, ccp(0.f, 2.5f))),
+			CCEaseSineInOut::create(CCMoveBy::create(2.2f, ccp(0.f, -2.5f))),
+			nullptr
+		));
+		difficultyFaceNode->runAction(bob);
+	}
 }
 
 void BetterPause::applyExitAnimations(std::function<void()> onComplete) {
@@ -1461,10 +1847,25 @@ void BetterPause::applyExitAnimations(std::function<void()> onComplete) {
 	if (layerMenuScrollButtons) {
 		layerMenuScrollButtons->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(-45.f, 0.f))));
 	}
+	if (difficultyFaceNode) {
+		difficultyFaceNode->runAction(CCEaseBackIn::create(CCScaleTo::create(duration, 0.0f)));
+	}
 	if (normalBarPercentage) {
 		normalBarPercentage->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(0.f, 25.f))));
 	}
 	if (practiceBarPercentage) {
 		practiceBarPercentage->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(0.f, 25.f))));
+	}
+	if (levelNameLabel) {
+		levelNameLabel->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(0.f, 20.f))));
+	}
+	if (achievementsPanel) {
+		achievementsPanel->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(60.f, 0.f))));
+	}
+	if (sliderPlusMusic) {
+		sliderPlusMusic->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(45.f, 0.f))));
+	}
+	if (sliderPlusSFX) {
+		sliderPlusSFX->runAction(CCEaseSineIn::create(CCMoveBy::create(duration, ccp(45.f, 0.f))));
 	}
 }

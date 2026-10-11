@@ -20,11 +20,11 @@
   "settings": {
     "type-pause": {
       "name": "Select Pause",
-      "description": "Choose the type of pause style you want: \n1. BetterPause \n2. ClassicPause \n3. SimplePause \n0. DisablePause (You could just disable the mod, but just in case).",
+      "description": "Choose the type of pause style you want: \n1. BetterPause \n2. ClassicPause \n3. SimplePause \n4. AchievementsPause (Zidnes Concept) \n0. DisablePause (You could just disable the mod, but just in case).",
       "type": "int",
       "default": 1,
       "min": 0,
-      "max": 3,
+      "max": 4,
       "control": {
         "arrows": true,
         "slider": true
@@ -74,11 +74,11 @@
     },
     "pause-music-track": {
       "name": "Pause Music Track",
-      "description": "Select the background music to play while paused:\n0: Disabled\n1: Stay Inside Me (Iconic Chill)\n2: The Vault (secretLoop)\n3: Chamber of Time (secretLoop02)\n4: The Shop (shop)\n5: Secret Shop (secretShop)",
+      "description": "Select the background music to play while paused:\n0: Disabled\n1: Menu Loop (menuLoop)\n2: Stay Inside Me (Iconic Chill)\n3: The Vault (secretLoop)\n4: Chamber of Time (secretLoop02)\n5: The Shop (shop)\n6: Secret Shop (secretShop)",
       "type": "int",
       "default": 1,
       "min": 0,
-      "max": 5,
+      "max": 6,
       "control": {
         "arrows": true,
         "slider": true
@@ -98,9 +98,21 @@
     },
     "enable-unpause-countdown": {
       "name": "Unpause Countdown",
-      "description": "Shows a 3.. 2.. 1.. GO countdown when resuming to prepare your reaction before physics resume. Press Space or Esc to skip instantly.",
+      "description": "Shows a stylized 3.. 2.. 1.. GO countdown when resuming, safely locking inputs to prepare your reactions before physics resume.",
       "type": "bool",
       "default": false
+    },
+    "countdown-animation-style": {
+      "name": "Countdown Animation Style",
+      "description": "Choose the creative animation style for the unpause countdown:\n0: Bounce & Ripple (Expanding shockwaves)\n1: Cyberpunk Glitch (Digital jitter & neon flash)\n2: Cinematic Zoom (Epic scale slam & starburst)\n3: Orbital Spin (Futuristic rotating ring snap)\n4: Minimalist Pill (Sleek modern pill with progress bar)",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 4,
+      "control": {
+        "arrows": true,
+        "slider": true
+      }
     },
     "enable-progress-milestones": {
       "name": "Progress Bar Milestones",
