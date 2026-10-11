@@ -469,7 +469,6 @@ class $modify(PauseLayer) {
 		PauseLayer::keyBackClicked();
 	}
 
-#ifdef GEODE_IS_MACOS
 	void onQuit(cocos2d::CCObject* sender) {
 		if (m_fields->isCountingDown || m_fields->isResuming || m_fields->hasPosibleExitHotKey) {
 			return;
@@ -479,17 +478,13 @@ class $modify(PauseLayer) {
 		PauseLayer::onQuit(sender);
 	}
 
-#else
 	void tryQuit(cocos2d::CCObject* sender) {
 		if (m_fields->isCountingDown || m_fields->isResuming || m_fields->hasPosibleExitHotKey) {
 			return;
 		}
 
-		this->cleanUpEnhancements();
 		PauseLayer::tryQuit(sender);
 	}
-
-#endif
 };
 
 class $modify(PlayLayer) {

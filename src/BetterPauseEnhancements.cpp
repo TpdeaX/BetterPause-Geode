@@ -257,6 +257,33 @@ static CCSprite* safeCreateFrame(const char* frameName) {
     return nullptr;
 }
 
+UnpauseCountdownNode* UnpauseCountdownNode::s_activeCountdown = nullptr;
+
+void UnpauseCountdownNode::updateActiveCountdown(float dt) {
+    if (!s_activeCountdown || s_activeCountdown->m_finished) return;
+    s_activeCountdown->tick(dt);
+}
+
+void UnpauseCountdownNode::tick(float dt) {
+    if (m_finished) return;
+
+    auto now = std::chrono::steady_clock::now();
+    float elapsed = 0.016f;
+    if (m_hasTicked) {
+        elapsed = std::chrono::duration<float>(now - m_lastTickTime).count();
+        if (elapsed > 0.5f) elapsed = 0.016f;
+    } else {
+        m_hasTicked = true;
+    }
+    m_lastTickTime = now;
+
+    m_stepTimer += elapsed;
+    if (m_stepTimer >= m_stepInterval) {
+        m_stepTimer = 0.0f;
+        this->stepCountdown();
+    }
+}
+
 UnpauseCountdownNode* UnpauseCountdownNode::create(std::function<void()> onResumeCallback) {
     auto ret = new UnpauseCountdownNode();
     if (ret && ret->init(onResumeCallback)) {
@@ -268,6 +295,9 @@ UnpauseCountdownNode* UnpauseCountdownNode::create(std::function<void()> onResum
 }
 
 UnpauseCountdownNode::~UnpauseCountdownNode() {
+    if (s_activeCountdown == this) {
+        s_activeCountdown = nullptr;
+    }
     CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
 }
 
@@ -277,6 +307,10 @@ bool UnpauseCountdownNode::init(std::function<void()> onResumeCallback) {
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("GJ_GameSheet.plist");
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("GJ_GameSheet02.plist");
     CCSpriteFrameCache::sharedSpriteFrameCache()->addSpriteFramesWithFile("GJ_GameSheet03.plist");
+
+    s_activeCountdown = this;
+    m_hasTicked = false;
+    m_lastTickTime = std::chrono::steady_clock::now();
 
     m_onResumeCallback = onResumeCallback;
     m_currentCount = 3;
@@ -372,12 +406,7 @@ void UnpauseCountdownNode::onEnter() {
 }
 
 void UnpauseCountdownNode::update(float dt) {
-    if (m_finished) return;
-    m_stepTimer += dt;
-    if (m_stepTimer >= m_stepInterval) {
-        m_stepTimer = 0.0f;
-        this->stepCountdown();
-    }
+    this->tick(dt);
 }
 
 void UnpauseCountdownNode::registerWithTouchDispatcher() {
@@ -397,6 +426,9 @@ void UnpauseCountdownNode::keyBackClicked() {
 }
 
 void UnpauseCountdownNode::onExit() {
+    if (s_activeCountdown == this) {
+        s_activeCountdown = nullptr;
+    }
     this->unscheduleUpdate();
     CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
     CCLayer::onExit();
@@ -729,6 +761,9 @@ void UnpauseCountdownNode::stepCountdown() {
 void UnpauseCountdownNode::finish() {
     if (m_finished) return;
     m_finished = true;
+    if (s_activeCountdown == this) {
+        s_activeCountdown = nullptr;
+    }
     this->unscheduleUpdate();
     this->retain();
     CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
@@ -747,6 +782,9 @@ void UnpauseCountdownNode::finish() {
 void UnpauseCountdownNode::cancel() {
     if (m_finished) return;
     m_finished = true;
+    if (s_activeCountdown == this) {
+        s_activeCountdown = nullptr;
+    }
     this->unscheduleUpdate();
     CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
     this->stopAllActions();

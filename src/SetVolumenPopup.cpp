@@ -52,30 +52,27 @@ bool SetVolumenPopup::setup(Slider* m_pSliderRef)
 	float popupW = 230.f;
 	float popupH = 125.f;
 
-	auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
-	cocos2d::CCPoint winCenter = { winSize.width / 2.f, winSize.height / 2.f };
-
 	this->m_bgSprite->setContentSize({ popupW, popupH });
-	this->m_bgSprite->setPosition(winCenter);
+	this->m_bgSprite->setPosition({ 0.f, 0.f });
 	this->m_bgSprite->setColor({ 14, 14, 18 });
 	this->m_bgSprite->setOpacity(185);
 
-	m_buttonMenu->setPosition({ 0, 0 });
+	m_buttonMenu->setPosition({ 0.f, 0.f });
 
 	m_closeBtn->removeFromParentAndCleanup(true);
 	auto closeSpr = cocos2d::CCSprite::createWithSpriteFrameName("GJ_closeBtn_001.png");
 	closeSpr->setScale(0.8f);
 	m_closeBtn = CCMenuItemSpriteExtra::create(closeSpr, this, (cocos2d::SEL_MenuHandler)&SetVolumenPopup::onClose);
-	m_closeBtn->setPosition({ winCenter.x - popupW / 2.f + 4.f, winCenter.y + popupH / 2.f - 4.f });
+	m_closeBtn->setPosition({ -popupW / 2.f + 14.f, popupH / 2.f - 14.f });
 	m_buttonMenu->addChild(m_closeBtn);
 
 	auto titleLayer = cocos2d::CCLabelBMFont::create("- Set Value -", "goldFont.fnt");
 	titleLayer->setScale(0.7f);
-	titleLayer->setPosition({ winCenter.x, winCenter.y + popupH / 2.f - 18.f });
+	titleLayer->setPosition({ 0.f, popupH / 2.f - 18.f });
 	m_mainLayer->addChild(titleLayer);
 
 	auto underline = cocos2d::CCSprite::createWithSpriteFrameName("floorLine_001.png");
-	underline->setPosition({ winCenter.x, winCenter.y + popupH / 2.f - 30.f });
+	underline->setPosition({ 0.f, popupH / 2.f - 30.f });
 	underline->setScaleX(0.45f);
 	underline->setScaleY(0.6f);
 	underline->setOpacity(100);
@@ -92,7 +89,7 @@ bool SetVolumenPopup::setup(Slider* m_pSliderRef)
 	// Input box background
 	m_pBGInputTextValue = cocos2d::extension::CCScale9Sprite::create("square02_small.png");
 	m_pBGInputTextValue->setContentSize({ 65.f, 28.f });
-	m_pBGInputTextValue->setPosition({ winCenter.x - 38.f, winCenter.y - 12.f });
+	m_pBGInputTextValue->setPosition({ -38.f, -12.f });
 	m_pBGInputTextValue->setColor({ 20, 20, 25 });
 	m_pBGInputTextValue->setOpacity(160);
 	m_mainLayer->addChild(m_pBGInputTextValue);
@@ -103,18 +100,18 @@ bool SetVolumenPopup::setup(Slider* m_pSliderRef)
 	m_pInputTextValue->m_maxLabelLength = 3;
 	m_pInputTextValue->setAllowedChars("0123456789");
 	m_pInputTextValue->setMaxLabelScale(0.65f);
-	m_pInputTextValue->setPosition({ winCenter.x - 38.f, winCenter.y - 12.f });
+	m_pInputTextValue->setPosition({ -38.f, -12.f });
 	m_pInputTextValue->setDelegate(this);
 	m_mainLayer->addChild(m_pInputTextValue);
 
 	auto perSymbol = cocos2d::CCLabelBMFont::create("%", "bigFont.fnt");
 	perSymbol->setScale(0.55f);
-	perSymbol->setPosition({ winCenter.x + 5.f, winCenter.y - 12.f });
+	perSymbol->setPosition({ 5.f, -12.f });
 	m_mainLayer->addChild(perSymbol);
 
 	auto buttonSetValue = ButtonSprite::create("Set", 0xFC, false, "goldFont.fnt", "GJ_button_01.png", 30.f, 0.6f);
 	m_pSetValueBtn = CCMenuItemSpriteExtra::create(buttonSetValue, this, (cocos2d::SEL_MenuHandler)&SetVolumenPopup::onSet);
-	m_pSetValueBtn->setPosition({ winCenter.x + 55.f, winCenter.y - 12.f });
+	m_pSetValueBtn->setPosition({ 50.f, -12.f });
 	m_buttonMenu->addChild(m_pSetValueBtn);
 
 	this->setMouseEnabled(true);

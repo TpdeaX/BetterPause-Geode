@@ -19,22 +19,38 @@ void SelectQuickSettings::handleOptionsLayers() {
 	BetterPauseDebug::log("  Initial quickSettingsNames.size() = " + std::to_string(BetterPause::quickSettingsNames.size()));
 	BetterPauseDebug::log("  Initial quickSettingsNamesG.size() = " + std::to_string(BetterPause::quickSettingsNamesG.size()));
 
-	SelectQuickSettings::GameOptionsLayer_getSettings = true;
-
-	auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
+	if (auto pl = Utils::getplayLayerA()) {
+		SelectQuickSettings::GameOptionsLayer_getSettings = true;
+		auto gameOptionsLayer = GameOptionsLayer::create(pl);
 #ifdef GEODE_IS_MACOS
-	auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x508);
-	functionPointer();
+		auto functionPointer = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x508);
+		functionPointer();
 #else
-	gameOptionsLayer->show();
+		gameOptionsLayer->show();
 #endif
-	cocos2d::CCTouchDispatcher::get()->unregisterForcePrio(gameOptionsLayer);
+		cocos2d::CCTouchDispatcher::get()->unregisterForcePrio(gameOptionsLayer);
 #ifdef GEODE_IS_MACOS
-	auto functionPointer2 = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
-	functionPointer2(nullptr);
+		auto functionPointer2 = reinterpret_cast<void (*)(cocos2d::CCObject*)>(*reinterpret_cast<uintptr_t*>(gameOptionsLayer) + 0x529);
+		functionPointer2(nullptr);
 #else
-	gameOptionsLayer->onClose(nullptr);
+		gameOptionsLayer->onClose(nullptr);
 #endif
+		SelectQuickSettings::GameOptionsLayer_getSettings = false;
+	} else {
+		BetterPauseDebug::log("  PlayLayer is null (called outside level), using default GameOptions names to prevent options_api crash");
+		BetterPause::quickSettingsNamesG = {
+			"Auto-Retry",
+			"Auto-Checkpoints",
+			"Quick Checkpoints",
+			"Show Restart Button",
+			"Hide Practice Buttons",
+			"Flip Pause Button",
+			"Show Info in Pause",
+			"Show ProgressBar",
+			"Show %",
+			"Practice Music Sync"
+		};
+	}
 
 	BetterPauseDebug::log("  After GameOptionsLayer: quickSettingsNamesG.size() = " + std::to_string(BetterPause::quickSettingsNamesG.size()));
 

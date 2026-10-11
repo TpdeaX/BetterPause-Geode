@@ -2,6 +2,7 @@
 #include <Geode/Geode.hpp>
 #include <Geode/Bindings.hpp>
 #include <string>
+#include <chrono>
 
 using namespace geode::prelude;
 
@@ -62,6 +63,13 @@ public:
     int m_animStyle = 0;
     float m_stepTimer = 0.0f;
     float m_stepInterval = 0.55f;
+
+    static UnpauseCountdownNode* s_activeCountdown;
+    static void updateActiveCountdown(float dt);
+
+    std::chrono::steady_clock::time_point m_lastTickTime;
+    bool m_hasTicked = false;
+    void tick(float dt);
 
     static UnpauseCountdownNode* create(std::function<void()> onResumeCallback);
     bool init(std::function<void()> onResumeCallback);

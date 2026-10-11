@@ -680,10 +680,6 @@ void BetterPause::createSecondaryButtonsMenu() {
 	scrollDownButton->setPosition({ 0.f, 65.f });
 	secondaryMenuButtons->addChild(scrollDownButton);
 
-	if (!Mod::get()->getSettingValue<bool>("disable-arrow-blink")) {
-		scrollUpButtonSprite->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
-		scrollDownButtonSprite->runAction(cocos2d::CCRepeatForever::create(CCSequence::create(CCFadeTo::create(0.4f, 50), CCFadeTo::create(0.4f, 255), nullptr)));
-	}
 
 	if (Mod::get()->getSettingValue<bool>("disable-arrow-buttons")) {
 		scrollUpButton->setVisible(false);

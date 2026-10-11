@@ -216,12 +216,11 @@ bool PauseZoomManager::onScroll(float y, float x) {
     }
 
     // Check if any popup or alert is active above PauseLayer
-    int pauseZ = pauseLayer->getZOrder();
     for (auto child : CCArrayExt<CCNode*>(scene->getChildren())) {
         if (!child || child == pauseLayer) continue;
         if (child->isVisible()) {
-            if (child->getZOrder() > pauseZ || typeinfo_cast<FLAlertLayer*>(child)) {
-                return false; // Popups are open, block background zoom!
+            if (typeinfo_cast<FLAlertLayer*>(child) || typeinfo_cast<CCBlockLayer*>(child)) {
+                return false; // Modals/popups are open, block background zoom!
             }
         }
     }
@@ -473,13 +472,13 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
         ccp(x1, y2)
     };
 
-    // Inner viewport indicator: very transparent soft red fill + sleek distinct bright red border
+    // Inner viewport indicator: softer transparent dark red fill + sleek crimson border
     m_minimap->drawPolygon(
         innerPts,
         4,
-        ccc4f(1.0f, 0.10f, 0.10f, 0.14f),
+        ccc4f(0.65f, 0.06f, 0.06f, 0.08f),
         1.0f,
-        ccc4f(1.0f, 0.20f, 0.20f, 0.75f)
+        ccc4f(0.75f, 0.10f, 0.10f, 0.85f)
     );
 }
 
@@ -516,6 +515,7 @@ class $modify(PauseZoomKeyboard, cocos2d::CCKeyboardDispatcher) {
 
 class $modify(PauseZoomScheduler, cocos2d::CCScheduler) {
     void update(float dt) {
+        UnpauseCountdownNode::updateActiveCountdown(dt);
         PauseZoomManager::get()->update(dt);
         CCScheduler::update(dt);
     }
