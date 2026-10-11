@@ -28,8 +28,12 @@ bool SliderPlus::init(std::string labelDesc, cocos2d::CCNode* targetSlider, coco
     targetSlider_ = targetSlider;
     targetBtn_ = targetBtn;
 
+    float safeVal = value;
+    if (std::isnan(safeVal) || std::isinf(safeVal)) safeVal = 1.0f;
+    safeVal = std::clamp(safeVal, 0.0f, 1.0f);
+
     sliderMain = Slider::create(this, (cocos2d::SEL_MenuHandler)&SliderPlus::onSliderChanger, 1.f);
-    sliderMain->setValue(value);
+    sliderMain->setValue(safeVal);
     sliderMain->setScale(0.8f);
     sliderMain->setAnchorPoint({ 0.f, 0.f });
     addChild(sliderMain);
@@ -40,9 +44,10 @@ bool SliderPlus::init(std::string labelDesc, cocos2d::CCNode* targetSlider, coco
     label->setPosition({ this->sliderMain->getPositionX() - 100.f, this->sliderMain->getPositionY() });
     addChild(label);
 
+    int displayPercent = std::clamp(static_cast<int>(std::round(safeVal * 100.f)), 0, 100);
     valueSlider = cocos2d::CCLabelBMFont::create("0%", "goldFont.fnt");
     valueSlider->setString(
-        cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(this->sliderMain->getThumb()->getValue() * 100))->getCString());
+        cocos2d::CCString::createWithFormat("%i%%", displayPercent)->getCString());
     valueSlider->setScale(0.6f);
 
     menu = cocos2d::CCMenu::create();
@@ -59,9 +64,18 @@ bool SliderPlus::init(std::string labelDesc, cocos2d::CCNode* targetSlider, coco
 }
 
 void SliderPlus::onSliderChanger(cocos2d::CCObject* sender) {
-    auto valueV = sliderMain->getThumb()->getValue();
-    valueSlider->setString(
-        cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(valueV * 100))->getCString());
+    float valueV = 1.0f;
+    if (sliderMain && sliderMain->getThumb()) {
+        valueV = sliderMain->getThumb()->getValue();
+    }
+    if (std::isnan(valueV) || std::isinf(valueV)) valueV = 1.0f;
+    valueV = std::clamp(valueV, 0.0f, 1.0f);
+
+    int displayPercent = std::clamp(static_cast<int>(std::round(valueV * 100.f)), 0, 100);
+    if (valueSlider) {
+        valueSlider->setString(
+            cocos2d::CCString::createWithFormat("%i%%", displayPercent)->getCString());
+    }
 
     if (handleSlider_ && targetSlider_) {
         (targetSlider_->*handleSlider_)(sender);

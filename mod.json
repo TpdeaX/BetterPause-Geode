@@ -74,15 +74,29 @@
     },
     "pause-music-track": {
       "name": "Pause Music Track",
-      "description": "Select the background music to play while paused:\n0: Disabled\n1: Menu Loop (menuLoop)\n2: Stay Inside Me (Iconic Chill)\n3: The Vault (secretLoop)\n4: Chamber of Time (secretLoop02)\n5: The Shop (shop)\n6: Secret Shop (secretShop)",
+      "description": "Select the background music to play while paused:\n0: Disabled\n1: Menu Loop (menuLoop.mp3)\n2: Stay Inside Me (Iconic Chill)\n3: The Vault (secretLoop.mp3)\n4: Chamber of Time (secretLoop02.mp3)\n5: The Shop (shop.mp3)\n6: Secret Shop (secretShop.mp3)\n7: Current Level Song (Official or Downloaded)\n8: Downloaded Custom Song ID\n9: Custom File Name or Path",
       "type": "int",
       "default": 1,
       "min": 0,
-      "max": 6,
+      "max": 9,
       "control": {
         "arrows": true,
         "slider": true
       }
+    },
+    "pause-custom-song-id": {
+      "name": "Custom Pause Song ID",
+      "description": "If track 8 is selected, enter the downloaded Newgrounds / Custom Song ID to play while paused.",
+      "type": "int",
+      "default": 0,
+      "min": 0,
+      "max": 99999999
+    },
+    "pause-custom-song-file": {
+      "name": "Custom Pause Audio File",
+      "description": "If track 9 is selected, enter the audio file name (e.g. menuLoop.mp3) or full path to play while paused.",
+      "type": "string",
+      "default": ""
     },
     "pause-music-volume": {
       "name": "Pause Music Volume",
@@ -118,13 +132,19 @@
       "name": "Progress Bar Milestones",
       "description": "Shows markers on the progress bar for your Session Best and coin locations.",
       "type": "bool",
-      "default": true
+      "default": false
     },
     "enable-death-marker": {
       "name": "Last Death Marker",
       "description": "Shows where you died on your last attempt on the progress bar and in the level while paused.",
       "type": "bool",
-      "default": true
+      "default": false
+    },
+    "enable-difficulty-face": {
+      "name": "Level Difficulty Face",
+      "description": "Displays the animated level difficulty face badge next to the level title.",
+      "type": "bool",
+      "default": false
     },
     "level-editor-hack": {
       "name": "Level Editor Hack",
@@ -158,7 +178,10 @@
     "Quick-Settings-Select": {
       "name": "Quick Settings Select",
       "description": "Select which quick settings are available in the pause menu.",
-      "type": "button"
+      "type": "button",
+      "buttons": {
+        "open-quick-settings": "Configure Quick Settings"
+      }
     },
     "disable-arrow-buttons": {
       "name": "Disable Arrow Buttons",

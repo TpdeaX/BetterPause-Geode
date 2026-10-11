@@ -88,19 +88,66 @@ void PauseMusicManager::onPause() {
     int trackIdx = static_cast<int>(Mod::get()->getSettingValue<int64_t>("pause-music-track"));
     if (trackIdx <= 0) return;
 
-    std::string track = getTrackFilename(trackIdx);
-    if (track.empty()) return;
-
     float vol = static_cast<float>(Mod::get()->getSettingValue<double>("pause-music-volume"));
     if (vol <= 0.0f) return;
 
     auto fmodEngine = FMODAudioEngine::sharedEngine();
     if (!fmodEngine || !fmodEngine->m_system) return;
 
-    std::string fullPath = cocos2d::CCFileUtils::sharedFileUtils()->fullPathForFilename(track.c_str(), false);
-    if (fullPath.empty()) {
-        fullPath = track;
+    std::string fullPath = "";
+    auto fileUtils = cocos2d::CCFileUtils::sharedFileUtils();
+
+    if (trackIdx == 7) {
+        // Current Level Song (Official or Downloaded)
+        auto pl = PlayLayer::get();
+        if (pl && pl->m_level) {
+            int songID = pl->m_level->m_songID;
+            if (songID > 0) {
+                // Downloaded custom song
+                std::string sPath = MusicDownloadManager::sharedState()->pathForSong(songID);
+                if (!sPath.empty() && fileUtils->isFileExist(sPath.c_str())) {
+                    fullPath = sPath;
+                }
+            } else {
+                // Official GD song track
+                std::string audioFile = LevelTools::getAudioFileName(pl->m_level->m_audioTrack);
+                if (!audioFile.empty()) {
+                    fullPath = fileUtils->fullPathForFilename(audioFile.c_str(), false);
+                }
+            }
+        }
+    } else if (trackIdx == 8) {
+        // Downloaded Custom Song by ID
+        int customID = static_cast<int>(Mod::get()->getSettingValue<int64_t>("pause-custom-song-id"));
+        if (customID > 0) {
+            std::string sPath = MusicDownloadManager::sharedState()->pathForSong(customID);
+            if (!sPath.empty() && fileUtils->isFileExist(sPath.c_str())) {
+                fullPath = sPath;
+            }
+        }
+    } else if (trackIdx == 9) {
+        // Custom File Name or Path
+        std::string customFile = Mod::get()->getSettingValue<std::string>("pause-custom-song-file");
+        if (!customFile.empty()) {
+            std::string resolved = fileUtils->fullPathForFilename(customFile.c_str(), false);
+            if (!resolved.empty() && fileUtils->isFileExist(resolved.c_str())) {
+                fullPath = resolved;
+            } else if (fileUtils->isFileExist(customFile.c_str())) {
+                fullPath = customFile;
+            }
+        }
+    } else {
+        // Built-in game loops (1 - 6)
+        std::string track = getTrackFilename(trackIdx);
+        if (!track.empty()) {
+            fullPath = fileUtils->fullPathForFilename(track.c_str(), false);
+            if (fullPath.empty()) {
+                fullPath = track;
+            }
+        }
     }
+
+    if (fullPath.empty()) return;
 
     this->onResume();
 

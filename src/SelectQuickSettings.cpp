@@ -1,4 +1,5 @@
 #include "SelectQuickSettings.h"
+#include "DebugLogger.hpp"
 
 bool SelectQuickSettings::GameOptionsLayer_getSettings = false;
 
@@ -14,6 +15,10 @@ SelectQuickSettings* SelectQuickSettings::create(bool inGame) {
 }
 
 void SelectQuickSettings::handleOptionsLayers() {
+	BetterPauseDebug::log("SelectQuickSettings::handleOptionsLayers() START");
+	BetterPauseDebug::log("  Initial quickSettingsNames.size() = " + std::to_string(BetterPause::quickSettingsNames.size()));
+	BetterPauseDebug::log("  Initial quickSettingsNamesG.size() = " + std::to_string(BetterPause::quickSettingsNamesG.size()));
+
 	SelectQuickSettings::GameOptionsLayer_getSettings = true;
 
 	auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
@@ -31,15 +36,38 @@ void SelectQuickSettings::handleOptionsLayers() {
 	gameOptionsLayer->onClose(nullptr);
 #endif
 
+	BetterPauseDebug::log("  After GameOptionsLayer: quickSettingsNamesG.size() = " + std::to_string(BetterPause::quickSettingsNamesG.size()));
+
+	// Clear before opening MoreOptionsLayer so we do not accumulate duplicates
+	BetterPause::quickSettingsNames.clear();
+	BetterPause::quickSettingsKeys.clear();
+	BetterPause::quickSettingsDescriptions.clear();
+
 	auto moreOptionsLayer = MoreOptionsLayer::create();
+	if (moreOptionsLayer) {
+		BetterPauseDebug::log("  MoreOptionsLayer created successfully. Children count = " + std::to_string(moreOptionsLayer->getChildrenCount()));
+		if (moreOptionsLayer->getChildren()) {
+			for (int i = 0; i < moreOptionsLayer->getChildrenCount(); i++) {
+				auto child = static_cast<CCNode*>(moreOptionsLayer->getChildren()->objectAtIndex(i));
+				std::string childID = child->getID().empty() ? "(no ID)" : child->getID();
+				BetterPauseDebug::log("    Child[" + std::to_string(i) + "] ID: '" + childID + "' visible: " + (child->isVisible() ? "true" : "false"));
+			}
+		}
+
 #ifdef GEODE_IS_MACOS
-	auto functionPointer3 = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(moreOptionsLayer) + 0x508);
-	functionPointer3();
+		auto functionPointer3 = reinterpret_cast<void (*)()>(*reinterpret_cast<uintptr_t*>(moreOptionsLayer) + 0x508);
+		functionPointer3();
 #else
-	moreOptionsLayer->show();
+		moreOptionsLayer->show();
 #endif
-	cocos2d::CCTouchDispatcher::get()->unregisterForcePrio(moreOptionsLayer);
-	moreOptionsLayer->onClose(nullptr);
+		cocos2d::CCTouchDispatcher::get()->unregisterForcePrio(moreOptionsLayer);
+		moreOptionsLayer->onClose(nullptr);
+	} else {
+		BetterPauseDebug::log("  MoreOptionsLayer::create() returned NULL!");
+	}
+
+	BetterPauseDebug::log("  After MoreOptionsLayer: quickSettingsNames.size() = " + std::to_string(BetterPause::quickSettingsNames.size()));
+	BetterPauseDebug::log("SelectQuickSettings::handleOptionsLayers() END");
 }
 
 bool SelectQuickSettings::setup(bool inGame)
@@ -73,12 +101,31 @@ bool SelectQuickSettings::setup(bool inGame)
 
 	this->handleOptionsLayers();
 
-	BetterPause::quickSettingsNamesG[9] = "Practice Music Sync";
+	if (BetterPause::quickSettingsNamesG.size() > 9) {
+		BetterPause::quickSettingsNamesG[9] = "Practice Music Sync";
+	}
+
+	auto& posQuick = BetterPauseManager::sharedState()->posQuickA;
+	std::string currentPosStr = "[";
+	bool allEmpty = true;
+	for (size_t k = 0; k < posQuick.size(); ++k) {
+		currentPosStr += std::to_string(posQuick[k]) + (k + 1 < posQuick.size() ? ", " : "");
+		if (posQuick[k] != -1) allEmpty = false;
+	}
+	currentPosStr += "]";
+	BetterPauseDebug::log("SelectQuickSettings::setup() - Current posQuickA: " + currentPosStr);
+
+	if (allEmpty || posQuick.size() < 6) {
+		BetterPauseDebug::log("  posQuickA was empty or all -1! Restoring posQuickASafe defaults so toggles are selected.");
+		BetterPauseManager::sharedState()->posQuickA = BetterPauseManager::sharedState()->posQuickASafe;
+	}
+
+	int selectedCount = 0;
 
 	for (size_t i = 0; i < 10; i++) {
 		if (i == 0) {
 			auto menu = cocos2d::CCMenu::create();
-			auto nameList = cocos2d::CCLabelBMFont::create("- Game Settings- ", "goldFont.fnt");
+			auto nameList = cocos2d::CCLabelBMFont::create("- Game Settings -", "goldFont.fnt");
 			nameList->setScale(0.8f);
 			nameList->setPosition({ 160.f, 15.f });
 			nameList->setAnchorPoint({ 0.5f, 0.5f });
@@ -87,36 +134,39 @@ bool SelectQuickSettings::setup(bool inGame)
 		}
 
 		auto menu = cocos2d::CCMenu::create();
-		auto nameList = cocos2d::CCLabelBMFont::create(BetterPause::quickSettingsNamesG[i].c_str(), "bigFont.fnt");
+		std::string sName = (i < BetterPause::quickSettingsNamesG.size()) ? BetterPause::quickSettingsNamesG[i] : "";
+		auto nameList = cocos2d::CCLabelBMFont::create(sName.c_str(), "bigFont.fnt");
 		auto btnSelect = CCMenuItemToggler::createWithStandardSprites(this, (cocos2d::SEL_MenuHandler)&SelectQuickSettings::onToggleWithGameVariable, 0.6f);
 
-		for (int j = 0; j < 6; j++) {
-			if (((i + 2) * -1) == BetterPauseManager::sharedState()->posQuickA[j])
-			{
+		int expectedTag = static_cast<int>(i + 2) * -1;
+		bool isSelected = false;
+		for (size_t j = 0; j < 6 && j < BetterPauseManager::sharedState()->posQuickA.size(); j++) {
+			if (expectedTag == BetterPauseManager::sharedState()->posQuickA[j]) {
 				btnSelect->toggle(true);
+				isSelected = true;
+				selectedCount++;
+				break;
 			}
 		}
 
-		if (BetterPause::quickSettingsNamesG[i] == "Practice Music Sync" && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
+		BetterPauseDebug::log("  GameOption[" + std::to_string(i) + "] '" + sName + "' tag=" + std::to_string(expectedTag) + (isSelected ? " -> SELECTED" : ""));
+
+		if (sName == "Practice Music Sync" && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11)) {
 			reinterpret_cast<CCSprite*>(reinterpret_cast<CCMenuItemSpriteExtra*>(btnSelect->getChildren()->objectAtIndex(0))->getChildren()->objectAtIndex(0))->setColor({ 150,150,150 });
 			reinterpret_cast<CCSprite*>(reinterpret_cast<CCMenuItemSpriteExtra*>(btnSelect->getChildren()->objectAtIndex(1))->getChildren()->objectAtIndex(0))->setColor({ 150,150,150 });
 			nameList->setColor({ 150,150,150 });
 		}
 
-		btnSelect->setTag((i + 2) * -1);
+		btnSelect->setTag(expectedTag);
 		btnSelect->setPosition({ 315.f, 15.f });
-		//auto buttonButton = CCMenuItemSpriteExtra::create(ButtonSprite::create("View", (int)(90 * 0.5), true, "bigFont.fnt", "GJ_button_01.png", 44 * 0.6f, 0.5f), menu, nullptr);
 
 		nameList->setPosition({ 10.f, 15.f });
 		nameList->setAnchorPoint({ 0.f, 0.5f });
-		//buttonButton->setPosition({ 300.f, 26.f });
 
 		menu->addChild(nameList);
 		menu->addChild(btnSelect);
 		m_toggles.push_back(btnSelect);
 		nameList->limitLabelWidth(200.f, 0.5f, 0.1f);
-
-		//menu->addChild(buttonButton);
 
 		arrayList->addObject(menu);
 	}
@@ -125,7 +175,7 @@ bool SelectQuickSettings::setup(bool inGame)
 	{
 		if (i == 0) {
 			auto menu = cocos2d::CCMenu::create();
-			auto nameList = cocos2d::CCLabelBMFont::create("- Gameplay - ", "goldFont.fnt");
+			auto nameList = cocos2d::CCLabelBMFont::create("- Gameplay -", "goldFont.fnt");
 			nameList->setScale(0.8f);
 			nameList->setPosition({ 160.f, 15.f });
 			nameList->setAnchorPoint({ 0.5f, 0.5f });
@@ -135,7 +185,7 @@ bool SelectQuickSettings::setup(bool inGame)
 
 		if (i == 20) {
 			auto menu = cocos2d::CCMenu::create();
-			auto nameList = cocos2d::CCLabelBMFont::create("- Practice - ", "goldFont.fnt");
+			auto nameList = cocos2d::CCLabelBMFont::create("- Practice -", "goldFont.fnt");
 			nameList->setScale(0.8f);
 			nameList->setPosition({ 160.f, 15.f });
 			nameList->setAnchorPoint({ 0.5f, 0.5f });
@@ -145,7 +195,7 @@ bool SelectQuickSettings::setup(bool inGame)
 
 		if (i == 28) {
 			auto menu = cocos2d::CCMenu::create();
-			auto nameList = cocos2d::CCLabelBMFont::create("- Performance - ", "goldFont.fnt");
+			auto nameList = cocos2d::CCLabelBMFont::create("- Performance -", "goldFont.fnt");
 			nameList->setScale(0.8f);
 			nameList->setPosition({ 160.f, 15.f });
 			nameList->setAnchorPoint({ 0.5f, 0.5f });
@@ -155,7 +205,7 @@ bool SelectQuickSettings::setup(bool inGame)
 
 		if (i == 36) {
 			auto menu = cocos2d::CCMenu::create();
-			auto nameList = cocos2d::CCLabelBMFont::create("- Audio - ", "goldFont.fnt");
+			auto nameList = cocos2d::CCLabelBMFont::create("- Audio -", "goldFont.fnt");
 			nameList->setScale(0.8f);
 			nameList->setPosition({ 160.f, 15.f });
 			nameList->setAnchorPoint({ 0.5f, 0.5f });
@@ -165,7 +215,7 @@ bool SelectQuickSettings::setup(bool inGame)
 
 		if (i == 41) {
 			auto menu = cocos2d::CCMenu::create();
-			auto nameList = cocos2d::CCLabelBMFont::create("- Other - ", "goldFont.fnt");
+			auto nameList = cocos2d::CCLabelBMFont::create("- Other -", "goldFont.fnt");
 			nameList->setScale(0.8f);
 			nameList->setPosition({ 160.f, 15.f });
 			nameList->setAnchorPoint({ 0.5f, 0.5f });
@@ -177,14 +227,20 @@ bool SelectQuickSettings::setup(bool inGame)
 		auto nameList = cocos2d::CCLabelBMFont::create(BetterPause::quickSettingsNames[i].c_str(), "bigFont.fnt");
 		auto btnSelect = CCMenuItemToggler::createWithStandardSprites(this, (cocos2d::SEL_MenuHandler)&SelectQuickSettings::onToggleWithGameVariable, 0.6f);
 		
-		for (int j = 0; j < 6; j++){
-			if (i == BetterPauseManager::sharedState()->posQuickA[j])
+		bool isSelected = false;
+		for (size_t j = 0; j < 6 && j < BetterPauseManager::sharedState()->posQuickA.size(); j++){
+			if (static_cast<int>(i) == BetterPauseManager::sharedState()->posQuickA[j])
 			{
 				btnSelect->toggle(true);
+				isSelected = true;
+				selectedCount++;
+				break;
 			}
 		}
+
+		BetterPauseDebug::log("  MoreOption[" + std::to_string(i) + "] '" + BetterPause::quickSettingsNames[i] + "' tag=" + std::to_string(i) + (isSelected ? " -> SELECTED" : ""));
 		
-		btnSelect->setTag(i);
+		btnSelect->setTag(static_cast<int>(i));
 		btnSelect->setPosition({ 315.f, 15.f });
 
 		nameList->setPosition({ 10.f, 15.f });
@@ -195,11 +251,10 @@ bool SelectQuickSettings::setup(bool inGame)
 		m_toggles.push_back(btnSelect);
 		nameList->limitLabelWidth(200.f, 0.5f, 0.1f);
 
-
 		arrayList->addObject(menu);
 	}
 
-	BetterPause::clearQuickSettings();
+	BetterPauseDebug::log("SelectQuickSettings::setup() FINISHED - Total items selected: " + std::to_string(selectedCount));
 
 	auto CustomVi = ListView::create(arrayList, 30.f, 340.f, 200.f);
 
@@ -216,28 +271,20 @@ bool SelectQuickSettings::setup(bool inGame)
 
 void SelectQuickSettings::onToggleWithGameVariable(CCObject* pSender)
 {
-	int count = 0;
 	auto toggleButton = reinterpret_cast<CCMenuItemToggler*>(pSender);
-
-
+	if (!toggleButton) return;
 
 	if (toggleButton->getTag() == -11 && !GameStatsManager::sharedState()->isItemUnlocked(UnlockType::GJItem, 0x11) && !toggleButton->isToggled()) {
-		auto toggleButton = reinterpret_cast<CCMenuItemToggler*>(pSender);
-		auto gameOptionsLayer = GameOptionsLayer::create(Utils::getplayLayerA());
-
 		auto arr = CCArray::create();
 		arr->addObject(DialogObject::create("Scratch", "What's the <cl>point</c> of adding it if you don't have it <cr>unlocked?</c>", 13, 1.0f, false, { 255, 255, 255 }));
 		auto dl = DialogLayer::createDialogLayer(nullptr, arr, 2);
 		dl->animateInRandomSide();
 		CCScene::get()->addChild(dl, CCScene::get()->getHighestChildZ());
-
-
-		//auto dialogObj = AttemptAtReversingDialogObject::create("Scratch", "You need a <cg>Music Unlocker</c> to play <cy>normal music</c> in <cl>practice mod e</c>.", 2, 512.f, false, { 0, 0, 0 });
-		//auto dialogLayer = DialogLayer::create(reinterpret_cast<DialogObject*>(dialogObj), 2);
-		//Utils::shareDirectorA()->getRunningScene()->addChild(dialogLayer, Utils::shareDirectorA()->getRunningScene()->getHighestChildZ());
-		//dialogLayer->animateIn(DialogAnimationType::FromCenter);
+		toggleButton->toggle(false);
+		return;
 	}
 
+	int count = 0;
 	for (auto buttonToggle : m_toggles)
 	{
 		if (buttonToggle->isToggled())
@@ -246,36 +293,18 @@ void SelectQuickSettings::onToggleWithGameVariable(CCObject* pSender)
 		}
 	}
 
-	if (reinterpret_cast<CCMenuItemToggler*>(pSender)->isToggled())
-	{
-		count--;
-	}
-	else
-	{
-		count++;
-	}
-
-	//std::cout << count << "\t" << reinterpret_cast<CCMenuItemToggler*>(pSender)->isToggled() << std::endl;
+	BetterPauseDebug::log("onToggleWithGameVariable: Tag=" + std::to_string(toggleButton->getTag()) + " isToggled=" + (toggleButton->isToggled() ? "true" : "false") + " TotalToggledNow=" + std::to_string(count));
 
 	if (count > 6)
 	{
 		auto flalert = FLAlertLayer::create(
 			"Maximum Exceeded",
-			gd::string("You've exceeded the maximum number of quick settings."),
+			gd::string("You can select up to 6 quick settings."),
 			"OK"
 		);
 		flalert->show();
-		reinterpret_cast<CCMenuItemToggler*>(pSender)->toggle(true);
-	}
-
-	if (count < 3)
-	{
-		auto flalert = FLAlertLayer::create(
-			 "Minimum Not Met",
-			gd::string("You haven't met the minimum number of quick settings."),
-			"OK");
-		flalert->show();
-		reinterpret_cast<CCMenuItemToggler*>(pSender)->toggle(false);
+		toggleButton->toggle(false);
+		BetterPauseDebug::log("  Blocked toggle: Exceeded maximum 6 quick settings.");
 	}
 }
 
@@ -286,23 +315,33 @@ void SelectQuickSettings::keyBackClicked()
 
 void SelectQuickSettings::onClose(cocos2d::CCObject* pSender)
 {
-	for (int j = 0; j < 6; j++)
-	{
-		BetterPauseManager::sharedState()->posQuickA[j] = -1;
-	}
+	auto& posQuick = BetterPauseManager::sharedState()->posQuickA;
+	posQuick.assign(6, -1);
 
 	int count = 0;
-
-	for (size_t i = 0; i < m_toggles.size(); i++)
+	for (size_t i = 0; i < m_toggles.size() && count < 6; i++)
 	{
 		auto buttonToggle = m_toggles[i];
 		if (buttonToggle->isToggled())
 		{
-			BetterPauseManager::sharedState()->posQuickA[count] = m_toggles[i]->getTag();
+			posQuick[count] = buttonToggle->getTag();
 			count++;
 		}
 	}
 
+	if (count == 0) {
+		BetterPauseDebug::log("SelectQuickSettings::onClose() - 0 items selected! Restoring defaults to avoid empty pause menu.");
+		posQuick = BetterPauseManager::sharedState()->posQuickASafe;
+	}
+
+	std::string savedStr = "[";
+	for (size_t k = 0; k < posQuick.size(); ++k) {
+		savedStr += std::to_string(posQuick[k]) + (k + 1 < posQuick.size() ? ", " : "");
+	}
+	savedStr += "]";
+	BetterPauseDebug::log("SelectQuickSettings::onClose() - Saved posQuickA: " + savedStr);
+
+	BetterPauseManager::sharedState()->saveState();
 	Popup::onClose(pSender);
 }
 

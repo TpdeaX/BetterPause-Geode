@@ -19,17 +19,17 @@ void SetVolumenPopup::onSet(cocos2d::CCObject* pSender)
 	try
 	{
 		numberAs = std::stoi(this->m_pInputTextValue->getString());
+		numberAs = std::clamp(numberAs, 0, 100);
 		if (this->m_pSliderRef) {
-			numberAs = std::min(100, std::max(0, numberAs));
 			this->m_pSliderRef->setValue(static_cast<float>(numberAs) / 100.f);
-			this->m_pSliderRef->getThumb()->activate();
+			if (this->m_pSliderRef->getThumb()) {
+				this->m_pSliderRef->getThumb()->activate();
+			}
 			this->m_pSliderRef->updateBar();
 		}
 	}
-	catch (std::exception const& e)
+	catch (...)
 	{
-		//numberAs = this->m_pSliderRef->m_touchLogic->getThumb()->getValue() * 100;
-		// FLAlertLayer::create(nullptr, "Error", "OK", nullptr, "There was an error processing the number.")->show();
 	}
 	this->keyBackClicked();
 }
@@ -74,8 +74,16 @@ bool SetVolumenPopup::setup(Slider* m_pSliderRef)
 	m_pBGInputTextValue->setOpacity(100);
 	m_mainLayer->addChild(m_pBGInputTextValue);
 
+	float curVal = 1.0f;
+	if (this->m_pSliderRef && this->m_pSliderRef->getThumb()) {
+		curVal = this->m_pSliderRef->getThumb()->getValue();
+	}
+	if (std::isnan(curVal) || std::isinf(curVal)) curVal = 1.0f;
+	curVal = std::clamp(curVal, 0.0f, 1.0f);
+	int intVal = std::clamp(static_cast<int>(std::round(curVal * 100.f)), 0, 100);
+
 	m_pInputTextValue = CCTextInputNode::create(50.f, 20.f, "Vol", "bigFont.fnt");
-	m_pInputTextValue->setString(gd::string(std::to_string(static_cast<int>(this->m_pSliderRef->getThumb()->getValue() * 100))));
+	m_pInputTextValue->setString(gd::string(std::to_string(intVal)));
 	m_pInputTextValue->setLabelPlaceholderColor({ 0x75, 0xAA, 0xF0 });
 	m_pInputTextValue->m_maxLabelLength = 3;
 	m_pInputTextValue->setAllowedChars("0123456789");

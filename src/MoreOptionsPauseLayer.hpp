@@ -4,13 +4,14 @@
 #include <Geode/ui/GeodeUI.hpp>
 #include <Geode/ui/Popup.hpp>
 #include "Utils.hpp"
+
 class BetterPause;
 
-class MoreOptionsPauseLayer : public geode::Popup, public cocos2d::CCTextFieldDelegate
+class MoreOptionsPauseLayer : public geode::Popup<CCNode*>, public cocos2d::CCTextFieldDelegate
 {
 public:
 	static MoreOptionsPauseLayer* create(CCNode* ref);
-	bool setup(CCNode* ref);
+	bool setup(CCNode* ref) override;
 	void onClose(CCObject* pSender) override;
 	void onOptionsGame(CCObject* pSender);
 	void onOptionsPause(CCObject* pSender);
@@ -23,5 +24,5 @@ public:
 	cocos2d::CCLabelBMFont* m_pTitleLayer = nullptr;
 	cocos2d::CCLabelBMFont* m_pExtraTitle = nullptr;
 	cocos2d::extension::CCScale9Sprite* m_pBGExtraButtons = nullptr;
-	cocos2d::CCMenu* m_extraButtonsMenu = nullptr;
+	std::vector<CCMenuItemSpriteExtra*> m_addedExtraButtons;
 };

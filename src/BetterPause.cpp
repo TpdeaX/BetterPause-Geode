@@ -223,7 +223,7 @@ void BetterPause::createClassicPause() {
 	}
 	this->addChild(menuToggles);
 
-	auto settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
+	auto settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
 	settingsButtonImage->setScale(0.6f);
 	auto settingsButton = CCMenuItemSpriteExtra::create(settingsButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onOptionsLayer);
 	settingsButton->setID("better-pause-button");
@@ -287,6 +287,10 @@ void BetterPause::handleOptionsLayers() {
 #else
 	gameOptionsLayer->onClose(nullptr);
 #endif
+
+	BetterPause::quickSettingsNames.clear();
+	BetterPause::quickSettingsKeys.clear();
+	BetterPause::quickSettingsDescriptions.clear();
 
 	auto moreOptionsLayer = MoreOptionsLayer::create();
 #ifdef GEODE_IS_MACOS
@@ -543,6 +547,14 @@ void BetterPause::createMainButtonsMenu() {
 		createButtonMenu(showCommentsButton);
 	}
 
+	auto plusButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
+	if (plusButtonImage) {
+		plusButtonImage->setScale(0.55f);
+		auto plusButton = CCMenuItemSpriteExtra::create(plusButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onOptionsLayer);
+		plusButton->setID("better-pause-plus-button");
+		totalHeight += plusButtonImage->getContentSize().height - 24.f;
+		createButtonMenu(plusButton);
+	}
 
 	std::vector<CCMenuItemSpriteExtra*> menuButtonsDetected = {};
 	std::vector<std::string> buttonIds{ "edit-button", "full-restart-button", "practice-button",
@@ -604,13 +616,13 @@ void BetterPause::createSecondaryButtonsMenu() {
 	this->visibleButton = CCMenuItemSpriteExtra::create(visibleButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onHide);
 	secondaryMenuButtons->addChild(this->visibleButton, -5);
 
-	auto settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
+	auto settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
 	if (!settingsButtonImage) {
-		settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_optionsBtn_001.png");
+		settingsButtonImage = cocos2d::CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
 	}
 	settingsButtonImage->setScale(0.6f);
 	auto settingsButton = CCMenuItemSpriteExtra::create(settingsButtonImage, this, (cocos2d::SEL_MenuHandler)&BetterPause::onOptionsLayer);
-	settingsButton->setID("better-pause-plus-button");
+	settingsButton->setID("better-pause-button");
 	secondaryMenuButtons->addChild(settingsButton);
 
 	auto firstButtonRect = visibleButton->boundingBox();
@@ -650,21 +662,18 @@ void BetterPause::createSecondaryButtonsMenu() {
 }
 
 void BetterPause::createAudioControls() {
+	float musicValue = 1.0f;
+	float sfxValue = 1.0f;
 
-	auto musicValue = 0.f;
-	auto sfxValue = 0.f;
+	if (Utils::shareFMOD()) {
+		musicValue = Utils::shareFMOD()->getBackgroundMusicVolume();
+		sfxValue = Utils::shareFMOD()->getEffectsVolume();
+	}
 
-#ifdef GEODE_IS_WINDOWS
-	musicValue = Utils::from<float>(Utils::shareFMOD(), 0x168);
-#else
-	musicValue = Utils::shareFMOD()->getBackgroundMusicVolume();
-#endif
-
-#ifdef GEODE_IS_WINDOWS
-	sfxValue = Utils::from<float>(Utils::shareFMOD(), 0x16C);
-#else
-	sfxValue = Utils::shareFMOD()->getEffectsVolume();
-#endif
+	if (std::isnan(musicValue) || std::isinf(musicValue)) musicValue = 1.0f;
+	if (std::isnan(sfxValue) || std::isinf(sfxValue)) sfxValue = 1.0f;
+	musicValue = std::clamp(musicValue, 0.0f, 1.0f);
+	sfxValue = std::clamp(sfxValue, 0.0f, 1.0f);
 
 	sliderPlusMusic = SliderPlus::create("Music", this, (cocos2d::SEL_MenuHandler)&PauseLayer::musicSliderChanged,
 		nullptr, nullptr, musicValue);
@@ -690,10 +699,12 @@ void BetterPause::createLabels() {
 	auto levelType = Utils::getplayLayerA()->m_level->m_levelType;
 	auto isPracticeMode = Utils::getplayLayerA()->m_isPracticeMode;
 
-	this->difficultyFaceNode = this->createDifficultyFace(theLevel, 0.55f);
-	if (this->difficultyFaceNode) {
-		this->difficultyFaceNode->setPosition({ 60.f, Utils::WinSize().height - 33.f });
-		this->addChild(this->difficultyFaceNode);
+	if (Mod::get()->getSettingValue<bool>("enable-difficulty-face")) {
+		this->difficultyFaceNode = this->createDifficultyFace(theLevel, 0.45f);
+		if (this->difficultyFaceNode) {
+			this->difficultyFaceNode->setPosition({ 62.f, Utils::WinSize().height - 24.f });
+			this->addChild(this->difficultyFaceNode);
+		}
 	}
 
 	levelNameLabel = cocos2d::CCLabelBMFont::create(levelName.c_str(), "goldFont.fnt");
@@ -844,21 +855,35 @@ void BetterPause::onLevelInfoLayer(cocos2d::CCObject* pSender) {
 }
 
 void BetterPause::musicSliderChanged(cocos2d::CCObject* pSender) {
-	auto valueV = this->musicSlider->getThumb()->getValue();
-	this->pauseLayer->musicSliderChanged(pSender);
-	this->musicVolumeSettingsLabel->setString(
-		cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(valueV * 100))->getCString());
-
-	return;
+	if (this->pauseLayer) {
+		this->pauseLayer->musicSliderChanged(pSender);
+	}
+	if (this->musicSlider && this->musicSlider->getThumb()) {
+		float valueV = this->musicSlider->getThumb()->getValue();
+		if (std::isnan(valueV) || std::isinf(valueV)) valueV = 1.0f;
+		valueV = std::clamp(valueV, 0.0f, 1.0f);
+		int intPct = std::clamp(static_cast<int>(std::round(valueV * 100.f)), 0, 100);
+		if (this->musicVolumeSettingsLabel) {
+			this->musicVolumeSettingsLabel->setString(
+				cocos2d::CCString::createWithFormat("%i%%", intPct)->getCString());
+		}
+	}
 }
 
 void BetterPause::sfxSliderChanged(cocos2d::CCObject* pSender) {
-	auto valueV = this->sfxSlider->getThumb()->getValue();
-	this->pauseLayer->sfxSliderChanged(pSender);
-	this->sfxVolumeSettingsLabel->setString(
-		cocos2d::CCString::createWithFormat("%i%%", static_cast<int>(valueV * 100))->getCString());
-
-	return;
+	if (this->pauseLayer) {
+		this->pauseLayer->sfxSliderChanged(pSender);
+	}
+	if (this->sfxSlider && this->sfxSlider->getThumb()) {
+		float valueV = this->sfxSlider->getThumb()->getValue();
+		if (std::isnan(valueV) || std::isinf(valueV)) valueV = 1.0f;
+		valueV = std::clamp(valueV, 0.0f, 1.0f);
+		int intPct = std::clamp(static_cast<int>(std::round(valueV * 100.f)), 0, 100);
+		if (this->sfxVolumeSettingsLabel) {
+			this->sfxVolumeSettingsLabel->setString(
+				cocos2d::CCString::createWithFormat("%i%%", intPct)->getCString());
+		}
+	}
 }
 
 void BetterPause::onSetMusicVolume(cocos2d::CCObject* pSender) {
@@ -938,11 +963,10 @@ void BetterPause::createToggleButton(cocos2d::SEL_MenuHandler callback, bool on,
 
 void BetterPause::onOptionsLayer(cocos2d::CCObject* pSender) {
 	auto popup = MoreOptionsPauseLayer::create(this);
-	popup->setID("popup-betterpause");
-	std::cout << CCScene::get()->getHighestChildZ() << std::endl;
-	auto zOrderP = CCScene::get()->getHighestChildZ();
-	popup->show();
-	popup->setZOrder(zOrderP);
+	if (popup) {
+		popup->setID("popup-betterpause");
+		popup->show();
+	}
 }
 
 void BetterPause::onHide(cocos2d::CCObject* pSender) {

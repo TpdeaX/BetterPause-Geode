@@ -92,6 +92,12 @@ if (-not $SkipInstall) {
     $dest = Join-Path $GdModsDir $geodeName
     Copy-Item -Path $out -Destination $dest -Force
     Write-Host "==> Installed: $dest"
+
+    $buildsDir = 'C:\Users\Joseph\Documents\GitHub\.geode-builds'
+    if (Test-Path $buildsDir) {
+        Copy-Item -Path $out -Destination (Join-Path $buildsDir $geodeName) -Force
+        Write-Host "==> Backed up to: $(Join-Path $buildsDir $geodeName)"
+    }
 }
 
 Write-Host '==> Done.'

@@ -18,6 +18,7 @@
 #include "BetterPause.hpp"
 #include "CustomSettings.hpp"
 #include "SelectQuickSettings.h"
+#include "DebugLogger.hpp"
 #include <Geode/modify/CCScrollLayerExt.hpp>
 #include "CoinsViewerSprites.hpp"
 #include "PauseZoom.hpp"
@@ -39,7 +40,7 @@ class $modify(PauseLayer) {
 		bool hasPosibleExitHotKey = false;
 		bool hasConfirmPopup = false;
 		bool isCountingDown = false;
-		bool skipCountdown = false;
+		bool isResuming = false;
 		~Fields() {
 			PauseMusicManager::get()->onResume();
 			LastDeathGhostNode::removeFromPlayLayer(PlayLayer::get());
@@ -89,11 +90,11 @@ class $modify(PauseLayer) {
 	}
 
 	void onResume(cocos2d::CCObject * sender) {
-		if (m_fields->isCountingDown) {
+		if (m_fields->isCountingDown || m_fields->isResuming) {
 			return;
 		}
 
-		if (!m_fields->skipCountdown && Mod::get()->getSettingValue<bool>("confirm-resume-level") && !m_fields->hasConfirmPopup) {
+		if (Mod::get()->getSettingValue<bool>("confirm-resume-level") && !m_fields->hasConfirmPopup) {
 			geode::createQuickPopup(
 				"Resume Level",
 				std::string("Are you sure you want to <cr>resume</c>?"),
@@ -116,49 +117,59 @@ class $modify(PauseLayer) {
 			return nullptr;
 		};
 
-		if (!m_fields->skipCountdown && Mod::get()->getSettingValue<bool>("enable-unpause-countdown")) {
+		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown")) {
 			m_fields->isCountingDown = true;
 
-			if (auto bp = getBP()) {
-				bp->setVisible(false);
+			// Close any sub-popups that may be active
+			auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
+			while (popuBetterPause) {
+				typeinfo_cast<FLAlertLayer*>(popuBetterPause)->keyBackClicked();
+				popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
+			}
+
+			// Completely hide the entire PauseLayer background and all its children
+			if (auto rgba = typeinfo_cast<CCRGBAProtocol*>(this)) {
+				rgba->setOpacity(0);
 			}
 
 			for (size_t i = 0; i < this->getChildrenCount(); i++) {
 				if (auto child = dynamic_cast<CCNode*>(this->getChildren()->objectAtIndex(i))) {
+					child->stopAllActions();
+					child->setVisible(false);
 					if (auto menu = dynamic_cast<CCMenu*>(child)) {
-						menu->setVisible(false);
 						menu->setEnabled(false);
 					}
 				}
 			}
 
-			auto cd = UnpauseCountdownNode::create([this, sender]() {
+			auto cd = UnpauseCountdownNode::create([this, sender, getBP]() {
 				m_fields->isCountingDown = false;
-				m_fields->skipCountdown = true;
-				this->onResume(sender);
+				m_fields->isResuming = true;
+
+				auto betterPause = getBP();
+				if (betterPause) {
+					betterPause->unregisterScriptTouchHandler();
+				}
+
+				this->cleanUpEnhancements();
+				PauseLayer::onResume(sender);
 			});
 			cd->setID("unpause-countdown-node");
 			this->addChild(cd, 99999);
 			return;
 		}
 
-		m_fields->skipCountdown = false;
+		m_fields->isResuming = true;
 
 		auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
-
-		auto betterPause = getBP();
-
-		if (betterPause) {
-			if (betterPause->questMenu) {
-				betterPause->questMenu->onClose(nullptr);
-			}
-			betterPause->unregisterScriptTouchHandler();
-		}
-
 		while (popuBetterPause) {
 			typeinfo_cast<FLAlertLayer*>(popuBetterPause)->keyBackClicked();
-
 			popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
+		}
+
+		auto betterPause = getBP();
+		if (betterPause) {
+			betterPause->unregisterScriptTouchHandler();
 		}
 
 		this->cleanUpEnhancements();
@@ -166,7 +177,7 @@ class $modify(PauseLayer) {
 	}
 
 	void onPracticeMode(cocos2d::CCObject* sender) {
-		if (m_fields->isCountingDown) {
+		if (m_fields->isCountingDown || m_fields->isResuming) {
 			return;
 		}
 
@@ -195,7 +206,7 @@ class $modify(PauseLayer) {
 	}
 
 	void onNormalMode(cocos2d::CCObject* sender) {
-		if (m_fields->isCountingDown) {
+		if (m_fields->isCountingDown || m_fields->isResuming) {
 			return;
 		}
 
@@ -225,7 +236,7 @@ class $modify(PauseLayer) {
 
 	void onRestart(cocos2d::CCObject* sender)
 	{
-		if (m_fields->isCountingDown) {
+		if (m_fields->isCountingDown || m_fields->isResuming) {
 			return;
 		}
 
@@ -254,7 +265,7 @@ class $modify(PauseLayer) {
 
 	void onRestartFull(cocos2d::CCObject* sender)
 	{
-		if (m_fields->isCountingDown) {
+		if (m_fields->isCountingDown || m_fields->isResuming) {
 			return;
 		}
 
@@ -282,7 +293,7 @@ class $modify(PauseLayer) {
 
 	void onEdit(cocos2d::CCObject* sender)
 	{
-		if (m_fields->isCountingDown) {
+		if (m_fields->isCountingDown || m_fields->isResuming) {
 			return;
 		}
 
@@ -309,7 +320,7 @@ class $modify(PauseLayer) {
 	}
 
 	void keyDown(cocos2d::enumKeyCodes p0, double p1) {
-		if (m_fields->isCountingDown) {
+		if (m_fields->isCountingDown || m_fields->isResuming) {
 			return;
 		}
 
@@ -323,7 +334,7 @@ class $modify(PauseLayer) {
 	}
 
 	void keyBackClicked() {
-		if (m_fields->isCountingDown) {
+		if (m_fields->isCountingDown || m_fields->isResuming) {
 			return;
 		}
 		PauseLayer::keyBackClicked();
@@ -331,7 +342,7 @@ class $modify(PauseLayer) {
 
 #ifdef GEODE_IS_MACOS
 	void onQuit(cocos2d::CCObject* sender) {
-		if (m_fields->isCountingDown || m_fields->hasPosibleExitHotKey) {
+		if (m_fields->isCountingDown || m_fields->isResuming || m_fields->hasPosibleExitHotKey) {
 			return;
 		}
 
@@ -341,7 +352,7 @@ class $modify(PauseLayer) {
 
 #else
 	void tryQuit(cocos2d::CCObject* sender) {
-		if (m_fields->isCountingDown || m_fields->hasPosibleExitHotKey) {
+		if (m_fields->isCountingDown || m_fields->isResuming || m_fields->hasPosibleExitHotKey) {
 			return;
 		}
 
@@ -468,13 +479,24 @@ class $modify(GJBaseGameLayer) {
 };
 
 class $modify(MoreOptionsLayer) {
+	bool init() {
+		BetterPauseDebug::log("MoreOptionsLayer::init() called");
+		bool ret = MoreOptionsLayer::init();
+		BetterPauseDebug::log(std::string("MoreOptionsLayer::init() returned ") + (ret ? "true" : "false"));
+		return ret;
+	}
+
 	void addToggle(const char* name, const char* key, const char* info) {
 		MoreOptionsLayer::addToggle(name, key, info);
 
-		BetterPause::quickSettingsNames.push_back(name);
-		BetterPause::quickSettingsKeys.push_back(key);
-		BetterPause::quickSettingsDescriptions.push_back(info);
+		BetterPause::quickSettingsNames.push_back(name ? name : "");
+		BetterPause::quickSettingsKeys.push_back(key ? key : "");
+		BetterPause::quickSettingsDescriptions.push_back(info ? info : "");
 
+		std::string sName = name ? name : "NULL";
+		std::string sKey = key ? key : "NULL";
+		std::string sInfo = info ? info : "NULL";
+		BetterPauseDebug::log("MoreOptionsLayer::addToggle -> Name: '" + sName + "' | Key: '" + sKey + "' | Info: '" + sInfo + "' | Total stored: " + std::to_string(BetterPause::quickSettingsNames.size()));
 	}
 };
 
