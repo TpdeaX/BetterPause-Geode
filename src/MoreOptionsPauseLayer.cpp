@@ -9,8 +9,9 @@ MoreOptionsPauseLayer* MoreOptionsPauseLayer::create(CCNode* ref)
 	float height = hasExtra ? 260.f : 215.f;
 
 	auto node = new MoreOptionsPauseLayer();
-	if (node && node->init(width, height, ref, "GJ_square01.png"))
+	if (node && node->init(width, height, "GJ_square01.png"))
 	{
+		node->setup(ref);
 		node->autorelease();
 		return node;
 	}
@@ -150,7 +151,6 @@ void MoreOptionsPauseLayer::onClose(cocos2d::CCObject* pSender)
 	}
 	m_addedExtraButtons.clear();
 
-	FLAlertLayer::keyBackClicked();
 	Popup::onClose(pSender);
 }
 

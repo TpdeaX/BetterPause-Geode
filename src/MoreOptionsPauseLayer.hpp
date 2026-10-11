@@ -7,11 +7,11 @@
 
 class BetterPause;
 
-class MoreOptionsPauseLayer : public geode::Popup<CCNode*>, public cocos2d::CCTextFieldDelegate
+class MoreOptionsPauseLayer : public geode::Popup, public cocos2d::CCTextFieldDelegate
 {
 public:
 	static MoreOptionsPauseLayer* create(CCNode* ref);
-	bool setup(CCNode* ref) override;
+	bool setup(CCNode* ref);
 	void onClose(CCObject* pSender) override;
 	void onOptionsGame(CCObject* pSender);
 	void onOptionsPause(CCObject* pSender);
