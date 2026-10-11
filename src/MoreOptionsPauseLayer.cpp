@@ -21,17 +21,31 @@ MoreOptionsPauseLayer* MoreOptionsPauseLayer::create(CCNode* ref)
 
 bool MoreOptionsPauseLayer::setup(CCNode* ref)
 {
+	m_noElasticity = true;
 	this->betterPauseRef = ref;
 
 	auto bp = typeinfo_cast<BetterPause*>(ref);
 	bool hasExtra = bp && !bp->m_extraButtons.empty();
-	float popupW = m_size.width;
-	float popupH = m_size.height;
+	float popupW = hasExtra ? 300.f : 260.f;
+	float popupH = hasExtra ? 275.f : 225.f;
 
 	auto winSize = cocos2d::CCDirector::sharedDirector()->getWinSize();
 	cocos2d::CCPoint winCenter = { winSize.width / 2.f, winSize.height / 2.f };
 
-	// Geode's Popup centers m_bgSprite and m_buttonMenu at winCenter
+	this->m_bgSprite->setContentSize({ popupW, popupH });
+	this->m_bgSprite->setPosition(winCenter);
+	this->m_bgSprite->setColor({ 14, 14, 18 });
+	this->m_bgSprite->setOpacity(185);
+
+	m_buttonMenu->setPosition({ 0, 0 });
+
+	m_closeBtn->removeFromParentAndCleanup(true);
+	auto closeSpr = cocos2d::CCSprite::createWithSpriteFrameName("GJ_closeBtn_001.png");
+	closeSpr->setScale(0.8f);
+	m_closeBtn = CCMenuItemSpriteExtra::create(closeSpr, this, (cocos2d::SEL_MenuHandler)&MoreOptionsPauseLayer::onClose);
+	m_closeBtn->setPosition({ winCenter.x - popupW / 2.f + 4.f, winCenter.y + popupH / 2.f - 4.f });
+	m_buttonMenu->addChild(m_closeBtn);
+
 	this->m_pTitleLayer = cocos2d::CCLabelBMFont::create("- Settings -", "goldFont.fnt");
 	this->m_pTitleLayer->setScale(0.7f);
 	this->m_pTitleLayer->setPosition({ winCenter.x, winCenter.y + popupH / 2.f - 18.f });
@@ -44,19 +58,18 @@ bool MoreOptionsPauseLayer::setup(CCNode* ref)
 	this->m_pUnderLine->setOpacity(100);
 	m_mainLayer->addChild(this->m_pUnderLine);
 
-	float bgOptionsH = hasExtra ? 135.f : 148.f;
+	float bgOptionsH = hasExtra ? 138.f : 150.f;
 	float bgOptionsY = hasExtra ? (winCenter.y + 24.f) : (winCenter.y - 12.f);
 
 	this->m_pBGOptions = cocos2d::extension::CCScale9Sprite::create("GJ_square01.png");
-	this->m_pBGOptions->setContentSize({ popupW - 35.f, bgOptionsH });
+	this->m_pBGOptions->setContentSize({ popupW - 36.f, bgOptionsH });
 	this->m_pBGOptions->setPosition({ winCenter.x, bgOptionsY });
-	this->m_pBGOptions->setColor({ 30, 30, 30 });
-	this->m_pBGOptions->setOpacity((GLubyte)70);
+	this->m_pBGOptions->setColor({ 18, 18, 22 });
+	this->m_pBGOptions->setOpacity((GLubyte)80);
 	m_mainLayer->addChild(this->m_pBGOptions);
 
-	// m_buttonMenu is already centered at winCenter, so (0, y) centers horizontally
-	float yBase = hasExtra ? 64.f : 32.f;
-	float yStep = 42.f;
+	float yBase = hasExtra ? (winCenter.y + 68.f) : (winCenter.y + 36.f);
+	float yStep = 44.f;
 
 	// 1. Pause Options
 	auto imageButtonRealPauseSettings = cocos2d::CCSprite::createWithSpriteFrameName("GJ_pauseBtn_001.png");
@@ -71,7 +84,7 @@ bool MoreOptionsPauseLayer::setup(CCNode* ref)
 	m_pBGRealOptionsPause->addChild(imageButtonRealPauseSettings);
 	m_pBGRealOptionsPause->addChild(txtRealOptionsPause);
 	auto m_pRealOptionsPause = CCMenuItemSpriteExtra::create(m_pBGRealOptionsPause, this, (cocos2d::SEL_MenuHandler)&MoreOptionsPauseLayer::onOptionsPause);
-	m_pRealOptionsPause->setPosition({ 0.f, yBase });
+	m_pRealOptionsPause->setPosition({ winCenter.x, yBase });
 	m_buttonMenu->addChild(m_pRealOptionsPause);
 
 	// 2. Game Options
@@ -87,7 +100,7 @@ bool MoreOptionsPauseLayer::setup(CCNode* ref)
 	m_pBGOptionsGamePause->addChild(imageButtonSettings);
 	m_pBGOptionsGamePause->addChild(txtOptionGame);
 	auto m_pOptionsGamePause = CCMenuItemSpriteExtra::create(m_pBGOptionsGamePause, this, (cocos2d::SEL_MenuHandler)&MoreOptionsPauseLayer::onOptionsGame);
-	m_pOptionsGamePause->setPosition({ 0.f, yBase - yStep });
+	m_pOptionsGamePause->setPosition({ winCenter.x, yBase - yStep });
 	m_buttonMenu->addChild(m_pOptionsGamePause);
 
 	// 3. Mod Options
@@ -103,7 +116,7 @@ bool MoreOptionsPauseLayer::setup(CCNode* ref)
 	m_pBGOptionsGamePause2->addChild(imageButtonSettings2);
 	m_pBGOptionsGamePause2->addChild(txtOptionGame2);
 	auto m_pOptionsGamePause2 = CCMenuItemSpriteExtra::create(m_pBGOptionsGamePause2, this, (cocos2d::SEL_MenuHandler)&MoreOptionsPauseLayer::onSettingsMod);
-	m_pOptionsGamePause2->setPosition({ 0.f, yBase - yStep * 2.f });
+	m_pOptionsGamePause2->setPosition({ winCenter.x, yBase - yStep * 2.f });
 	m_buttonMenu->addChild(m_pOptionsGamePause2);
 
 	// Extra Mod Buttons section
@@ -114,13 +127,13 @@ bool MoreOptionsPauseLayer::setup(CCNode* ref)
 		m_mainLayer->addChild(this->m_pExtraTitle);
 
 		this->m_pBGExtraButtons = cocos2d::extension::CCScale9Sprite::create("GJ_square02.png");
-		this->m_pBGExtraButtons->setContentSize({ popupW - 35.f, 40.f });
+		this->m_pBGExtraButtons->setContentSize({ popupW - 36.f, 40.f });
 		this->m_pBGExtraButtons->setPosition({ winCenter.x, winCenter.y - popupH / 2.f + 30.f });
-		this->m_pBGExtraButtons->setColor({ 25, 25, 25 });
-		this->m_pBGExtraButtons->setOpacity(150);
+		this->m_pBGExtraButtons->setColor({ 18, 18, 22 });
+		this->m_pBGExtraButtons->setOpacity((GLubyte)90);
 		m_mainLayer->addChild(this->m_pBGExtraButtons);
 
-		float extraY = -popupH / 2.f + 30.f;
+		float extraY = winCenter.y - popupH / 2.f + 30.f;
 		float countExtra = static_cast<float>(bp->m_extraButtons.size());
 		float startX = -((countExtra - 1.f) * 35.f) / 2.f;
 
@@ -129,7 +142,7 @@ bool MoreOptionsPauseLayer::setup(CCNode* ref)
 			if (btn) {
 				btn->removeFromParent();
 				btn->setScale(0.55f);
-				btn->setPosition({ startX + static_cast<float>(i) * 35.f, extraY });
+				btn->setPosition({ winCenter.x + startX + static_cast<float>(i) * 35.f, extraY });
 				m_buttonMenu->addChild(btn);
 				m_addedExtraButtons.push_back(btn);
 			}

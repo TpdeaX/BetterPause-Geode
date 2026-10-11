@@ -41,7 +41,15 @@ class $modify(PauseLayer) {
 		bool hasConfirmPopup = false;
 		bool isCountingDown = false;
 		bool isResuming = false;
+		bool isExecutingAction = false;
 		~Fields() {
+			CCNode* cd = nullptr;
+			if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+				cd = scene->getChildByID("unpause-countdown-node");
+			}
+			if (cd) {
+				cd->removeFromParent();
+			}
 			PauseMusicManager::get()->onResume();
 			LastDeathGhostNode::removeFromPlayLayer(PlayLayer::get());
 			PauseZoomManager::get()->onResume();
@@ -90,7 +98,18 @@ class $modify(PauseLayer) {
 	}
 
 	void onResume(cocos2d::CCObject * sender) {
-		if (m_fields->isCountingDown || m_fields->isResuming) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
+		if (m_fields->isExecutingAction) {
+			m_fields->isExecutingAction = false;
+			m_fields->isResuming = true;
+			PauseLayer::onResume(sender);
+			return;
+		}
+
+		if (m_fields->isResuming) {
 			return;
 		}
 
@@ -118,44 +137,9 @@ class $modify(PauseLayer) {
 		};
 
 		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown")) {
-			m_fields->isCountingDown = true;
-
-			// Close any sub-popups that may be active
-			auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
-			while (popuBetterPause) {
-				typeinfo_cast<FLAlertLayer*>(popuBetterPause)->keyBackClicked();
-				popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
-			}
-
-			// Completely hide the entire PauseLayer background and all its children
-			if (auto rgba = typeinfo_cast<CCRGBAProtocol*>(this)) {
-				rgba->setOpacity(0);
-			}
-
-			for (size_t i = 0; i < this->getChildrenCount(); i++) {
-				if (auto child = dynamic_cast<CCNode*>(this->getChildren()->objectAtIndex(i))) {
-					child->stopAllActions();
-					child->setVisible(false);
-					if (auto menu = dynamic_cast<CCMenu*>(child)) {
-						menu->setEnabled(false);
-					}
-				}
-			}
-
-			auto cd = UnpauseCountdownNode::create([this, sender, getBP]() {
-				m_fields->isCountingDown = false;
-				m_fields->isResuming = true;
-
-				auto betterPause = getBP();
-				if (betterPause) {
-					betterPause->unregisterScriptTouchHandler();
-				}
-
-				this->cleanUpEnhancements();
-				PauseLayer::onResume(sender);
+			this->startCountdown([this, sender]() {
+				this->onResume(sender);
 			});
-			cd->setID("unpause-countdown-node");
-			this->addChild(cd, 99999);
 			return;
 		}
 
@@ -176,8 +160,87 @@ class $modify(PauseLayer) {
 		PauseLayer::onResume(sender);
 	}
 
+	BetterPause* getBP() {
+		if (auto bp = typeinfo_cast<BetterPause*>(this->getChildByID("better-pause-node"))) return bp;
+		if (auto bp = typeinfo_cast<BetterPause*>(this->getChildByID("simple-pause-node"))) return bp;
+		if (auto bp = typeinfo_cast<BetterPause*>(this->getChildByID("classic-pause-node"))) return bp;
+		return nullptr;
+	}
+
+	void cancelCountdown() {
+		if (!m_fields->isCountingDown) return;
+		m_fields->isCountingDown = false;
+		m_fields->isExecutingAction = false;
+
+		CCNode* cd = nullptr;
+		if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+			cd = scene->getChildByID("unpause-countdown-node");
+		}
+		if (!cd) {
+			cd = this->getChildByID("unpause-countdown-node");
+		}
+
+		if (cd) {
+			if (auto countdown = typeinfo_cast<UnpauseCountdownNode*>(cd)) {
+				countdown->cancel();
+			} else {
+				cd->removeFromParent();
+			}
+		}
+
+		this->setVisible(true);
+
+		if (auto bp = getBP()) {
+			bp->setVisible(!bp->isHidden);
+		}
+	}
+
+	void startCountdown(std::function<void()> onComplete) {
+		m_fields->isCountingDown = true;
+		m_fields->isExecutingAction = false;
+
+		auto popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
+		while (popuBetterPause) {
+			typeinfo_cast<FLAlertLayer*>(popuBetterPause)->keyBackClicked();
+			popuBetterPause = Utils::shareDirectorA()->getRunningScene()->getChildByID("popup-betterpause");
+		}
+
+		this->setVisible(false);
+
+		auto cd = UnpauseCountdownNode::create([this, onComplete]() {
+			m_fields->isCountingDown = false;
+			m_fields->isExecutingAction = true;
+
+			auto betterPause = getBP();
+			if (betterPause) {
+				betterPause->unregisterScriptTouchHandler();
+			}
+
+			this->cleanUpEnhancements();
+			if (onComplete) {
+				onComplete();
+			}
+		});
+		cd->setID("unpause-countdown-node");
+		if (auto scene = CCDirector::sharedDirector()->getRunningScene()) {
+			scene->addChild(cd, 99999);
+		} else {
+			this->addChild(cd, 99999);
+		}
+	}
+
 	void onPracticeMode(cocos2d::CCObject* sender) {
-		if (m_fields->isCountingDown || m_fields->isResuming) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
+		if (m_fields->isExecutingAction) {
+			m_fields->isExecutingAction = false;
+			PauseLayer::onPracticeMode(sender);
+			return;
+		}
+
+		if (m_fields->isResuming) {
 			return;
 		}
 
@@ -190,8 +253,7 @@ class $modify(PauseLayer) {
 				[this, sender](FLAlertLayer* fla, bool btn2) {
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						this->cleanUpEnhancements();
-						PauseLayer::onPracticeMode(sender);
+						this->onPracticeMode(sender);
 						m_fields->hasConfirmPopup = false;
 					}
 				}
@@ -201,12 +263,29 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown") && Mod::get()->getSettingValue<bool>("countdown-practice-mode")) {
+			this->startCountdown([this, sender]() {
+				this->onPracticeMode(sender);
+			});
+			return;
+		}
+
 		this->cleanUpEnhancements();
 		PauseLayer::onPracticeMode(sender);
 	}
 
 	void onNormalMode(cocos2d::CCObject* sender) {
-		if (m_fields->isCountingDown || m_fields->isResuming) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
+		if (m_fields->isExecutingAction) {
+			m_fields->isExecutingAction = false;
+			PauseLayer::onNormalMode(sender);
+			return;
+		}
+
+		if (m_fields->isResuming) {
 			return;
 		}
 
@@ -219,8 +298,7 @@ class $modify(PauseLayer) {
 				[this, sender](FLAlertLayer* fla, bool btn2) {
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						this->cleanUpEnhancements();
-						PauseLayer::onNormalMode(sender);
+						this->onNormalMode(sender);
 						m_fields->hasConfirmPopup = false;
 					}
 				}
@@ -230,13 +308,30 @@ class $modify(PauseLayer) {
 			return;
 		}
 
+		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown") && Mod::get()->getSettingValue<bool>("countdown-normal-mode")) {
+			this->startCountdown([this, sender]() {
+				this->onNormalMode(sender);
+			});
+			return;
+		}
+
 		this->cleanUpEnhancements();
 		PauseLayer::onNormalMode(sender);
 	}
 
 	void onRestart(cocos2d::CCObject* sender)
 	{
-		if (m_fields->isCountingDown || m_fields->isResuming) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
+		if (m_fields->isExecutingAction) {
+			m_fields->isExecutingAction = false;
+			PauseLayer::onRestart(sender);
+			return;
+		}
+
+		if (m_fields->isResuming) {
 			return;
 		}
 
@@ -249,13 +344,19 @@ class $modify(PauseLayer) {
 
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						this->cleanUpEnhancements();
-						PauseLayer::onRestart(sender);
+						this->onRestart(sender);
 						m_fields->hasConfirmPopup = false;
 					}
 				}
 			);
 
+			return;
+		}
+
+		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown") && Mod::get()->getSettingValue<bool>("countdown-restart-level")) {
+			this->startCountdown([this, sender]() {
+				this->onRestart(sender);
+			});
 			return;
 		}
 
@@ -265,7 +366,17 @@ class $modify(PauseLayer) {
 
 	void onRestartFull(cocos2d::CCObject* sender)
 	{
-		if (m_fields->isCountingDown || m_fields->isResuming) {
+		if (m_fields->isCountingDown) {
+			return;
+		}
+
+		if (m_fields->isExecutingAction) {
+			m_fields->isExecutingAction = false;
+			PauseLayer::onRestartFull(sender);
+			return;
+		}
+
+		if (m_fields->isResuming) {
 			return;
 		}
 
@@ -278,12 +389,19 @@ class $modify(PauseLayer) {
 
 					if (btn2) {
 						m_fields->hasConfirmPopup = true;
-						this->cleanUpEnhancements();
-						PauseLayer::onRestartFull(sender);
+						this->onRestartFull(sender);
 						m_fields->hasConfirmPopup = false;
 					}
 				}
 			);
+
+			return;
+		}
+
+		if (Mod::get()->getSettingValue<bool>("enable-unpause-countdown") && Mod::get()->getSettingValue<bool>("countdown-restart-level")) {
+			this->startCountdown([this, sender]() {
+				this->onRestartFull(sender);
+			});
 			return;
 		}
 
@@ -312,6 +430,7 @@ class $modify(PauseLayer) {
 					}
 				}
 			);
+
 			return;
 		}
 
@@ -320,7 +439,13 @@ class $modify(PauseLayer) {
 	}
 
 	void keyDown(cocos2d::enumKeyCodes p0, double p1) {
-		if (m_fields->isCountingDown || m_fields->isResuming) {
+		if (m_fields->isCountingDown) {
+			if (p0 == cocos2d::enumKeyCodes::KEY_Escape) {
+				this->cancelCountdown();
+			}
+			return;
+		}
+		if (m_fields->isResuming) {
 			return;
 		}
 
@@ -334,7 +459,11 @@ class $modify(PauseLayer) {
 	}
 
 	void keyBackClicked() {
-		if (m_fields->isCountingDown || m_fields->isResuming) {
+		if (m_fields->isCountingDown) {
+			this->cancelCountdown();
+			return;
+		}
+		if (m_fields->isResuming) {
 			return;
 		}
 		PauseLayer::keyBackClicked();

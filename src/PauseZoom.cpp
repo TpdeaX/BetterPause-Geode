@@ -205,18 +205,34 @@ bool PauseZoomManager::onScroll(float y, float x) {
     if (!m_isPaused) return false;
     if (!Mod::get()->getSettingValue<bool>("enable-pause-zoom")) return false;
 
-    // Check if mouse is hovering over BetterPause's button list
-    if (auto pauseLayer = CCScene::get()->getChildByID("PauseLayer")) {
-        if (pauseLayer->getChildByID("unpause-countdown-node")) {
-            return false;
-        }
-        auto betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"));
-        if (!betterPause) betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("simple-pause-node"));
-        if (!betterPause) betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("classic-pause-node"));
-        if (betterPause) {
-            if (betterPause->buttonsList && BetterInfo::isHoveringNode(betterPause->buttonsList)) {
-                return false; // let buttonsList scroll
+    auto scene = CCScene::get();
+    if (!scene) return false;
+
+    auto pauseLayer = scene->getChildByID("PauseLayer");
+    if (!pauseLayer) return false;
+
+    if (pauseLayer->getChildByID("unpause-countdown-node")) {
+        return false;
+    }
+
+    // Check if any popup or alert is active above PauseLayer
+    int pauseZ = pauseLayer->getZOrder();
+    for (auto child : CCArrayExt<CCNode*>(scene->getChildren())) {
+        if (!child || child == pauseLayer) continue;
+        if (child->isVisible()) {
+            if (child->getZOrder() > pauseZ || typeinfo_cast<FLAlertLayer*>(child)) {
+                return false; // Popups are open, block background zoom!
             }
+        }
+    }
+
+    // Check if mouse is hovering over BetterPause's button list
+    auto betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("better-pause-node"));
+    if (!betterPause) betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("simple-pause-node"));
+    if (!betterPause) betterPause = static_cast<BetterPause*>(pauseLayer->getChildByID("classic-pause-node"));
+    if (betterPause) {
+        if (betterPause->buttonsList && BetterInfo::isHoveringNode(betterPause->buttonsList)) {
+            return false; // let buttonsList scroll
         }
     }
 
@@ -412,7 +428,10 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     const float MW = 76.0f;
     const float MH = 42.0f;
 
-    // Outer radar frame: sleek thin border + soft dark background
+    bool usePlayerTheme = Mod::get()->getSettingValue<bool>("enable-player-theme");
+    auto borderCol = usePlayerTheme ? BetterPauseTheme::getPlayerCol1F(0.85f) : ccc4f(0.80f, 0.80f, 0.85f, 0.50f);
+
+    // Outer radar frame: sleek thin border + highly transparent glass background so game shines through
     CCPoint outerPts[4] = {
         ccp(0.0f, 0.0f),
         ccp(MW, 0.0f),
@@ -422,9 +441,9 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     m_minimap->drawPolygon(
         outerPts,
         4,
-        ccc4f(0.04f, 0.04f, 0.05f, 0.65f),
+        ccc4f(0.02f, 0.02f, 0.04f, 0.28f),
         1.0f,
-        BetterPauseTheme::getPlayerCol1F(0.90f)
+        borderCol
     );
 
     auto winSize = CCDirector::sharedDirector()->getWinSize();
@@ -455,9 +474,9 @@ void PauseZoomBadge::updateBadge(float zoom, CCPoint pan) {
     m_minimap->drawPolygon(
         innerPts,
         4,
-        ccc4f(1.0f, 0.12f, 0.12f, 0.18f),
+        ccc4f(1.0f, 0.10f, 0.10f, 0.14f),
         1.0f,
-        ccc4f(1.0f, 0.15f, 0.15f, 1.0f)
+        ccc4f(1.0f, 0.20f, 0.20f, 0.75f)
     );
 }
 

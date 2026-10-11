@@ -57,6 +57,9 @@ public:
     CustomSongWidget* customSongWidget = nullptr;
     CCMenuItemSpriteExtra* questButtonAlt = nullptr;
     ScrollLayer* buttonsList = nullptr;
+    std::vector<cocos2d::CCNode*> m_buttonPages;
+    int m_currentButtonPage = 0;
+    bool m_useScrollLayer = false;
     cocos2d::CCSprite* scrollUpButtonSprite = nullptr;
     cocos2d::CCSprite* scrollDownButtonSprite = nullptr;
     CCMenuItemSpriteExtra* scrollUpButton = nullptr;

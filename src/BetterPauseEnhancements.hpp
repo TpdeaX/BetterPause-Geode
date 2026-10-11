@@ -60,11 +60,15 @@ public:
     int m_currentCount = 3;
     bool m_finished = false;
     int m_animStyle = 0;
+    float m_stepTimer = 0.0f;
+    float m_stepInterval = 0.55f;
 
     static UnpauseCountdownNode* create(std::function<void()> onResumeCallback);
     bool init(std::function<void()> onResumeCallback);
     virtual ~UnpauseCountdownNode();
 
+    virtual void onEnter() override;
+    virtual void update(float dt) override;
     virtual void registerWithTouchDispatcher() override;
     virtual bool ccTouchBegan(CCTouch* pTouch, CCEvent* pEvent) override;
     virtual void ccTouchMoved(CCTouch* pTouch, CCEvent* pEvent) override;
@@ -79,6 +83,7 @@ public:
     void createShockwaveRipple(const cocos2d::ccColor3B& color);
     void spawnStarBurst(int count, float radius);
     void finish();
+    void cancel();
 };
 
 namespace BetterPauseTheme {

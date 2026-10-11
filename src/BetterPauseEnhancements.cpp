@@ -356,11 +356,28 @@ bool UnpauseCountdownNode::init(std::function<void()> onResumeCallback) {
     m_label->setPosition(center);
     this->addChild(m_label, 3);
 
+    m_stepTimer = 0.0f;
+    m_stepInterval = 0.55f;
+
     this->setTouchEnabled(true);
     this->setKeypadEnabled(true);
 
-    stepCountdown();
     return true;
+}
+
+void UnpauseCountdownNode::onEnter() {
+    CCLayer::onEnter();
+    this->scheduleUpdate();
+    this->stepCountdown();
+}
+
+void UnpauseCountdownNode::update(float dt) {
+    if (m_finished) return;
+    m_stepTimer += dt;
+    if (m_stepTimer >= m_stepInterval) {
+        m_stepTimer = 0.0f;
+        this->stepCountdown();
+    }
 }
 
 void UnpauseCountdownNode::registerWithTouchDispatcher() {
@@ -375,9 +392,12 @@ void UnpauseCountdownNode::ccTouchMoved(CCTouch* pTouch, CCEvent* pEvent) {}
 void UnpauseCountdownNode::ccTouchEnded(CCTouch* pTouch, CCEvent* pEvent) {}
 void UnpauseCountdownNode::ccTouchCancelled(CCTouch* pTouch, CCEvent* pEvent) {}
 
-void UnpauseCountdownNode::keyBackClicked() {}
+void UnpauseCountdownNode::keyBackClicked() {
+    this->cancel();
+}
 
 void UnpauseCountdownNode::onExit() {
+    this->unscheduleUpdate();
     CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
     CCLayer::onExit();
 }
@@ -689,11 +709,8 @@ void UnpauseCountdownNode::stepCountdown() {
         }
 
         m_currentCount--;
-        this->runAction(CCSequence::create(
-            CCDelayTime::create(0.55f),
-            CCCallFunc::create(this, callfunc_selector(UnpauseCountdownNode::stepCountdown)),
-            nullptr
-        ));
+        m_stepTimer = 0.0f;
+        m_stepInterval = 0.55f;
     } else if (m_currentCount == 0) {
         this->playStyleGoAnimation();
 
@@ -702,17 +719,17 @@ void UnpauseCountdownNode::stepCountdown() {
         }
 
         m_currentCount = -1;
-        this->runAction(CCSequence::create(
-            CCDelayTime::create(0.25f),
-            CCCallFunc::create(this, callfunc_selector(UnpauseCountdownNode::finish)),
-            nullptr
-        ));
+        m_stepTimer = 0.0f;
+        m_stepInterval = 0.28f;
+    } else {
+        this->finish();
     }
 }
 
 void UnpauseCountdownNode::finish() {
     if (m_finished) return;
     m_finished = true;
+    this->unscheduleUpdate();
     this->retain();
     CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
     this->stopAllActions();
@@ -725,6 +742,16 @@ void UnpauseCountdownNode::finish() {
         cb();
     }
     this->release();
+}
+
+void UnpauseCountdownNode::cancel() {
+    if (m_finished) return;
+    m_finished = true;
+    this->unscheduleUpdate();
+    CCDirector::sharedDirector()->getTouchDispatcher()->removeDelegate(this);
+    this->stopAllActions();
+    m_onResumeCallback = nullptr;
+    this->removeFromParent();
 }
 
 // ==========================================

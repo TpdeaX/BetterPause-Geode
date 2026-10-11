@@ -64,7 +64,7 @@
       "name": "Player Theme Colors",
       "description": "Sync pause menu progress bar and minimap border with your player icon colors.",
       "type": "bool",
-      "default": true
+      "default": false
     },
     "enable-pause-animations": {
       "name": "Smooth Pause Animations",
@@ -127,6 +127,30 @@
         "arrows": true,
         "slider": true
       }
+    },
+    "countdown-practice-mode": {
+      "name": "Countdown on Practice Mode",
+      "description": "Applies the countdown when entering Practice Mode from the pause menu.",
+      "type": "bool",
+      "default": false
+    },
+    "countdown-normal-mode": {
+      "name": "Countdown on Normal Mode",
+      "description": "Applies the countdown when switching back to Normal Mode from the pause menu.",
+      "type": "bool",
+      "default": false
+    },
+    "countdown-restart-level": {
+      "name": "Countdown on Restart",
+      "description": "Applies the countdown when restarting the level from the pause menu.",
+      "type": "bool",
+      "default": false
+    },
+    "enable-scroll-buttons-list": {
+      "name": "Enable Scroll Buttons List",
+      "description": "Enables touch/wheel scrolling for the pause buttons list. When disabled, buttons are arranged in discrete pages with arrows to avoid conflicts with smooth scroll mods.",
+      "type": "bool",
+      "default": false
     },
     "enable-progress-milestones": {
       "name": "Progress Bar Milestones",
