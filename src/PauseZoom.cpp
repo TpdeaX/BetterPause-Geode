@@ -234,6 +234,9 @@ bool PauseZoomManager::onScroll(float y, float x) {
         if (betterPause->buttonsList && BetterInfo::isHoveringNode(betterPause->buttonsList)) {
             return false; // let buttonsList scroll
         }
+        if (betterPause->layerMenuScrollButtons && BetterInfo::isHoveringNode(betterPause->layerMenuScrollButtons)) {
+            return false; // let layerMenuScrollButtons scroll
+        }
     }
 
     CCPoint mousePos = getMousePos();

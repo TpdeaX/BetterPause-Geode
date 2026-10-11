@@ -1276,10 +1276,16 @@ void BetterPause::adjustLayerForAspectRatio() {
 					continue;
 				}
 				if (layerMenuScrollButtons == child) {
-					child = buttonsList;
-					float originalY = child->getPositionY();
-					float newY = originalY + displacementY;
-					child->setPositionY(newY);
+					if (buttonsList) {
+						float originalY = buttonsList->getPositionY();
+						float newY = originalY + displacementY;
+						buttonsList->setPositionY(newY);
+					}
+					else {
+						float originalY = child->getPositionY();
+						float newY = originalY + displacementY;
+						child->setPositionY(newY);
+					}
 					continue;
 				}
 				float originalY = child->getPositionY();
@@ -1294,11 +1300,11 @@ void BetterPause::adjustLayerForAspectRatio() {
 
 
 	if (respect) {
-		this->volumeSettingsLabel->setPositionX((this->volumeSettingsLabel->getPositionX() + 40.f));
-		this->questsLabel->setPositionX(this->questsLabel->getPositionX() + 40.f);
-		this->sliderPlusMusic->setScale(this->sliderPlusMusic->getScale() - scale_value(1.7 - round(aspectRatio * 10.f) / 10.f));
-		this->sliderPlusSFX->setScale(this->sliderPlusSFX->getScale() - scale_value(1.7 - round(aspectRatio * 10.f) / 10.f));
-		this->questMenu->m_mainLayer->setScale(this->questMenu->m_mainLayer->getScale() - (scale_value(1.7 - round(aspectRatio * 10.f) / 10.f) - 0.05f));
+		if (this->volumeSettingsLabel) this->volumeSettingsLabel->setPositionX((this->volumeSettingsLabel->getPositionX() + 40.f));
+		if (this->questsLabel) this->questsLabel->setPositionX(this->questsLabel->getPositionX() + 40.f);
+		if (this->sliderPlusMusic) this->sliderPlusMusic->setScale(this->sliderPlusMusic->getScale() - scale_value(1.7 - round(aspectRatio * 10.f) / 10.f));
+		if (this->sliderPlusSFX) this->sliderPlusSFX->setScale(this->sliderPlusSFX->getScale() - scale_value(1.7 - round(aspectRatio * 10.f) / 10.f));
+		if (this->questMenu && this->questMenu->m_mainLayer) this->questMenu->m_mainLayer->setScale(this->questMenu->m_mainLayer->getScale() - (scale_value(1.7 - round(aspectRatio * 10.f) / 10.f) - 0.05f));
 	}
 
 	return;
