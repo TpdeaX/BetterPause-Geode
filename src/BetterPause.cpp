@@ -1679,7 +1679,7 @@ void BetterPause::createAchievementsPause() {
 		panel->addChild(cardNormal);
 	}
 
-	float practicePct = static_cast<float>(theLevel->m_practicePercent.value());
+	float practicePct = static_cast<float>(theLevel->m_practicePercent);
 	auto cardPractice = this->createAchievementCard(
 		"Practice Mode",
 		practicePct >= 100.f ? "Practice finished!" : "Progress in Practice",
@@ -1694,9 +1694,18 @@ void BetterPause::createAchievementsPause() {
 
 	int totalCoins = theLevel->m_coins;
 	int collectedCoins = 0;
-	if (theLevel->m_firstCoin > 0) collectedCoins++;
-	if (theLevel->m_secondCoin > 0) collectedCoins++;
-	if (theLevel->m_thirdCoin > 0) collectedCoins++;
+	if (auto pl = Utils::getplayLayerA()) {
+		if (!CoinsViewerSprites::coinsInVector.empty()) {
+			for (auto coinObj : CoinsViewerSprites::coinsInVector) {
+				if (pl->hasUniqueCoin(reinterpret_cast<EffectGameObject*>(coinObj))) {
+					collectedCoins++;
+				}
+			}
+			if (totalCoins == 0) {
+				totalCoins = static_cast<int>(CoinsViewerSprites::coinsInVector.size());
+			}
+		}
+	}
 
 	cocos2d::CCNode* cardExtra = nullptr;
 	if (totalCoins > 0) {
